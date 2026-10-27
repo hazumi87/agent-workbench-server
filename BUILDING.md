@@ -38,6 +38,10 @@ The available measured typecheck is for the engine. Do not infer a broker or bro
 
 Verify the source/output inventories supplied with the snapshot before comparing. SOURCES.json under web-ui inventories static and build inputs as well as bundled source. An esbuild metafile alone omits static-copy and build-only inputs. The browser builder and dependency versions come from web-ui/build-tools and its lockfile.
 
+Two scan-policy files are distributed alongside these inputs: `web-ui/osv-scanner.toml` and `web-ui/build-tools/osv-scanner.toml`. They are covered by `FILES.sha256` and are excluded from `SOURCES.json` because they are not browser build inputs. The complete `web-ui/` file set is the `SOURCES.json` entries, `SOURCES.json` itself, and these two policy files.
+
+The build-tools policy excepts only the named esbuild advisory. esbuild runs during browser compilation; the four xterm assets are copied into the served app and remain runtime dependencies. No xterm advisory is ignored by this policy.
+
 From the repository root, use a fresh comparison output. This reads the intended identity from the supplied, checksum-verified app manifest; it does not substitute the assembly repository's unrelated HEAD:
 
 ```sh

@@ -1,0 +1,7 @@
+# Reviewed advisories for this lockfile (osv-scanner config). Each entry expires; re-review then.
+
+# esbuild 0.28.0 (CVSS 2.5)
+[[IgnoredVulns]]
+id = "GHSA-g7r4-m6w7-qqqr"
+ignoreUntil = 2027-01-27
+reason = "build-tool dependency installed only for browser compilation; not included in the served bundle or server runtime; upgrade tracked"

@@ -52,6 +52,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_ENABLE_COMMENTS: "false"
           GITLEAKS_CONFIG: .gitleaks.toml
+          GITLEAKS_VERSION: 8.30.1 # the action defaults to 8.24.3, which ignores the multi-condition [[allowlists]] in .gitleaks.toml
   sast:
     name: static analysis (semgrep, errors fail)
     timeout-minutes: 20
