@@ -850,6 +850,8 @@ html.dark .wr-in { background: var(--md-sys-color-surface-container-highest); }
   .wr-toolpagebar { flex: none; display: flex; align-items: center; gap: 4px; height: 48px; padding: 0 8px 0 0;
     background: var(--md-sys-color-surface-container-low); border-bottom: 1px solid var(--md-sys-color-outline-variant); }
   .wr-toolpageback { width: 48px; height: 48px; }
+  /* the button sits at the screen's corner: its focus ring is drawn inside it (the web nav's ring rule pushes rings out with !important) */
+  html[data-wb-web] .wr-toolpagebar .wr-toolpageback:focus-visible { outline-offset: -3px !important; }
   .wr-toolpaget { font: 500 14px/20px var(--font); color: var(--md-sys-color-on-surface); }
 }
 /* a tool's preview on a phone (the design's s10): its back arrow "Back to the room" is a 48 px target */
@@ -929,5 +931,7 @@ html.dark .wr-in { background: var(--md-sys-color-surface-container-highest); }
   html[data-wb-toollayer] .wr-roomhead,
   html[data-wb-toollayer] .wb-bnav { display: none !important; }
 }
+/* final-plus 5: a seat's terminal in its room is a layer too; the bars hide through the same html attribute as the tool layer, and its own
+   header is styled with the Terminals page's layer in web-terminals/phone.css */
 .wr-layerguard { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .wr-body.has-toolpage > .wr-layerguard { display: block !important; } /* the full page's focus guards stay focusable */

@@ -368,7 +368,9 @@ export function renderRecipe(sec, st, ctx, h) {
   // Run: the picker, only the programs that are on; installed first, then the rest in Programs' order,
   // Shell always last with the login's shell; each row with what the chosen login's broker reported;
   // the closed field shows the name, the report as supporting text ("2.1.303 on Brokered")
-  const withLines = programs.map((p) => ({ p, line: reportLine(p, row) }));
+  // a hosted engine opens no bare shell and no shell syntax: no Shell program, and Custom command says what it is (the engine's own refusals reach the screen as they are)
+  const noShell = !!globalThis.wb?.web?.capabilities && globalThis.wb.web.capabilities.bareShell() === false;
+  const withLines = programs.filter((p) => !(noShell && p.id === 'shell')).map((p) => ({ p, line: reportLine(p, row) }));
   const order = (x) => (x.p.id === 'shell' ? 3 : x.line.kind === 'installed' || x.line.kind === 'old' ? 0 : x.line.kind === 'unknown' ? 1 : 2);
   withLines.sort((a, b) => order(a) - order(b));
   const shellName = (row && row.shell) || (row && row.test && row.test.shell) || '';
@@ -379,7 +381,7 @@ export function renderRecipe(sec, st, ctx, h) {
     disabled: !row,
     valueText: program ? (program.id === 'shell' ? 'Shell' : program.label) : '',
     placeholder: 'Choose a program',
-    support: !row ? '' : program && program.custom ? 'Runs in your shell, in this folder' : program && program.id === 'shell' ? shellName : chosenLine.kind === 'installed' || chosenLine.kind === 'old' ? `${chosenLine.text} on ${row.serverName}` : chosenLine.kind === 'unknown' ? chosenLine.text : '',
+    support: !row ? '' : program && program.custom ? (noShell ? 'A program and its options' : 'Runs in your shell, in this folder') : program && program.id === 'shell' ? shellName : chosenLine.kind === 'installed' || chosenLine.kind === 'old' ? `${chosenLine.text} on ${row.serverName}` : chosenLine.kind === 'unknown' ? chosenLine.text : '',
     hint: !row ? 'Choose where it runs first.' : '',
     rows: withLines
       .map(({ p, line }) => ({
@@ -394,7 +396,7 @@ export function renderRecipe(sec, st, ctx, h) {
         action: line.kind === 'missing' && row && row.local && p.install && h.install ? { label: 'Install', fn: () => h.install(p.id) } : null,
       }))
       // Custom command… last: anything you'd type yourself, in your shell, in that folder
-      .concat([{ value: 'custom', text: 'Custom command…', line: "Anything you'd type yourself", mark: 'generic', markColor: null, selected: st.programId === 'custom' }]),
+      .concat([{ value: 'custom', text: 'Custom command…', line: noShell ? 'A program and its options' : "Anything you'd type yourself", mark: 'generic', markColor: null, selected: st.programId === 'custom' }]),
     footer: offCount ? { text: "Programs that are off aren't listed.", link: 'Programs…', fn: () => h.openPrograms() } : null,
     onPick: (v) => h.set('programId', v),
   });
@@ -434,7 +436,8 @@ export function renderRecipe(sec, st, ctx, h) {
     ci.value = st.command || '';
     ci.setAttribute('aria-describedby', 'rfCommand-sup');
     ci.addEventListener('input', () => h.set('command', ci.value));
-    const cs = el('div', 'ac-sup', `Runs in your shell, in this folder. Like npm run dev or ${win ? '.\\build.ps1' : './build.sh'}`);
+    const hostedNoShell = !!globalThis.wb?.web?.capabilities && globalThis.wb.web.capabilities.bareShell() === false;
+    const cs = el('div', 'ac-sup', hostedNoShell ? "A program and its options. The server tells you if it can't start it." : `Runs in your shell, in this folder. Like npm run dev or ${win ? '.\\build.ps1' : './build.sh'}`);
     cs.id = 'rfCommand-sup';
     cmdField.append(cl2, ci, cs);
   }

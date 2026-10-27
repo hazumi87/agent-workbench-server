@@ -213,10 +213,21 @@ export function createWebNav({ document, root, win, bar, appsEl, main, wb, web, 
     entry.item.setAttribute('aria-label', text ? `${entry.label}, ${text} waiting` : entry.label);
   }
 
+  /** The Terminals item's badge: how many terminals run in this window (none at 0; the design s13). */
+  function paintTerminals(info) {
+    const text = badgeText(info && info.count);
+    const entry = items.get('terminals');
+    if (!entry) return;
+    entry.badge.textContent = text;
+    entry.badge.hidden = text === '';
+    entry.item.setAttribute('aria-label', text ? `${entry.label}, ${text} running` : entry.label);
+  }
+
   // ---- inputs
   if (web && web.events) {
     offs.push(web.events.on('room-shown', (p) => { shown = p || null; render(); }));
     offs.push(web.events.on('rooms-waiting', paintBadge));
+    offs.push(web.events.on('terminals-running', paintTerminals));
   }
   offs.push(wb.on('rooms:status', (status) => { if (status && status.me !== undefined) { me = status.me; paintAccount(); } }));
   const ready = Promise.resolve()

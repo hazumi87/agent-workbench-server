@@ -1,0 +1,53 @@
+/* Terminals on a phone (the design s13, option A): a page under 600 px; nothing here shows at 600 px and wider. */
+#termPhone, #termBack { display: none; }
+.pane-h .sb-title .sstate { display: none; }
+.pane-back.tp-pback { display: none; }
+@media (max-width: 599px) {
+  html[data-term-surface="1"][data-tphone="list"] #termPhone { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; gap: 8px; padding: 12px 16px 24px; overflow-y: auto; overflow-x: hidden; box-sizing: border-box; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); }
+  html[data-term-surface="1"][data-tphone="term"] #termBack { position: absolute; top: 0; left: 0; right: 0; height: 48px; z-index: 5; display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 0; background: var(--md-sys-color-surface-container); color: var(--md-sys-color-on-surface); font: 500 14px/20px var(--font, inherit); text-align: left; cursor: pointer; }
+  html[data-term-surface="1"][data-tphone="term"] #termBack { display: none !important; } /* the layer's own header holds the arrow (final-plus 5) */
+  html[data-term-surface="1"][data-tphone="term"] #grid { top: 0; }
+  /* final-plus 5: the layer is the whole screen: no app bar, no bottom bar; the only way out is Back in its own header */
+  html[data-term-surface="1"][data-tphone="term"] .hwb-bar,
+  html[data-term-surface="1"][data-tphone="term"] .wb-bnav { display: none !important; }
+  /* the terminal layer is ONE terminal full screen, whatever else this window has open */
+  html[data-term-surface="1"][data-tphone="term"] #grid .pane { display: none !important; }
+  html[data-term-surface="1"][data-tphone="term"] #grid .pane.is-active { display: flex !important; position: absolute !important; inset: 0 !important; width: auto !important; height: auto !important; }
+  /* final-plus 5 (the design s14): while a terminal layer is open the header is ONE 56 px row: the arrow (48 px, its name for a screen reader), the
+     name, and the Keys toggle; the ring, the keep-running icon, the route words, the settings gear and the hide button are window chrome */
+  :is(html[data-wb-toollayer="terminal"] .wr-inline-terminal, html[data-term-surface="1"][data-tphone="term"] #grid .pane.is-active) .pane-h { display: flex; align-items: center; gap: 4px; padding: 0 4px; }
+  :is(html[data-wb-toollayer="terminal"] .wr-inline-terminal, html[data-term-surface="1"][data-tphone="term"] #grid .pane.is-active) .pane-h > :is(.sp, .pane-rstate, .account-chip, .pane-kr, .pane-gear, .px) { display: none !important; }
+  :is(html[data-wb-toollayer="terminal"] .wr-inline-terminal, html[data-term-surface="1"][data-tphone="term"] #grid .pane.is-active) .pane-h > .pane-back { display: inline-flex !important; order: 0; flex: none; width: 48px; height: 48px; margin: 0; padding: 0; justify-content: center; overflow: hidden; font-size: 0; }
+  :is(html[data-wb-toollayer="terminal"] .wr-inline-terminal, html[data-term-surface="1"][data-tphone="term"] #grid .pane.is-active) .pane-h > .pane-back .ms { font-size: 24px; }
+  :is(html[data-wb-toollayer="terminal"] .wr-inline-terminal, html[data-term-surface="1"][data-tphone="term"] #grid .pane.is-active) .pane-h > .pane-ring { order: 1; flex: none; }
+  :is(html[data-wb-toollayer="terminal"] .wr-inline-terminal, html[data-term-surface="1"][data-tphone="term"] #grid .pane.is-active) .pane-h > .sb-title { order: 2; flex: 1 1 0; min-width: 0; }
+  :is(html[data-wb-toollayer="terminal"] .wr-inline-terminal) .pane-h > .sb-title .sstate { display: block; font: 400 12px/16px var(--font, inherit); color: var(--md-sys-color-on-surface-variant); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  :is(html[data-wb-toollayer="terminal"] .wr-inline-terminal, html[data-term-surface="1"][data-tphone="term"] #grid .pane.is-active) .pane-h > .sb-title .sname { font: 500 16px/22px var(--font, inherit); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  :is(html[data-wb-toollayer="terminal"] .wr-inline-terminal, html[data-term-surface="1"][data-tphone="term"] #grid .pane.is-active) .pane-h > .wb-terminal-keys-toggle { order: 3; flex: none; }
+  .tp-backt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #termBack:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: -2px; }
+  .tp-h { margin: 4px 0 4px; font: 500 22px/28px var(--font, inherit); }
+  .tp-sh { margin: 12px 4px 0; font: 500 12px/16px var(--font, inherit); letter-spacing: .5px; text-transform: none; color: var(--md-sys-color-on-surface-variant); }
+  .tp-none { margin: 8px 4px; color: var(--md-sys-color-on-surface-variant); }
+  .tp-new { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 48px; border: 0; border-radius: var(--shape-full, 24px); background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); font: 500 14px/20px var(--font, inherit); cursor: pointer; }
+  .tp-new:disabled { opacity: .72; }
+  .tp-custom { width: 100%; min-height: 48px; margin-top: 8px; border: 1px solid var(--md-sys-color-outline); border-radius: var(--shape-full, 24px); background: transparent; color: var(--md-sys-color-primary); font: 500 14px/20px var(--font, inherit); cursor: pointer; }
+  .tp-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-height: 72px; padding: 4px 0; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+  .tp-open { flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 0; border: 0; background: transparent; color: inherit; text-align: left; font: inherit; cursor: pointer; }
+  .tp-rmain { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; }
+  .tp-tile { flex: none; width: 48px; height: 48px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+  .tp-tx { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; }
+  .tp-nm { font: 500 16px/22px var(--font, inherit); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tp-st { font-size: 14px; line-height: 20px; color: var(--md-sys-color-on-surface-variant); overflow-wrap: anywhere; }
+  .tp-ib { flex: none; width: 48px; height: 48px; border: 0; border-radius: 50%; background: transparent; color: var(--md-sys-color-on-surface-variant); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .tp-start { flex: none; min-width: 64px; min-height: 48px; padding: 0 16px; border: 1px solid var(--md-sys-color-outline); border-radius: var(--shape-full, 24px); background: transparent; color: var(--md-sys-color-primary); font: 500 14px/20px var(--font, inherit); cursor: pointer; }
+  .tp-start:disabled { opacity: .72; cursor: default; }
+  .tp-err { width: 100%; padding: 0 4px 8px 60px; box-sizing: border-box; font-size: 13px; line-height: 18px; color: var(--md-sys-color-error); }
+  .tp-open:focus-visible, .tp-new:focus-visible, .tp-custom:focus-visible, .tp-start:focus-visible, .tp-ib:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 2px; }
+  .tp-scrim { position: absolute; inset: 0; z-index: 8; display: flex; align-items: flex-end; background: rgba(0,0,0,.32); }
+  .tp-sheet { width: 100%; border-radius: 28px 28px 0 0; background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface); box-shadow: 0 -4px 24px rgba(0,0,0,.28); padding-bottom: 12px; }
+  .tp-sheethead { display: flex; align-items: center; justify-content: space-between; padding: 8px 8px 0 24px; min-height: 56px; }
+  .tp-sheettitle { font: 500 18px/24px var(--font, inherit); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tp-sheetrow { display: flex; align-items: center; gap: 16px; width: 100%; min-height: 56px; padding: 0 24px; border: 0; background: transparent; color: var(--md-sys-color-on-surface); font: 500 16px/22px var(--font, inherit); text-align: left; cursor: pointer; }
+  .tp-sheetrow.err { color: var(--md-sys-color-error); }
+}

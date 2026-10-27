@@ -13,6 +13,8 @@ import { icon } from './m3-chrome.js';
 import { markSvg } from './settings-pages.js';
 import { PIN_FROM, SLIM_UNDER, isUnpinned, setUnpinned, isCollapsed, toggleCollapsed, groupLabel } from './srail.js';
 import { causeWords } from './route-overlay.js';
+import { createTerminalsPhone } from './web-terminals/phone.js';
+import { bareShellOff, isBareShellRecipe } from './web-shared/bare-shell.js';
 
 // 0.19.0 (B1–B3, the design's "One rail for the Workbench"): this rail is the shared rail's reference. It
 // starts pinned (the owner ); unpinning is remembered for this window's Terminals tab; under 700 px it
@@ -71,7 +73,9 @@ export function createRail(deps) {
   const docked = () => pinned && allowPin && canPin();
   let list = [];
   let servers = null; // mode B's server area (null in mode A)
+  let recipesAll = null; // the recipes the renderer sent; `recipes` is what is shown: a hosted engine opens no bare shell, so the Shell recipe is left out there
   let recipes = null; // the recipes' view rows from the renderer (both modes since 0.12.1, )
+  const shownRecipes = () => (recipesAll && bareShellOff() ? recipesAll.filter((v) => !isBareShellRecipe(v)) : recipesAll);
   let unsaved = null; // "1 recipe not saved · Finish" (the design's No dead ends): { label, link, fn } or null
   // step 3d (the design's 3d page, "Rail groups"): one group per server · login where something of this
   // person's keeps running on the broker and isn't open here: { key, title, count, atLimit, line,
@@ -106,6 +110,22 @@ export function createRail(deps) {
   body.setAttribute('aria-label', 'CLIs');
   rail.append(head, body); // 0.19.0 (the owner ): no New CLI button at the foot; IN THIS WINDOW + has it
   deps.host.appendChild(rail);
+  // the web build's phone page (under 600 px there is no rail): the same lists, drawn as a page (web-terminals/phone.js, the design s13)
+  const phone = window.wb && window.wb.web && deps.phoneHost
+    ? createTerminalsPhone({
+      host: deps.phoneHost,
+      me: () => deps.myWid(),
+      act: (sid) => deps.act(sid),
+      end: (sid) => deps.end(sid),
+      newCli: () => deps.newCli(),
+      startRecipe: (id) => deps.startRecipe(id),
+      goTo: (sid) => deps.goTo(sid),
+      customCommand: () => deps.customCommand(),
+      mark: (v) => { const mk = el('span', 'nm-mk'); mk.appendChild(markSvg(v.mark || 'generic', v.markColor || '#5F6368')); return mk; },
+      fire: (count) => window.wb.web.events && window.wb.web.events.fire('terminals-running', { count }),
+      bareShell: () => !bareShellOff(),
+    })
+    : null;
 
   const flag = el('button', 'rail-flag');
   flag.id = 'railFlag';
@@ -891,7 +911,7 @@ export function createRail(deps) {
     m.setAttribute('role', 'menu');
     m.setAttribute('aria-label', 'New CLI');
     const web = !!(window.wb && window.wb.web); // the web build runs on a server: just "Shell", no machine words, no Servers door
-    nmItem(m, 'shell', 'terminal', web ? 'Shell' : 'Shell on this machine', web ? '' : deps.shellLine ? deps.shellLine() : '');
+    if (!bareShellOff()) nmItem(m, 'shell', 'terminal', web ? 'Shell' : 'Shell on this machine', web ? '' : deps.shellLine ? deps.shellLine() : '');
     for (const v of recipes || []) {
       const mk = el('span', 'nm-mk');
       mk.appendChild(markSvg(v.mark || 'generic', v.markColor || '#5F6368'));
@@ -1484,9 +1504,24 @@ export function createRail(deps) {
         render();
       }
     },
+    /** The engine's capabilities changed (a hosted engine opens no bare shell): draw what is offered again. */
+    capsChanged() {
+      recipes = shownRecipes();
+      phone && phone.setRecipes(recipes);
+      phone && phone.capsChanged();
+      if (open || docked()) {
+        render();
+      }
+    },
+    /** The Terminals tab is on screen (web: the phone page shows under 600 px). */
+    setPhoneSurface(on) {
+      phone && phone.setSurface(!!on);
+    },
     /** null in mode A (no RECIPES header); the recipes' view rows once signed in (3c). */
     setRecipes(next, u) {
-      recipes = next;
+      recipesAll = next;
+      recipes = shownRecipes();
+      phone && phone.setRecipes(recipes);
       unsaved = u || null;
       paintHead();
       if (open || docked()) {
@@ -1540,6 +1575,7 @@ export function createRail(deps) {
     },
     update(next) {
       list = next || [];
+      phone && phone.update(list.map((s) => ({ ...s, name: deps.displayName(s) })));
       if (renaming != null && !list.some((s) => s.sid === renaming)) {
         renaming = null;
       }

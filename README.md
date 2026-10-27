@@ -32,13 +32,27 @@ The deployment operator supplies TLS, SSO on every network route, loopback-only 
 
 Available evidence covers a clean engine/broker dependency install, engine typecheck, locked Playwright browser download and source-inventory/fixture consistency checks. Those establish their respective setup properties, not the security assertions of an unexecuted proof.
 
-The combined success proofs, typed-delivery negative control and actual viewer/attachment browser proof still need measured exported-tree results. The final browser update and its independent source/output verification are also outstanding. Run the commands in BUILDING against this snapshot and record actual source identities, browser, outcomes and limitations; no earlier candidate count is a result for this tree.
+The current exported engine's affected setup and settings suites measured **94 pass / 0 fail**, exit 0 (13 setup checks and 81 settings checks). The earlier engine export measured **11 combined proof suites:427 pass /0 fail**, exit 0, and a separate typed-delivery negative control: **15 pass /3 expected failures**, exit 1. Those earlier results are carried to the current engine by an approved diff: only derived hosted/bareShell fields and their tests changed; the nineteen proof files are byte/mode-identical. They were **not freshly rerun on the current engine**. The expected negative-control failures are message-body leakage, fixed-ring admission and independent origin-trace admission; setup and correlation controls passed.
 
-## Current browser limitations
+The earlier exported ordinary-suite run selected 338 suites: 332 passed initially, three failed and three were skipped. First-run check totals were 14742 pass/two fail, with one failed suite lacking a summary. A later **captured** rerun of the three failed suites measured 129 pass/zero fail, exit 0. The first run was not clean; skipped suites remain skipped, and an earlier uncaptured rerun is not the receipt. These ordinary results remain attributed to that earlier engine export, separately from the proof counts and current affected suites.
 
-Below600px, the standalone Terminals destination in this snapshot has no terminal list or start controls; terminal views opened from room seats work. A phone Terminals page is being added in a subsequent review revision. At320px, the full-page tool back-arrow focus ring can clip at the screen corner; its correction is also outstanding. Do not treat this snapshot as the completed phone workflow.
+The fresh exported viewer/attachment browser proof (L2) measured **9 pass /0 fail**, exit 0, on the accepted current engine and scrubbed final browser export. It ran 2026-10-27T12:56:55Z–12:57:01Z with Chromium 148.0.7778.96, Playwright 1.60.0 and Node 22.23.1. Log SHA-256: `5cae302d7eae223d7c4aa6959ac35c453f23dd0bb2e0ae53def643ec26230e0e`. Engine export inventory: `61e94dfc9862fedb8c3ff711442bc16cfa0e6e6b07beaa3329d7b08e7f825b8f`; app export inventory: `e7eaf77b3eddf9ae41969c5292360ca4f121791a1b241259f8dc28df0d328213`; app MANIFEST SHA-256: `02d4059b4cfcaa451e383c915ae68335c37ff980088857ebdc5724b07f7d36be`. Post-run source hashes and modes were unchanged. This is fresh exported L2 evidence, separate from carried engine proofs, native delivery and customer-home compatibility.
 
-These limits do not remove any shipped file from review. Native-agent delivery, browser proofs, customer-home compatibility and build reproduction are separate claims requiring their own scoped evidence.
+The standalone browser rebuild is verified: a fresh output directory built from the exported browser source is byte-identical to the supplied scrubbed app, **211/211 files**, including MANIFEST. The source inventory has **267 entries**; with SOURCES.json and the two scan-policy files, the assembled web-ui directory contains **270 files**. The frozen handoff checksums and inventory were independently verified. Build equality alone does not establish runtime or unit results; their completed measurements are recorded separately below.
+
+The exported browser runtime replay measured strict smoke **PASS** and **18/18 probe suites PASS**, including phone Terminals **90/0**, hosted Terminals **38/0** and the keypad's 32 checks. The frozen source and output inventories were unchanged after execution. These are exported-tree measurements, separate from the private application's own full suite.
+
+**The exported app unit result is NON-CLEAN: 2843 pass / 22 fail**, with 5 skipped and 18 todo. The verified failure-name set is identical to the earlier browser replay: 19 pre-existing connector failures, 2 bridge-equality artifacts involving an unshipped tool, and 1 assertion pinned to a pre-scrub tone hash. The shipped tone bytes match the exported engine; the unshipped bridge source is outside this distribution's closure. No new failure names were observed, but these explanations do not turn the run into a passing unit suite. Keep the failures visible and the unit result separate from passing runtime probes, L2 and carried engine proofs.
+
+Whole-tree content, secret and history checks are required separately for each release commit; their receipts identify the checked commit. Documentation alone does not grant release or publication clearance.
+
+Results apply to the recorded input identities; compare provenance and manifests before carrying them to a different tree.
+
+## Browser scope under final verification
+
+The selected browser revision includes the phone Terminals page, hosted capability-aware launch controls, full-screen phone terminal layers and a paged touch keypad. Hosted engines offer recipes and Custom command rather than a built-in bare Shell. Custom commands name a program and its options; engine refusal sentences remain authoritative, and OS account permissions remain the execution boundary. Dormant served branches remain in review scope.
+
+Fresh exported L2 and the standalone rebuild are measured as recorded above; runtime probes and units have completed as recorded above; final whole-tree and history checks require separate release receipts. This assessment snapshot does not claim a completed final export, native-agent proof, customer-home compatibility or release acceptance from those selected-source features.
 
 ## Licence and notices
 

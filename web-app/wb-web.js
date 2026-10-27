@@ -2090,8 +2090,8 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
           firstRunHint: false
         };
       }
-      function boot(register3) {
-        for (const fn of register3) fn(api);
+      function boot(register4) {
+        for (const fn of register4) fn(api);
         globalThis.wb = globalThis.wb || {};
         globalThis.wb.web = exposed;
         globalThis.__wbWebChannels = () => ({ handlers: [...handlers.keys()].sort(), listeners: [...listeners.keys()].sort(), exposed: Object.keys(exposed).sort(), duplicates: [...duplicates] });
@@ -2792,7 +2792,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
       "use strict";
       init_globals();
       var KNOWN = /* @__PURE__ */ new Set(["system", "light", "dark"]);
-      function register3(api) {
+      function register4(api) {
         for (const channel of ["pane:active", "win:mode", "win:closeEmpty", "startup:done", "state:report", "debug:log", "debug:set", "modules:theme"]) {
           api.on(channel, () => {
           });
@@ -2811,7 +2811,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
           shell: ""
         }));
       }
-      module.exports = { register: register3 };
+      module.exports = { register: register4 };
     }
   });
 
@@ -5568,7 +5568,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
       var scoped = require_scoped();
       var rt3 = require_runtime();
       var native = require_native_browser();
-      function register3(api) {
+      function register4(api) {
         const origin = globalThis.location ? globalThis.location.origin : "";
         const tasks = {
           // module-page task calls need the module host (a later slice): refuse, never fake an admission
@@ -5593,7 +5593,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
           broadcast: (channel, payload) => rt3.emit(channel, payload)
         });
       }
-      module.exports = { register: register3 };
+      module.exports = { register: register4 };
     }
   });
 
@@ -6264,7 +6264,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
         const text3 = sayServerAnswer(call, answer2), row = ROWS.find((r) => r.call === call && r.match(answer2));
         return { text: text3, action: row?.action || null };
       }
-      function register3(api, { browser = globalThis } = {}) {
+      function register4(api, { browser = globalThis } = {}) {
         let active = null;
         const web2 = () => browser.wb.web;
         api.expose("agents", Object.freeze({ open(options) {
@@ -6277,7 +6277,11 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
             current: () => scope.current(),
             serverAnswer: mapAgentServerAnswer,
             readApproval: (options2) => web2().settings.readApproval(options2),
-            programs: () => browser.wb.programsList(),
+            programs: async () => {
+              const list = await browser.wb.programsList();
+              return web2().capabilities && web2().capabilities.bareShell() === false && Array.isArray(list) ? list.filter((p) => p && p.id !== "shell") : list;
+            },
+            // a hosted engine opens no bare shell
             list: () => browser.wb.recipesList(),
             chooseFolder: (options2) => web2().files.chooseFolder(options2),
             checkFolder: async (path, options2) => {
@@ -6300,7 +6304,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
           browser.removeEventListener("pagehide", hide);
         };
       }
-      module.exports = { register: register3, mapAgentServerAnswer };
+      module.exports = { register: register4, mapAgentServerAnswer };
     }
   });
 
@@ -6587,7 +6591,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
       init_globals();
       var { createBrowserActions: createBrowserActions2 } = (init_browser_actions(), __toCommonJS(browser_actions_exports));
       var { createBrowserFeedback: createBrowserFeedback2 } = (init_view2(), __toCommonJS(view_exports2));
-      function register3(api, { browser = globalThis, makeFeedback = createBrowserFeedback2 } = {}) {
+      function register4(api, { browser = globalThis, makeFeedback = createBrowserFeedback2 } = {}) {
         let actions = createBrowserActions2(browser), feedback = makeFeedback(browser), disposed = false;
         const methods = {};
         const operation = { copyText: "copy", readText: "paste", openTab: "open", openExternal: "open", requestNotifications: "notify" };
@@ -6654,7 +6658,212 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
           browser.removeEventListener("pageshow", show);
         };
       }
-      module.exports = { register: register3 };
+      module.exports = { register: register4 };
+    }
+  });
+
+  // src/renderer/web-setup/policy.mjs
+  var modes, settings, text, serverFolder;
+  var init_policy = __esm({
+    "src/renderer/web-setup/policy.mjs"() {
+      init_globals();
+      modes = /* @__PURE__ */ new Set(["on", "off"]);
+      settings = /* @__PURE__ */ new Set(["follow", ...modes]);
+      text = (value) => typeof value === "string" && value.length > 0 && value.length <= 4096 && !/[\x00-\x1f]/.test(value);
+      serverFolder = (value) => text(value) && value.startsWith("/") && !value.split("/").some((part) => part === "." || part === "..");
+    }
+  });
+
+  // web/handlers/setup-settings.mjs
+  var setup_settings_exports = {};
+  __export(setup_settings_exports, {
+    createSettingsAPI: () => createSettingsAPI,
+    register: () => register
+  });
+  function createSettingsAPI(fetch, { timeoutMs = 15e3, maxBytes = 1024 * 1024 } = {}) {
+    if (typeof fetch !== "function" || !Number.isFinite(timeoutMs) || timeoutMs <= 0 || !Number.isSafeInteger(maxBytes) || maxBytes <= 0) invalid();
+    async function request(path, method, body, { signal, current } = {}) {
+      if (signal?.aborted || current && current() !== true) throw unknown();
+      const abort = new AbortController();
+      let timer, reader;
+      const cancel = () => abort.abort();
+      const interrupted = new Promise((_, reject) => abort.signal.addEventListener("abort", () => {
+        if (reader) void reader.cancel().catch(() => {
+        });
+        reject(unknown());
+      }, { once: true }));
+      signal?.addEventListener("abort", cancel, { once: true });
+      timer = setTimeout(cancel, timeoutMs);
+      try {
+        return await Promise.race([interrupted, (async () => {
+          let response;
+          try {
+            response = await fetch(path, {
+              method,
+              credentials: "same-origin",
+              redirect: "error",
+              cache: "no-store",
+              signal: abort.signal,
+              headers: { accept: "application/json", ...body === void 0 ? {} : { "content-type": "application/json" } },
+              ...body === void 0 ? {} : { body: JSON.stringify(body) }
+            });
+          } catch {
+            throw unknown();
+          }
+          if (abort.signal.aborted) {
+            void response.body?.cancel().catch(() => {
+            });
+            throw unknown();
+          }
+          const length = response.headers.get("content-length");
+          if (length !== null && Number(length) > maxBytes) {
+            void response.body?.cancel().catch(() => {
+            });
+            throw unknown();
+          }
+          if (!response.body?.getReader) throw unknown();
+          reader = response.body.getReader();
+          let size = 0, text3 = "";
+          const decoder = new TextDecoder("utf-8", { fatal: true });
+          try {
+            for (; ; ) {
+              const { done, value } = await reader.read();
+              if (abort.signal.aborted) throw unknown();
+              if (done) break;
+              size += value.byteLength;
+              if (size > maxBytes) {
+                void reader.cancel().catch(() => {
+                });
+                throw unknown();
+              }
+              text3 += decoder.decode(value, { stream: true });
+            }
+            text3 += decoder.decode();
+          } catch {
+            throw unknown();
+          }
+          let data;
+          try {
+            data = JSON.parse(text3);
+          } catch {
+            throw unknown();
+          }
+          if (refusalStatuses.has(response.status) && data && typeof data.error === "string") {
+            throw { code: "settings-refused", status: response.status };
+          }
+          if (!response.ok) throw unknown();
+          return data;
+        })()]);
+      } finally {
+        clearTimeout(timer);
+        signal?.removeEventListener("abort", cancel);
+      }
+    }
+    return Object.freeze({
+      readSetup: (options) => request("/api/settings/setup", "GET", void 0, options),
+      readPersonDisplay: (options) => request("/api/rooms/me", "GET", void 0, options),
+      readAgents: (options) => request("/api/agents/status", "GET", void 0, options),
+      async writeSetup(input, options) {
+        if (!input || typeof input !== "object") invalid();
+        const body = {};
+        if ("defaultFolder" in input) {
+          if (input.defaultFolder !== null && !serverFolder(input.defaultFolder)) invalid();
+          body.defaultFolder = input.defaultFolder;
+        }
+        if ("complete" in input) {
+          if (input.complete !== true) invalid();
+          body.complete = true;
+        }
+        if (!Object.keys(body).length) invalid();
+        return request("/api/settings/setup", "PUT", body, options);
+      },
+      async prepareAgentSignIn(vendor, options) {
+        if (!["claude-code", "codex-cli", "gemini-cli"].includes(vendor)) invalid();
+        return request(`/api/agents/${vendor}/sign-in`, "POST", {}, options);
+      },
+      readApproval: (options) => request("/api/settings/auto-approve", "GET", void 0, options),
+      async writeApproval(input, options) {
+        if (!input || !["on", "off"].includes(input.default) || input.disclosed !== void 0 && input.disclosed !== true) invalid();
+        const body = { default: input.default, ...input.disclosed === true ? { disclosed: true } : {} };
+        return request("/api/settings/auto-approve", "PUT", body, options);
+      },
+      readTrust: (options) => request("/api/settings/folder-trust", "GET", void 0, options),
+      async writeTrust(input, options) {
+        if (!input || !serverFolder(input.path) || typeof input.trusted !== "boolean") invalid();
+        return request("/api/settings/folder-trust", "PUT", { path: input.path, trusted: input.trusted }, options);
+      }
+    });
+  }
+  function register(api) {
+    api.expose("settings", createSettingsAPI((path, init) => api.engine.fetch(path, init)));
+  }
+  var refusalStatuses, unknown, invalid;
+  var init_setup_settings = __esm({
+    "web/handlers/setup-settings.mjs"() {
+      init_globals();
+      init_policy();
+      refusalStatuses = /* @__PURE__ */ new Set([400, 401, 403, 404, 409, 413, 422]);
+      unknown = () => ({ code: "settings-unconfirmed" });
+      invalid = () => {
+        throw { code: "settings-invalid" };
+      };
+    }
+  });
+
+  // web/handlers/capabilities.mjs
+  var capabilities_exports = {};
+  __export(capabilities_exports, {
+    createCapabilities: () => createCapabilities,
+    register: () => register2
+  });
+  function createCapabilities(read) {
+    let bare = true;
+    const listeners = /* @__PURE__ */ new Set();
+    const verdict = (setup) => !(setup && typeof setup === "object" && (setup.hosted === true || setup.bareShell === false));
+    async function refresh() {
+      let next = bare;
+      try {
+        next = verdict(await read());
+      } catch {
+      }
+      if (next !== bare) {
+        bare = next;
+        for (const fn of [...listeners]) {
+          try {
+            fn(bare);
+          } catch {
+          }
+        }
+      }
+      return bare;
+    }
+    return Object.freeze({
+      /** false only when the engine said so (hosted, or bareShell false). */
+      bareShell: () => bare,
+      refresh,
+      onChange(fn) {
+        listeners.add(fn);
+        return () => listeners.delete(fn);
+      }
+    });
+  }
+  function register2(api) {
+    const settings2 = createSettingsAPI((path, init) => api.engine.fetch(path, init));
+    api.expose("capabilities", createCapabilities(() => settings2.readSetup()));
+  }
+  var init_capabilities = __esm({
+    "web/handlers/capabilities.mjs"() {
+      init_globals();
+      init_setup_settings();
+    }
+  });
+
+  // web/handlers/capabilities.js
+  var require_capabilities = __commonJS({
+    "web/handlers/capabilities.js"(exports, module) {
+      "use strict";
+      init_globals();
+      module.exports = { register: (init_capabilities(), __toCommonJS(capabilities_exports)).register };
     }
   });
 
@@ -6908,34 +7117,34 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
       }
     }
     function bodyError(body) {
-      if (!(body instanceof Blob)) return invalid();
+      if (!(body instanceof Blob)) return invalid2();
       return body.size > MAX_ROOM_FILE_BYTES ? { ok: false, code: "too-large", limitBytes: MAX_ROOM_FILE_BYTES, sizeBytes: body.size } : null;
     }
     return Object.freeze({
       roomId: room,
       list(dir, sub = "") {
         if (!active()) return Promise.resolve(changed());
-        if (!directories.has(dir) || !relative(sub, true)) return Promise.resolve(invalid());
+        if (!directories.has(dir) || !relative(sub, true)) return Promise.resolve(invalid2());
         return send(`${base}?dir=${dir}&sub=${encodeURIComponent(sub)}`, { method: "GET" }, "list");
       },
       read(dir, rel) {
         if (!active()) return Promise.resolve(changed());
-        if (!directories.has(dir) || !relative(rel)) return Promise.resolve(invalid());
+        if (!directories.has(dir) || !relative(rel)) return Promise.resolve(invalid2());
         return send(filePath(dir, rel), { method: "GET" }, "blob");
       },
       readRevision(dir, rel, { signal: operationSignal } = {}) {
         if (!active() || operationSignal?.aborted) return Promise.resolve(changed());
-        if (!directories.has(dir) || !relative(rel)) return Promise.resolve(invalid());
+        if (!directories.has(dir) || !relative(rel)) return Promise.resolve(invalid2());
         return send(filePath(dir, rel), { method: "GET" }, "revision", operationSignal);
       },
       readNote(name2, { signal: operationSignal } = {}) {
         if (!active() || operationSignal?.aborted) return Promise.resolve(changed());
-        if (!relative(name2)) return Promise.resolve(invalid());
+        if (!relative(name2)) return Promise.resolve(invalid2());
         return send(filePath("notes", name2), { method: "GET" }, "note-read", operationSignal);
       },
       writeNote(name2, text3, { revision: baseline, signal: operationSignal } = {}) {
         if (!active() || operationSignal?.aborted) return Promise.resolve(changed());
-        if (!relative(name2) || typeof text3 !== "string") return Promise.resolve(invalid());
+        if (!relative(name2) || typeof text3 !== "string") return Promise.resolve(invalid2());
         if (!revision(baseline)) return Promise.resolve({ ok: false, code: "reload-required" });
         const body = new Blob([text3], { type: "text/plain; charset=utf-8" }), error2 = bodyError(body);
         if (error2) return Promise.resolve(error2);
@@ -6943,29 +7152,29 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
       },
       write(dir, rel, body, { revision: baseline } = {}) {
         if (!active()) return Promise.resolve(changed());
-        if (!directories.has(dir) || !relative(rel)) return Promise.resolve(invalid());
+        if (!directories.has(dir) || !relative(rel)) return Promise.resolve(invalid2());
         const error2 = bodyError(body);
         if (error2) return Promise.resolve(error2);
-        if (baseline !== void 0 && !revision(baseline)) return Promise.resolve(invalid());
+        if (baseline !== void 0 && !revision(baseline)) return Promise.resolve(invalid2());
         return send(filePath(dir, rel), { method: "PUT", body, headers: baseline === void 0 ? { "if-none-match": "*" } : { "if-match": baseline } });
       },
       upload(dir, body, name2 = body?.name) {
         if (!active()) return Promise.resolve(changed());
-        if (!directories.has(dir) || !segment(name2)) return Promise.resolve(invalid());
+        if (!directories.has(dir) || !segment(name2)) return Promise.resolve(invalid2());
         const error2 = bodyError(body);
         if (error2) return Promise.resolve(error2);
         return send(`${base}/${dir}`, { method: "POST", body, headers: { "x-filename": encodeURIComponent(name2) } }, "upload");
       },
       remove(dir, rel, { revision: baseline } = {}) {
         if (!active()) return Promise.resolve(changed());
-        if (!directories.has(dir) || !relative(rel)) return Promise.resolve(invalid());
-        if (baseline !== void 0 && !revision(baseline)) return Promise.resolve(invalid());
+        if (!directories.has(dir) || !relative(rel)) return Promise.resolve(invalid2());
+        if (baseline !== void 0 && !revision(baseline)) return Promise.resolve(invalid2());
         return send(filePath(dir, rel), { method: "DELETE", ...baseline === void 0 ? {} : { headers: { "if-match": baseline } } });
       },
       destroy
     });
   }
-  var MAX_ROOM_FILE_BYTES, MAX_LIST_BYTES, MAX_REPLY_BYTES2, MAX_ENTRIES, directories, segment, relative, changed, invalid, unavailable, revision, metadata, cancelBody;
+  var MAX_ROOM_FILE_BYTES, MAX_LIST_BYTES, MAX_REPLY_BYTES2, MAX_ENTRIES, directories, segment, relative, changed, invalid2, unavailable, revision, metadata, cancelBody;
   var init_room_files_client = __esm({
     "src/renderer/web-files/room-files-client.js"() {
       init_globals();
@@ -6977,7 +7186,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
       segment = (value) => typeof value === "string" && value.length > 0 && value.length <= 255 && value !== "." && value !== ".." && !/[\u0000-\u001f\u007f\\/]/.test(value);
       relative = (value, empty2 = false) => typeof value === "string" && value.length <= 4096 && !/^[A-Za-z]:\//.test(value) && (empty2 && value === "" || value.split("/").every(segment));
       changed = () => ({ ok: false, code: "changed" });
-      invalid = () => ({ ok: false, code: "invalid" });
+      invalid2 = () => ({ ok: false, code: "invalid" });
       unavailable = () => ({ ok: false, code: "unavailable" });
       revision = (value) => typeof value === "string" && value.length <= 4096 && /^"[\x21\x23-\x7e\x80-\xff]*"$/.test(value);
       metadata = (value) => !!value && segment(value.name) && Number.isSafeInteger(value.size) && value.size >= 0 && Number.isFinite(value.mtime) && value.mtime >= 0 && value.mtime <= 864e13 && revision(value.etag);
@@ -8970,11 +9179,11 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
   function companion(value) {
     if (!plain(value) || !["annotations", "annotated"].includes(value.kind) || typeof value.asset_id !== "string" || !assetId.test(value.asset_id)) return null;
     return Object.freeze({
-      name: text(value.name, 255),
+      name: text2(value.name, 255),
       kind: value.kind,
       asset_id: value.asset_id,
       size: count(value.size),
-      ...typeof value.by === "string" ? { by: text(value.by, 128) } : {}
+      ...typeof value.by === "string" ? { by: text2(value.by, 128) } : {}
     });
   }
   function project(value, room) {
@@ -8991,10 +9200,10 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
       id: value.id,
       room_id: room,
       kind: value.kind,
-      name: text(value.name, 255),
-      type: text(value.type, 255),
+      name: text2(value.name, 255),
+      type: text2(value.type, 255),
       size: count(value.size),
-      author: text(value.author, 128),
+      author: text2(value.author, 128),
       created_at: timestamp(value.created_at),
       modified_at: timestamp(value.modified_at),
       version: optionalText(value.version, 64),
@@ -9135,7 +9344,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
       }
     });
   }
-  var LIMITS, encoder, plain, encodable, roomName, cursorValue, text, optionalText, count, timestamp, ref, assetId, fail, cancelBody2;
+  var LIMITS, encoder, plain, encodable, roomName, cursorValue, text2, optionalText, count, timestamp, ref, assetId, fail, cancelBody2;
   var init_scratch_index = __esm({
     "src/renderer/web-files/scratch-index.js"() {
       init_globals();
@@ -9152,7 +9361,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
       };
       roomName = (value) => typeof value === "string" && value.length > 0 && value.length <= 128 && value !== "." && value !== ".." && !/[\\/\u0000-\u001f\u007f]/.test(value) && encodable(value);
       cursorValue = (value) => typeof value === "string" && value.length > 0 && encoder.encode(value).byteLength <= LIMITS.cursorBytes && encodable(value);
-      text = (value, max) => typeof value === "string" ? value.slice(0, max) : "";
+      text2 = (value, max) => typeof value === "string" ? value.slice(0, max) : "";
       optionalText = (value, max) => typeof value === "string" && value.length <= max ? value : null;
       count = (value) => Number.isSafeInteger(value) && value >= 0 ? value : null;
       timestamp = (value) => count(value) !== null && value <= 864e13 ? value : null;
@@ -9180,7 +9389,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
       var { createRoomScratchpadPage: createRoomScratchpadPage2 } = (init_scratchpad_page(), __toCommonJS(scratchpad_page_exports));
       var { sayServerAnswer } = require_server_answers();
       var { createRoomScratchIndex: createRoomScratchIndex2 } = (init_scratch_index(), __toCommonJS(scratch_index_exports));
-      function register3(api) {
+      function register4(api) {
         if (typeof api?.engine?.fetch !== "function" || typeof api?.expose !== "function") throw TypeError("Web files bridge required");
         const request = (path, options) => api.engine.fetch(path, options);
         const chooser = createServerFolderChooser2({ load: createFolderDirectoryLoader2({ request }), createDirectory: createFolderDirectoryCreator2({ request }) });
@@ -9283,7 +9492,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
         });
         api.expose("files", files);
       }
-      module.exports = { register: register3 };
+      module.exports = { register: register4 };
     }
   });
 
@@ -9374,7 +9583,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
     APP_MISSING_TITLE: () => APP_MISSING_TITLE,
     appMissingNotice: () => appMissingNotice,
     createModulesHandlers: () => createModulesHandlers,
-    register: () => register
+    register: () => register3
   });
   function createModulesHandlers(deps) {
     let engine = null;
@@ -9582,7 +9791,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
       }
     });
   }
-  function register(api) {
+  function register3(api) {
     const request = async (method, path, body) => {
       const init = { method, headers: { accept: "application/json" } };
       if (body !== void 0) {
@@ -9816,7 +10025,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
       "use strict";
       init_globals();
       var { renderBrowserNotifications: renderBrowserNotifications2, notificationSummary: notificationSummary2 } = (init_view3(), __toCommonJS(view_exports3));
-      function register3(api, { browser = globalThis } = {}) {
+      function register4(api, { browser = globalThis } = {}) {
         api.expose("notifications", Object.freeze({
           render: (sec, prefs, setPrefs) => renderBrowserNotifications2(sec, prefs, setPrefs, { browser }),
           summary: (notify) => {
@@ -9829,7 +10038,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
           }
         }));
       }
-      module.exports = { register: register3 };
+      module.exports = { register: register4 };
     }
   });
 
@@ -10092,7 +10301,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
           settings: m.settings && typeof m.settings === "object" ? m.settings : {}
         }));
       }
-      function register3(api) {
+      function register4(api) {
         const store = api.store || makeStore();
         const programs = catalog();
         const byId = (id) => programs.find((p) => p.id === id) || null;
@@ -10170,7 +10379,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
           return now;
         });
       }
-      module.exports = { register: register3, makeStore, catalog, PREFS_KEY, PROGRAMS_KEY };
+      module.exports = { register: register4, makeStore, catalog, PREFS_KEY, PROGRAMS_KEY };
     }
   });
 
@@ -10892,7 +11101,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
       init_globals();
       var { createRecipeImportApi: createRecipeImportApi2 } = (init_api(), __toCommonJS(api_exports));
       var { chooseRecipeFile: chooseRecipeFile2 } = (init_file_picker(), __toCommonJS(file_picker_exports));
-      function register3(api, { browser = globalThis, chooseFile } = {}) {
+      function register4(api, { browser = globalThis, chooseFile } = {}) {
         let bridge, disposed = false;
         const web2 = () => browser.wb?.web;
         const ready = () => typeof web2()?.recipes?.importSelected === "function" && typeof web2()?.files?.chooseFolder === "function" && typeof web2()?.files?.directoryLoader === "function";
@@ -10942,7 +11151,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
           browser.removeEventListener("pageshow", show);
         };
       }
-      module.exports = { register: register3 };
+      module.exports = { register: register4 };
     }
   });
 
@@ -11069,7 +11278,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
         }
         return base + " " + Date.now();
       }
-      function register3(api) {
+      function register4(api) {
         const rows = /* @__PURE__ */ new Map();
         let targetId = null;
         const note = (name2, extra) => api.cause ? api.cause(name2, extra) : void 0;
@@ -11291,7 +11500,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
         }
         api.expose("recipes", { importSelected, writeApproval });
       }
-      module.exports = { register: register3, copyName };
+      module.exports = { register: register4, copyName };
     }
   });
 
@@ -11331,10 +11540,10 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
       "use strict";
       init_globals();
       var rule = (init_seat_recipes(), __toCommonJS(seat_recipes_exports));
-      function register3(api) {
+      function register4(api) {
         api.expose("seat", Object.freeze({ seatRecipes: rule.seatRecipes, refusal: rule.refusal, applies: rule.applies, programName: rule.programName, WORDS: rule.WORDS, SEAT_VENDORS: rule.SEAT_VENDORS }));
       }
-      module.exports = { register: register3 };
+      module.exports = { register: register4 };
     }
   });
 
@@ -11511,7 +11720,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
         else for (let i = 0; i < b.length; i++) b[i] = Math.floor(Math.random() * 256);
         return [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
       };
-      function register3(api) {
+      function register4(api) {
         const handlers = /* @__PURE__ */ new Map();
         const handle = (chan, fn) => {
           handlers.set(chan, fn);
@@ -12108,7 +12317,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
           byPane.clear();
         } };
       }
-      module.exports = { register: register3, PERMIT_MS, tabLabel };
+      module.exports = { register: register4, PERMIT_MS, tabLabel };
     }
   });
 
@@ -12138,7 +12347,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
         }));
         return { serverId: "local", serverName: "This server", login: "", ok: true, state: "live", protocol: null, live: rows.filter((r) => r.alive).length, cap: null, draining: false, graceUntil: 0, rows };
       }
-      function register3(api) {
+      function register4(api) {
         const timers = api.timers || { setInterval: (fn, ms) => globalThis.setInterval(fn, ms), clearInterval: (t) => globalThis.clearInterval(t) };
         let poll = null;
         let last = "";
@@ -12206,155 +12415,7 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
           return { ok: true };
         });
       }
-      module.exports = { register: register3, groupFrom, offerView, POLL_MS };
-    }
-  });
-
-  // src/renderer/web-setup/policy.mjs
-  var modes, settings, text2, serverFolder;
-  var init_policy = __esm({
-    "src/renderer/web-setup/policy.mjs"() {
-      init_globals();
-      modes = /* @__PURE__ */ new Set(["on", "off"]);
-      settings = /* @__PURE__ */ new Set(["follow", ...modes]);
-      text2 = (value) => typeof value === "string" && value.length > 0 && value.length <= 4096 && !/[\x00-\x1f]/.test(value);
-      serverFolder = (value) => text2(value) && value.startsWith("/") && !value.split("/").some((part) => part === "." || part === "..");
-    }
-  });
-
-  // web/handlers/setup-settings.mjs
-  var setup_settings_exports = {};
-  __export(setup_settings_exports, {
-    createSettingsAPI: () => createSettingsAPI,
-    register: () => register2
-  });
-  function createSettingsAPI(fetch, { timeoutMs = 15e3, maxBytes = 1024 * 1024 } = {}) {
-    if (typeof fetch !== "function" || !Number.isFinite(timeoutMs) || timeoutMs <= 0 || !Number.isSafeInteger(maxBytes) || maxBytes <= 0) invalid2();
-    async function request(path, method, body, { signal, current } = {}) {
-      if (signal?.aborted || current && current() !== true) throw unknown();
-      const abort = new AbortController();
-      let timer, reader;
-      const cancel = () => abort.abort();
-      const interrupted = new Promise((_, reject) => abort.signal.addEventListener("abort", () => {
-        if (reader) void reader.cancel().catch(() => {
-        });
-        reject(unknown());
-      }, { once: true }));
-      signal?.addEventListener("abort", cancel, { once: true });
-      timer = setTimeout(cancel, timeoutMs);
-      try {
-        return await Promise.race([interrupted, (async () => {
-          let response;
-          try {
-            response = await fetch(path, {
-              method,
-              credentials: "same-origin",
-              redirect: "error",
-              cache: "no-store",
-              signal: abort.signal,
-              headers: { accept: "application/json", ...body === void 0 ? {} : { "content-type": "application/json" } },
-              ...body === void 0 ? {} : { body: JSON.stringify(body) }
-            });
-          } catch {
-            throw unknown();
-          }
-          if (abort.signal.aborted) {
-            void response.body?.cancel().catch(() => {
-            });
-            throw unknown();
-          }
-          const length = response.headers.get("content-length");
-          if (length !== null && Number(length) > maxBytes) {
-            void response.body?.cancel().catch(() => {
-            });
-            throw unknown();
-          }
-          if (!response.body?.getReader) throw unknown();
-          reader = response.body.getReader();
-          let size = 0, text3 = "";
-          const decoder = new TextDecoder("utf-8", { fatal: true });
-          try {
-            for (; ; ) {
-              const { done, value } = await reader.read();
-              if (abort.signal.aborted) throw unknown();
-              if (done) break;
-              size += value.byteLength;
-              if (size > maxBytes) {
-                void reader.cancel().catch(() => {
-                });
-                throw unknown();
-              }
-              text3 += decoder.decode(value, { stream: true });
-            }
-            text3 += decoder.decode();
-          } catch {
-            throw unknown();
-          }
-          let data;
-          try {
-            data = JSON.parse(text3);
-          } catch {
-            throw unknown();
-          }
-          if (refusalStatuses.has(response.status) && data && typeof data.error === "string") {
-            throw { code: "settings-refused", status: response.status };
-          }
-          if (!response.ok) throw unknown();
-          return data;
-        })()]);
-      } finally {
-        clearTimeout(timer);
-        signal?.removeEventListener("abort", cancel);
-      }
-    }
-    return Object.freeze({
-      readSetup: (options) => request("/api/settings/setup", "GET", void 0, options),
-      readPersonDisplay: (options) => request("/api/rooms/me", "GET", void 0, options),
-      readAgents: (options) => request("/api/agents/status", "GET", void 0, options),
-      async writeSetup(input, options) {
-        if (!input || typeof input !== "object") invalid2();
-        const body = {};
-        if ("defaultFolder" in input) {
-          if (input.defaultFolder !== null && !serverFolder(input.defaultFolder)) invalid2();
-          body.defaultFolder = input.defaultFolder;
-        }
-        if ("complete" in input) {
-          if (input.complete !== true) invalid2();
-          body.complete = true;
-        }
-        if (!Object.keys(body).length) invalid2();
-        return request("/api/settings/setup", "PUT", body, options);
-      },
-      async prepareAgentSignIn(vendor, options) {
-        if (!["claude-code", "codex-cli", "gemini-cli"].includes(vendor)) invalid2();
-        return request(`/api/agents/${vendor}/sign-in`, "POST", {}, options);
-      },
-      readApproval: (options) => request("/api/settings/auto-approve", "GET", void 0, options),
-      async writeApproval(input, options) {
-        if (!input || !["on", "off"].includes(input.default) || input.disclosed !== void 0 && input.disclosed !== true) invalid2();
-        const body = { default: input.default, ...input.disclosed === true ? { disclosed: true } : {} };
-        return request("/api/settings/auto-approve", "PUT", body, options);
-      },
-      readTrust: (options) => request("/api/settings/folder-trust", "GET", void 0, options),
-      async writeTrust(input, options) {
-        if (!input || !serverFolder(input.path) || typeof input.trusted !== "boolean") invalid2();
-        return request("/api/settings/folder-trust", "PUT", { path: input.path, trusted: input.trusted }, options);
-      }
-    });
-  }
-  function register2(api) {
-    api.expose("settings", createSettingsAPI((path, init) => api.engine.fetch(path, init)));
-  }
-  var refusalStatuses, unknown, invalid2;
-  var init_setup_settings = __esm({
-    "web/handlers/setup-settings.mjs"() {
-      init_globals();
-      init_policy();
-      refusalStatuses = /* @__PURE__ */ new Set([400, 401, 403, 404, 409, 413, 422]);
-      unknown = () => ({ code: "settings-unconfirmed" });
-      invalid2 = () => {
-        throw { code: "settings-invalid" };
-      };
+      module.exports = { register: register4, groupFrom, offerView, POLL_MS };
     }
   });
 
@@ -12372,14 +12433,14 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
     "web/handlers/storage.js"(exports, module) {
       "use strict";
       init_globals();
-      function register3(api) {
+      function register4(api) {
         const held = globalThis.__wbPersonStorage;
         delete globalThis.__wbPersonStorage;
         api.expose("storage", Object.freeze({ clear: () => {
           if (held) held.clear();
         } }));
       }
-      module.exports = { register: register3 };
+      module.exports = { register: register4 };
     }
   });
 
@@ -12391,5 +12452,5 @@ globalThis.__WB_WEB__ = {"version":"0.24.0","argv":[],"modules":[{"id":"cli-mana
   probe.syncMarker({ answer, fs: require_fs() });
   require_preload();
   var rt2 = require_runtime();
-  rt2.boot([require_platform().register, require_rooms2().register, require_agents().register, require_browser_actions().register, require_files().register, (init_modules(), __toCommonJS(modules_exports)).register, require_notifications().register, require_prefs_programs().register, require_recipe_import2().register, require_recipes2().register, require_seat_rule().register, require_session().register, require_sessions_broker().register, require_setup_settings().register, require_storage().register]);
+  rt2.boot([require_platform().register, require_rooms2().register, require_agents().register, require_browser_actions().register, require_capabilities().register, require_files().register, (init_modules(), __toCommonJS(modules_exports)).register, require_notifications().register, require_prefs_programs().register, require_recipe_import2().register, require_recipes2().register, require_seat_rule().register, require_session().register, require_sessions_broker().register, require_setup_settings().register, require_storage().register]);
 })();

@@ -1,6 +1,17 @@
 // P07 sends through the existing terminal input path. No commands, queue,
 // reconnect retry or keyboard-lease acquisition lives in this component.
-const FIXED = Object.freeze({ escape: '\x1b', tab: '\t', interrupt: '\x03' });
+// Enter, the new line (ESC then CR, "ctrl+enter") and the backtick are the bytes briefing-table's keypad sends (web/solo.js buildTouchKeypad, the
+// data-seq of the Enter, "Newline (ctrl+enter)" and "Backtick" keys; web/keypad-keys.mjs KEYS). The table is fixed: no key sends anything else.
+const FIXED = Object.freeze({ escape: '\x1b', tab: '\t', interrupt: '\x03', enter: '\r', newline: '\x1b\r', backtick: '`' });
+export const PASTE_MAX = 100000;
+/** Clipboard text made safe to hand to the terminal's own paste: the bracketed-paste markers (and every ESC, so no marker can be rebuilt),
+ *  every other C0 control except tab, CR and LF, DEL and the C1 controls are removed. null = too long (nothing is sent, not a part). */
+export function cleanPaste(text) {
+  if (typeof text !== 'string' || text.length > PASTE_MAX) return null;
+  let t = text, before;
+  do { before = t; t = t.replace(/\x1b\[20[01]~/g, ''); } while (t !== before);
+  return t.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]/g, '');
+}
 const ARROWS = Object.freeze({ up: 'A', down: 'B', right: 'C', left: 'D' });
 const own = (o, key) => Object.prototype.hasOwnProperty.call(o, key);
 

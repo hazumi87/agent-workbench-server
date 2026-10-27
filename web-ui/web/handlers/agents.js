@@ -17,7 +17,7 @@ function register(api,{browser=globalThis}={}) {
    current:()=>scope.current(),
    serverAnswer:mapAgentServerAnswer,
    readApproval:options=>web().settings.readApproval(options),
-   programs:()=>browser.wb.programsList(),
+   programs:async()=>{const list=await browser.wb.programsList();return web().capabilities&&web().capabilities.bareShell()===false&&Array.isArray(list)?list.filter(p=>p&&p.id!=='shell'):list;}, // a hosted engine opens no bare shell
    list:()=>browser.wb.recipesList(),
    chooseFolder:options=>web().files.chooseFolder(options),
    checkFolder:async(path,options)=>{const result=await web().files.directoryLoader()(path,options);return result?.ok===true;},

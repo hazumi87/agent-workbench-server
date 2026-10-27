@@ -1,5 +1,5 @@
 /* FIRST-RUN SETUP routes for the hosted web UI (web-first pilot, shapes ruled by application 2026-10-26):
- *   GET|PUT /api/settings/setup        {completedAt, defaultFolder}: the person's setup state (one person per server). completedAt is stamped by the ENGINE on the PUT that finishes setup
+ *   GET|PUT /api/settings/setup        {completedAt, defaultFolder, hosted, bareShell}: the person's setup state (one person per server). completedAt is stamped by the ENGINE on the PUT that finishes setup
  *                                      ({complete:true}); defaultFolder (absolute, exists, inside the folder-picker root) is the default for NEW rooms. Person only, both verbs.
  *   GET  /api/agents/status            {vendors:[{id, installed: true|false|null, reason?}]}: is the vendor's CLI installed. INSTALLED ONLY: nothing probes a sign-in. null = the engine's
  *                                      account cannot tell (the CLI may live in another account's home); false only when the search was complete.
@@ -28,6 +28,13 @@ export interface SetupDeps {
   dispatch: (call: { method: string; path: string; body: Record<string, unknown> | null }, cookie: string) => Promise<{ status: number; text: string }>;
 }
 
+/** The engine's OWN profile, for the page to key on (never inferred from a refusal): `hosted` = HARBOR_WB_HOSTED=1; `bareShell` = whether this engine will open a bare shell (a recipe with no program).
+ *  A hosted engine never does (launch.ts: no-cli), so the page must not offer the built-in Shell there. Additive: no existing field changes. */
+const withProfile = <T extends object>(state: T): T & { hosted: boolean; bareShell: boolean } => {
+  const hosted = process.env.HARBOR_WB_HOSTED === '1';
+  return { ...state, hosted, bareShell: !hosted };
+};
+
 const personOnly = (res: ServerResponse): void => void sendJson(res, 403, { error: 'person_only', message: 'only the signed-in person does this' });
 
 interface SetupState {
@@ -52,7 +59,7 @@ export async function handle(req: IncomingMessage, res: ServerResponse, route: s
   const method = req.method ?? 'GET';
   if (route === '/api/settings/setup') {
     if (!deps.human) return personOnly(res), true;
-    if (method === 'GET') return sendJson(res, 200, readSetup()), true;
+    if (method === 'GET') return sendJson(res, 200, withProfile(readSetup())), true;
     if (method !== 'PUT') return sendJson(res, 405, { error: 'method not allowed' }), true;
     const b = (await readBody(req).catch(() => null)) as Record<string, unknown> | null;
     if (!b || typeof b !== 'object') return sendJson(res, 400, { error: 'a JSON body is required' }), true;
@@ -79,7 +86,7 @@ export async function handle(req: IncomingMessage, res: ServerResponse, route: s
     if (b.complete === true && completedAt === null) completedAt = Date.now(); // the engine's clock, once
     const next = { completedAt, defaultFolder };
     table.setEngineSetting(SETUP_KEY, next);
-    return sendJson(res, 200, next), true;
+    return sendJson(res, 200, withProfile(next)), true;
   }
   if (route === '/api/agents/status') {
     if (method !== 'GET') return sendJson(res, 405, { error: 'method not allowed' }), true;

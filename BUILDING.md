@@ -1,10 +1,10 @@
 # Build and verify the server distribution
 
-This assessment snapshot contains the engine and broker as sibling components, complete browser inputs and a distributed static app. Clean engine/broker installation, engine typecheck and locked browser download have setup evidence. Exported runtime proofs and the final browser revision still need their own measured results. The commands below describe how to reproduce and check this tree; they do not assert those outstanding runs passed.
+This assessment snapshot contains the engine and broker as sibling components, complete browser inputs and a distributed static app. Clean engine/broker installation, engine typecheck and locked browser download have setup evidence. Measured engine evidence and its carry-over limits are recorded below. Fresh exported L2 and the standalone browser rebuild have measured results below; runtime probes and units have completed as recorded below; final whole-tree and history checks require separate release receipts. The commands below describe how to reproduce and check this tree; they do not assert those outstanding runs passed.
 
 ## Prerequisites and dependency scopes
 
-Use Linux, Node22, npm, bash and the committed lockfiles. The recorded setup used Node22.23.1 on Linux x64. Native dependencies need Python3, make and a C/C++ toolchain; terminal proofs also need cc, /proc and /dev/pts. Browser execution needs the appropriate Linux browser libraries supplied through your approved OS setup. Dependency and browser installation can need network access; the local proofs need no external service or model credentials.
+Use Linux, Node 22, npm, bash and the committed lockfiles. The recorded setup used Node 22.23.1 on Linux x64. Native dependencies need Python 3, make and a C/C++ toolchain; terminal proofs also need cc, /proc and /dev/pts. Browser execution needs the appropriate Linux browser libraries supplied through your approved OS setup. Dependency and browser installation can need network access; the local proofs need no external service or model credentials.
 
 | Directory | Purpose | Install here? |
 | --- | --- | --- |
@@ -23,7 +23,7 @@ npm --prefix briefing-table ci
 npm --prefix web-ui/build-tools ci
 ```
 
-Engine and broker installs have clean setup evidence. The final browser-source install/rebuild and exported proof results remain separate. Server components execute TypeScript through their installed tooling; Electron is not a server runtime dependency.
+Engine and broker installs have clean setup evidence. The measured standalone browser rebuild and exported proof results are recorded separately below. Server components execute TypeScript through their installed tooling; Electron is not a server runtime dependency.
 
 The declared typechecks are:
 
@@ -60,7 +60,7 @@ diff -qr web-app web-app-rebuilt
 
 If the comparison directory already exists, choose a new empty output path. Keep the supplied web-app intact. A passing comparison requires identical complete relative file lists and bytes, including MANIFEST.json, static resources and xterm runtime files. Do not normalize code differences away. Any approved metadata transformation must be recorded explicitly in provenance.
 
-The independent final browser rebuild remains outstanding for this review snapshot. A successful build or manifest comparison alone is not native-agent or security acceptance.
+The independent standalone browser rebuild measured identical output for all 211 files, as recorded below. A successful build or manifest comparison alone is not native-agent or security acceptance.
 
 ## Install the locked proof browser
 
@@ -71,7 +71,7 @@ cd briefing-table
 node node_modules/playwright/cli.js install chromium
 ```
 
-This uses the installed locked CLI instead of fetching a newer package. The clean setup verified Playwright1.60.0 with a fresh browser cache: Chromium and Chrome Headless Shell148.0.7778.96,revision1223,with dependency validation successful. The command downloads the browser; it does not install OS libraries or require sudo. If using PLAYWRIGHT_BROWSERS_PATH, use the same cache setting for installation and execution.
+This uses the installed locked CLI instead of fetching a newer package. The clean setup verified Playwright 1.60.0 with a fresh browser cache: Chromium and Chrome Headless Shell 148.0.7778.96,revision 1223,with dependency validation successful. The command downloads the browser; it does not install OS libraries or require sudo. If using PLAYWRIGHT_BROWSERS_PATH, use the same cache setting for installation and execution.
 
 This is browser-install evidence, not a passed runtime proof. Record the actual executable/version used by each run.
 
@@ -91,7 +91,7 @@ env -u WB_TEST_LOCAL_MODE -u WB_PROOF_T1_DELIVERY \
   proof-w1-terminal-trace doorbell-guards doorbell
 ```
 
-Success requires exit0 without assertion or setup failures. The command selects the hosted profile and clears the typed-delivery diagnostic. Report actual exported-tree suite/check counts: the HTML-policy proof inventories the pages actually shipped, so an earlier tree's count is not this tree's result.
+Success requires exit 0 without assertion or setup failures. The command selects the hosted profile and clears the typed-delivery diagnostic. Report actual exported-tree suite/check counts: the HTML-policy proof inventories the pages actually shipped, so an earlier tree's count is not this tree's result.
 
 ### Typed-delivery negative control
 
@@ -103,33 +103,47 @@ env -u WB_TEST_LOCAL_MODE WB_PROOF_H3_PROFILE=hosted \
   node scripts/run-tests.mjs --offset 1200 proof-w1-terminal-trace
 ```
 
-This opt-in diagnostic deliberately expects exit1. Only the message-body leak, fixed-ring whitelist and independent origin-trace whitelist assertions should fail. Setup, owned-process detection, persisted author/body, exact chat correlation and broker/trace byte equality controls must pass. A timeout, absent dependency or unrelated failure is not valid negative-control evidence. Do not include this command in an exit0 success batch; the ordinary command above clears its override.
+This opt-in diagnostic deliberately expects exit 1. Only the message-body leak, fixed-ring whitelist and independent origin-trace whitelist assertions should fail. Setup, owned-process detection, persisted author/body, exact chat correlation and broker/trace byte equality controls must pass. A timeout, absent dependency or unrelated failure is not valid negative-control evidence. Do not include this command in an exit 0 success batch; the ordinary command above clears its override.
 
 ### Viewer and attachment browser proof
 
-Set EXPECTED_APP_PIN and EXPECTED_ENGINE_PIN to the intended identities from the checksum-verified snapshot provenance before running, and CHROMIUM_EXECUTABLE to the installed Chromium148 executable. Do not discover arbitrary current values just to make the runner accept them. A source tree without a Git revision can use its independently verified SHA-256 tree digest as its engine label. The runner checks the built-app identity and every manifest entry.
+Set EXPECTED_APP_PIN and EXPECTED_ENGINE_PIN to the intended identities from the checksum-verified snapshot provenance before running, and verify the installed Playwright Chromium 148 cache. The measured command uses that installed browser, clearing any ambient CHROMIUM_EXECUTABLE override. Do not discover arbitrary current values just to make the runner accept them. A source tree without a Git revision can use its independently verified SHA-256 tree digest as its engine label. The runner checks the built-app identity and every manifest entry.
 
 From the engine component:
 
 ```sh
 : "${EXPECTED_APP_PIN:?Set the intended app identity}"
 : "${EXPECTED_ENGINE_PIN:?Set the intended engine identity}"
-: "${CHROMIUM_EXECUTABLE:?Set the installed Chromium148 executable}"
-env WB_TEST_PORT_OFFSET=2000 \
+env -u CHROMIUM_EXECUTABLE WB_TEST_PORT_OFFSET=2000 \
   WB_LOCAL_ENGINE_ROOT="$PWD" WB_PROOF_ENGINE_PIN="$EXPECTED_ENGINE_PIN" \
   WB_PROOF_BUILT_APP="$PWD/../web-app" WB_PROOF_APP_PIN="$EXPECTED_APP_PIN" \
   WB_PLAYWRIGHT_MODULE="$PWD/node_modules/playwright" \
-  CHROMIUM_EXECUTABLE="$CHROMIUM_EXECUTABLE" \
   node test/l2/run.mjs
 ```
 
-Success requires exit0 with no assertion or setup failures. The proof uses a fresh strict-hosted engine, synthetic sign-in, active-content controls, the picture viewer and actual attachment routes, then closes its browser/engine and removes scratch data. It starts no real vendor CLI. Keep browser proof, native delivery and customer-home compatibility distinct.
+Success requires exit 0 with no assertion or setup failures. The proof uses a fresh strict-hosted engine, synthetic sign-in, active-content controls, the picture viewer and actual attachment routes, then closes its browser/engine and removes scratch data. It starts no real vendor CLI. Keep browser proof, native delivery and customer-home compatibility distinct.
 
 ## Record results and limits
 
-Combined success, typed negative-control and viewer/attachment executions still await measured exported-tree results. No fixed pass count is claimed here. Record the exact source digest, app identity, command, browser, counts, exit code and sanitized evidence. An expected negative-control failure must match its named assertions; a setup failure cannot stand in for it.
+The current exported engine's affected setup and settings suites measured **94 pass / 0 fail**, exit 0 (13 setup checks and 81 settings checks). The earlier engine export measured **11 combined proof suites:427 pass /0 fail**, exit 0, and a separate typed-delivery negative control: **15 pass /3 expected failures**, exit 1. Those earlier results are carried to the current engine by an approved diff: only derived hosted/bareShell fields and their tests changed; the nineteen proof files are byte/mode-identical. They were **not freshly rerun on the current engine**. The expected negative-control failures are message-body leakage, fixed-ring admission and independent origin-trace admission; setup and correlation controls passed.
 
-Runtime tests, independent browser-source reproduction and full privacy/secret/dependency/licence gates remain separate checks. A passing subset or an earlier private run is not final acceptance of this snapshot. The final browser update will be a separate reviewed revision; do not transfer results across changed inputs without recording the scope.
+The earlier exported ordinary-suite run selected 338 suites: 332 passed initially, three failed and three were skipped. First-run check totals were 14742 pass/two fail, with one failed suite lacking a summary. A later **captured** rerun of the three failed suites measured 129 pass/zero fail, exit 0. The first run was not clean; skipped suites remain skipped, and an earlier uncaptured rerun is not the receipt. These ordinary results remain attributed to that earlier engine export, separately from the proof counts and current affected suites.
+
+The fresh exported viewer/attachment browser proof (L2) measured **9 pass /0 fail**, exit 0, on the accepted current engine and scrubbed final browser export. It ran 2026-10-27T12:56:55Z–12:57:01Z with Chromium 148.0.7778.96, Playwright 1.60.0 and Node 22.23.1. Log SHA-256: `5cae302d7eae223d7c4aa6959ac35c453f23dd0bb2e0ae53def643ec26230e0e`. Engine export inventory: `61e94dfc9862fedb8c3ff711442bc16cfa0e6e6b07beaa3329d7b08e7f825b8f`; app export inventory: `e7eaf77b3eddf9ae41969c5292360ca4f121791a1b241259f8dc28df0d328213`; app MANIFEST SHA-256: `02d4059b4cfcaa451e383c915ae68335c37ff980088857ebdc5724b07f7d36be`. Post-run source hashes and modes were unchanged. This is fresh exported L2 evidence, separate from carried engine proofs, native delivery and customer-home compatibility.
+
+The standalone browser rebuild is verified: a fresh output directory built from the exported browser source is byte-identical to the supplied scrubbed app, **211/211 files**, including MANIFEST. The source inventory has **267 entries**; with SOURCES.json and the two scan-policy files, the assembled web-ui directory contains **270 files**. The frozen handoff checksums and inventory were independently verified. Build equality alone does not establish runtime or unit results; their completed measurements are recorded separately below.
+
+The exported browser runtime replay measured strict smoke **PASS** and **18/18 probe suites PASS**, including phone Terminals **90/0**, hosted Terminals **38/0** and the keypad's 32 checks. The frozen source and output inventories were unchanged after execution. These are exported-tree measurements, separate from the private application's own full suite.
+
+**The exported app unit result is NON-CLEAN: 2843 pass / 22 fail**, with 5 skipped and 18 todo. The verified failure-name set is identical to the earlier browser replay: 19 pre-existing connector failures, 2 bridge-equality artifacts involving an unshipped tool, and 1 assertion pinned to a pre-scrub tone hash. The shipped tone bytes match the exported engine; the unshipped bridge source is outside this distribution's closure. No new failure names were observed, but these explanations do not turn the run into a passing unit suite. Keep the failures visible and the unit result separate from passing runtime probes, L2 and carried engine proofs.
+
+Whole-tree content, secret and history checks are required separately for each release commit; their receipts identify the checked commit. Documentation alone does not grant release or publication clearance.
+
+Results apply to the recorded input identities; compare provenance and manifests before carrying them to a different tree.
+
+Record the exact source digest, app identity, command, browser, counts, exit code and sanitized evidence. The measured proof browser was Chromium 148.0.7778.96. An expected negative-control failure must match its named assertions; a setup failure cannot stand in for it.
+
+Runtime tests, independent browser-source reproduction and full privacy/secret/dependency/licence gates remain separate checks. A passing subset or an earlier private run is not final acceptance of this snapshot. This assembly contains the selected final browser update. Its runtime probes and non-clean unit suite have receipts as recorded above; complete assembly checks require separate release receipts; do not transfer results across changed inputs without recording the scope.
 
 ## Provenance
 

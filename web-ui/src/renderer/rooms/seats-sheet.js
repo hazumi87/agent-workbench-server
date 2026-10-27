@@ -74,7 +74,7 @@ export function createSeatsSheet(deps) {
         try { ok = (await deps.start(deps.roomId(), s)) !== false; } catch { ok = false; }
         busy.delete(s.id);
         if (!ok) failed.set(s.id, (deps.startWhy && deps.startWhy()) || '');
-        if (isOpen()) render();
+        if (isOpen()) { if (ok) close(); else render(); } // a started seat's terminal opens: the person lands on it, not under the sheet
       });
     }
     const more = el('button', 'wr-ib wr-sheetmore');

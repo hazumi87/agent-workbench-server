@@ -23,6 +23,7 @@ import { brandMarkPath } from '../vendor/aurora/brand-marks/aurora-brand-marks.j
 import * as modules from './modules.js';
 import { createConciergeSlots, mountConciergeSlots } from './concierge-slot.js';
 import { captureTerminalFocus } from './terminal-focus.js';
+import { bareShellOff } from './web-shared/bare-shell.js';
 import { createRouteOverlay, routeWord, untilWord } from './route-overlay.js';
 import { createRail } from './rail.js';
 import { edgeFlags } from './edge-flags.js';
@@ -963,9 +964,15 @@ gridEl.addEventListener('pointerdown', (e) => {
 // pane — the settings gear. Rebuilt on every chrome refresh.
 function paintPaneHeader(pane, t) {
   const h = pane.querySelector('.pane-h');
+  const held = h.contains(document.activeElement) ? document.activeElement : null; // the header is rebuilt on every refresh: a focused control in it keeps focus
+  const heldBack = !!held && held.classList.contains('pane-back');
   const rw = routeWord(t.route);
   const brand = t.host === 'workrooms' ? t.inlineBrand : BRAND;
-  fillBar(h, { name: displayName(t), state: stateOf(t.sid), ringSize: ringPx(), brand, markPath: t.host === 'workrooms' ? brandMarkPath(brand) : MARK, attached: !rw });
+  fillBar(h, { name: phoneTerminalLayer(t) && t.inlineHandle ? '@' + t.inlineHandle : displayName(t), state: stateOf(t.sid), ringSize: ringPx(), brand, markPath: t.host === 'workrooms' ? brandMarkPath(brand) : MARK, attached: !rw });
+  if (t.host === 'workrooms' && typeof t.inlineStateWord === 'function') {
+    const word = t.inlineStateWord(); // the phone layer's header says it under the name (the design s14); other widths keep the one-line bar
+    if (word) { const sub = document.createElement('div'); sub.className = 'sstate'; sub.textContent = word; h.querySelector('.sb-title')?.appendChild(sub); }
+  }
   if (rw) {
     // The route's status word: an error chip, or quiet text for Reconnecting (the design, step 1).
     const w = document.createElement('span');
@@ -1006,6 +1013,16 @@ function paintPaneHeader(pane, t) {
     });
     h.appendChild(back);
   }
+  else if (window.wb && window.wb.web && t.host !== 'workrooms') {
+    // a terminal opened from the phone Terminals page: its layer's one header carries the way out (the page's own bar is hidden under the layer)
+    const back = document.createElement('button');
+    back.className = 'pane-back tp-pback';
+    back.type = 'button';
+    back.innerHTML = icon('arrow_back');
+    back.appendChild(document.createTextNode('Back to Terminals'));
+    back.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('termBack')?.click(); });
+    h.appendChild(back);
+  }
   const gear = document.createElement('button');
   gear.className = 'sb-ib pane-gear';
   gear.dataset.act = 'settings';
@@ -1021,6 +1038,7 @@ function paintPaneHeader(pane, t) {
   if (t.keypad) h.appendChild(t.keypad.toggle);
   h.append(gear, x);
   t.keypad?.refresh();
+  if (held && !held.isConnected && document.activeElement === document.body) { if (heldBack) h.querySelector('.pane-back')?.focus(); else if (t.keypad && held === t.keypad.toggle) held.focus(); }
 }
 
 function buildCliPane(sid) {
@@ -1167,6 +1185,10 @@ function activate(sid, seatFocus) {
       if (!t.rx.el.contains(document.activeElement)) {
         t.rx.focusPrimary();
       }
+    } else if (phoneTerminalLayer(t)) {
+      // a phone's terminal layer opens on its arrow, never on the terminal (that would raise the keyboard before anyone asked)
+      const arrow = paneEls.get(t.sid)?.querySelector('.pane-back');
+      if (arrow && arrow.getClientRects().length) arrow.focus(); else t.term.focus();
     } else if ($('settingsPop').hidden || document.activeElement !== $('tabName')) {
       t.term.focus();
     }
@@ -1299,17 +1321,22 @@ async function launch(opts = {}) {
 
 // A room owns this viewer's container and request epoch. Disposing disconnects only
 // the term viewer; the remote seat remains the room's running agent.
-async function openSeatTerminalInline({ room, seat, handle, roomName, vendor, host, current, onClose }) {
+async function openSeatTerminalInline({ room, seat, handle, roomName, vendor, host, current, onClose, stateWord }) {
   if (!host || !current?.()) return null;
   const sid = await launch({ spec: { route: 'term', room, seat, handle, roomName },
     name: '@' + handle, why: 'seat-terminal', host: 'workrooms', inlineHost: host,
-    inlineCurrent: current, inlineVendor: vendor, onInlineClose: onClose });
+    inlineCurrent: current, inlineVendor: vendor, inlineStateWord: stateWord, inlineHandle: handle, onInlineClose: onClose });
   if (sid == null) return null;
   const t = tabs.get(sid);
   if (!t) return null;
   if (!current()) { t.inlineDispose(); return null; }
   return { sid, dispose: t.inlineDispose, fit: () => { if (inlineTerminalCurrent(t)) t.fit.fit(); } };
 }
+// a phone's terminal layer (a seat's terminal in its room, or one opened from the Terminals page) is the whole screen
+function phoneTerminalLayer(t) {
+  return !!(window.matchMedia && window.matchMedia('(max-width: 599px)').matches) && (t.host === 'workrooms' || document.documentElement.dataset.tphone === 'term');
+}
+
 function inlineTerminalCurrent(t) {
   if (t.host !== 'workrooms') return true;
   if (tabs.get(t.sid) !== t) return false;
@@ -1375,7 +1402,7 @@ async function addTab(opts = {}) {
       box.remove();
       dbg('addTab-refused', {});
       // the web build says why on screen (the engine's own sentence, e.g. an agent with no folder), never nothing
-      if (window.wb.web && typeof r.error === 'string') accountsSnackbar(r.error.slice(0, 200));
+      if (window.wb.web && typeof r.error === 'string') { accountsSnackbar(r.error.slice(0, 200)); document.dispatchEvent(new CustomEvent('wb:launch-refused', { detail: { text: r.error.slice(0, 200) } })); }
       return null;
     }
     sid = r.sid;
@@ -1402,6 +1429,8 @@ async function addTab(opts = {}) {
     tab.host = 'workrooms'; tab.inlineHost = opts.inlineHost; tab.inlineCurrent = opts.inlineCurrent;
     tab.onInlineClose = opts.onInlineClose; tab.inlineWatchPrompt = true;
     tab.inlineBrand = seatBrand({ vendor: opts.inlineVendor });
+    tab.inlineStateWord = opts.inlineStateWord;
+    tab.inlineHandle = opts.inlineHandle;
     let disposed = false;
     tab.inlineDispose = () => {
       if (disposed) return; disposed = true;
@@ -1423,6 +1452,7 @@ async function addTab(opts = {}) {
       current: () => tabs.get(sid) === tab && currentViewScope(keypadScope) && inlineTerminalCurrent(tab),
       controlling: () => { const route = routeStates.get(sid); return route?.route === 'term' ? route.state === 'controlling' : window.wb.web.terminal?.state(sid) === 'typing'; },
       send: (data) => window.wb.input(sid, data), refit: () => fit.fit(),
+      layer: () => phoneTerminalLayer(tab),
     });
   }
   term.onData((d) => { if (inlineTerminalCurrent(tab)) window.wb.input(sid, d); });
@@ -1709,13 +1739,20 @@ const remapTree = (node, map) => {
 
 // startup: the window's first load opening its saved CLIs (no permit needed, once); otherwise each
 // CLI is an explicit launch.
+// the one shell a window opens with when it has nothing saved: not on a hosted engine, which opens no bare shell (it would only refuse, with a
+// sentence about a folder, on every load); the web build asks the engine first
+async function startupShellAllowed() {
+  if (!window.wb.web) return true;
+  try { await window.wb.web.capabilities?.refresh(); } catch { /* the engine said nothing: as before */ }
+  return !bareShellOff();
+}
 async function restoreState(r, { startup = false } = {}) {
   const map = new Map();
   const open = (o) => (startup ? addTab({ ...o, why: 'restore' }) : launch(o));
   for (const t of r.tabs || []) {
     map.set(t.sid, await open({ name: t.name || '', hue: t.hue }));
   }
-  if (!map.size) {
+  if (!map.size && await startupShellAllowed()) {
     await open({});
   }
   listPinned = !!r.listPinned;
@@ -2217,7 +2254,8 @@ function confirmEnd(sid) {
   if (!s) {
     return;
   }
-  const words = s.keepsRunning ? { title: `End this CLI on ${s.place}?`, body: "It stops everywhere it's open." } : { title: 'End this CLI?', body: (s.name || niceTitle(s.title)) + ': the shell and anything running in it will stop.' };
+  // the web build says Stop (a terminal on a server): the phone page's "Stop" leads here
+  const words = window.wb.web ? { title: 'Stop this terminal?', body: "It stops everywhere it's open.", action: 'Stop' } : s.keepsRunning ? { title: `End this CLI on ${s.place}?`, body: "It stops everywhere it's open." } : { title: 'End this CLI?', body: (s.name || niceTitle(s.title)) + ': the shell and anything running in it will stop.' };
   endDialog(words, () => endSession(sid), sid);
 }
 /** End… on a group row (3d): the same words; the broker ends it (no pane here holds it). */
@@ -2237,6 +2275,7 @@ function endDialog(words, onEnd, sid) {
   d.setAttribute('aria-describedby', 'endB');
   d.innerHTML = icon('cancel', 'ic') + '<h4 id="endT"></h4><p id="endB"></p><div class="a"><button class="cancel">Cancel</button><button class="danger">End</button></div>';
   d.querySelector('#endT').textContent = words.title;
+  d.querySelector('.danger').textContent = words.action || 'End';
   d.querySelector('#endB').textContent = words.body;
   wrap.appendChild(d);
   document.body.appendChild(wrap);
@@ -2280,6 +2319,7 @@ function endDialog(words, onEnd, sid) {
 }
 
 rail = createRail({
+  phoneHost: $('stage'),
   multipleAccounts: () => (acc.st?.accounts || []).length > 1,
   accountCard: (id) => (acc.st?.accounts || []).find((a) => a.id === id),
   host: $('main'),
@@ -2528,6 +2568,13 @@ if (window.wb.web) {
     refreshRecipes: async () => { recipeList = (await window.wb.recipesList()) || []; recipesApply(); }, // a recipe created a moment ago (sign-in) is not in the cache yet
     onSignedOut: () => window.wb.web.storage?.clear() }); // the storage rule: nothing the app stored outlives a sign-out
   window.wb.web.router = webRouter.api;
+  // what the engine says it can do (a hosted engine opens no bare shell): read at load and again once signed in; a change redraws the lists that offered a shell
+  const caps = window.wb.web.capabilities;
+  if (caps) {
+    caps.onChange(() => { rail?.capsChanged?.(); recipesApply?.(); });
+    void caps.refresh();
+    window.wb.on('rooms:status', (st) => { if (st && st.signedIn) void caps.refresh(); });
+  }
 }
 // About's live state: the last check's result, a check in flight, a download's progress.
 const about = { checking: false, last: null, progress: null, info: { available: false, auto: false, version: '' } };
@@ -3643,7 +3690,7 @@ function openRecipeForm(id, folderRole = 'agents', prepareOnly = false) {
   renderRecipeForm();
   // the local report for the Run list ("2.1.3" / "Not found on this computer"), taken once per program
   const todo = sx.programs.filter((p) => p.enabled && p.binary && !p.detected);
-  if (todo.length) {
+  if (todo.length && !window.wb.web) { // the web build has nothing to probe: the engine says at launch if a program is missing (and the call would only raise the red defect banner)
     Promise.all(todo.map((p) => window.wb.programsDetect(p.id).catch(() => null))).then(async () => {
       sx.programs = await window.wb.programsList();
       renderRecipeForm();
@@ -5412,6 +5459,7 @@ window.wb.on('init', (info) => {
         }
         if (rail) {
           rail.setPinAllowed(s === 'dashboard'); // 0.12.5: the pin is a Terminals setting (the owner )
+          rail.setPhoneSurface(s === 'dashboard'); // web: the phone's Terminals page
           const onRooms = modules.surfaceKind() === 'rooms';
           rail.setFlagOwner(onRooms ? roomsFlag : null);
           if (roomsPage) {
@@ -5450,7 +5498,7 @@ window.wb.on('init', (info) => {
   );
   // First load: the saved CLIs, an adopted one, or one new CLI. A reload re-adopts this window's
   // CLIs and never starts one (main refuses a launch without a permit after the first load anyway).
-  const first = () => (info.restore ? restoreState(info.restore, { startup: true }) : info.adopt ? addTab(info.adopt) : addTab({ why: 'startup' }));
+  const first = async () => (info.restore ? restoreState(info.restore, { startup: true }) : info.adopt ? addTab(info.adopt) : (await startupShellAllowed()) ? addTab({ why: 'startup' }) : undefined);
   const readopt = async () => {
     for (const a of info.readopt || []) {
       await addTab(a);

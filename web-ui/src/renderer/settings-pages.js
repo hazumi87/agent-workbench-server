@@ -140,7 +140,9 @@ export function renderPrograms(sec, list, machine, h) {
       sum.appendChild(cr);
     }
     tx.append(nm, sum);
-    if (globalThis.wb?.web) tx.append(el('small', 'pg-terminal', p.id === 'claude-code' || p.id === 'codex-cli' ? 'Opens in a room or as a terminal.' : 'Opens as a terminal.')); // Claude Code and Codex can join a room: every other program runs in Terminals
+    // (a hosted engine opens no bare shell: the Shell row says so and has no switch; the check reads the engine's own capability, wb.web.capabilities)
+    const noShell = p.id === 'shell' && !!globalThis.wb?.web?.capabilities && globalThis.wb.web.capabilities.bareShell() === false;
+    if (globalThis.wb?.web) tx.append(el('small', 'pg-terminal', noShell ? 'Not available on this server.' : p.id === 'claude-code' || p.id === 'codex-cli' ? 'Opens in a room or as a terminal.' : 'Opens as a terminal.')); // Claude Code and Codex can join a room: every other program runs in Terminals
     open.appendChild(tx);
     // The whole row opens the program's page; only the switch toggles (the design, step 2).
     row.addEventListener('click', (e) => {
@@ -161,7 +163,7 @@ export function renderPrograms(sec, list, machine, h) {
       });
     }
     if (p.id === 'shell') {
-      ctl = el('span', 'pg-always', 'Always on'); // every plain CLI runs your shell
+      ctl = noShell ? el('span', 'pg-always') : el('span', 'pg-always', 'Always on'); // every plain CLI runs your shell
     } else {
       ctl = switchEl(p.enabled, p.label + (p.enabled ? ' is on' : ' is off'), !!p.error);
       ctl.addEventListener('click', () => h.toggle(p.id, !p.enabled));

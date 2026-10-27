@@ -24,7 +24,7 @@ import { createSide } from './side.js';
 import { createStarterWorkrooms } from './starter-workrooms.js';
 import { createTemplateMount } from '../room-templates/mount.js';
 import { createAgentWizard } from '../first-run/agent-wizard.js';
-import { createPeople, closeMenus, openMenu, seatGlyph, roomGlyph } from './people.js';
+import { createPeople, closeMenus, openMenu, seatGlyph, roomGlyph, seatState } from './people.js';
 import { prefillFor, isToMe } from './rules.js';
 import { openDialog } from './dialog.js';
 import { decorateRoomActivity, applyRoomActivityContext, createRoomActivityAnnouncements, ROOM_ACTIVITY_SIZE, TEAM_ACTIVITY_SIZE } from './room-activity.js';
@@ -182,6 +182,7 @@ export function createRoomsPage(deps) {
   const inlineTerminal = el('section', 'wr-inline-terminal');
   inlineTerminal.setAttribute('aria-label', 'Seat terminal'); inlineTerminal.hidden = true;
   let inlineView = null, inlineEpoch = 0;
+  let inlineOpener = null; // the control a seat's terminal layer was opened from: Back returns focus there
   // full pages (a module's, opened from its preview): a tab in the strip; their frames stay attached here and are only
   // shown or hidden (a moved iframe reloads, and a reload ends its link)
   const toolHost = el('section', 'wr-toolpages');
@@ -465,7 +466,7 @@ export function createRoomsPage(deps) {
     const web = !!(globalThis.wb && globalThis.wb.web);
     const phone = web && !destroyed && st.shown && st.status.signedIn && st.width > 0 && st.width < 600;
     const page = phone ? toolPageOf(st.active) : null;
-    const next = !phone ? null : page ? 'page' : side.isOpen() && side.toolOpen && side.toolOpen() ? 'preview' : null;
+    const next = !phone ? null : page ? 'page' : side.isOpen() && side.toolOpen && side.toolOpen() ? 'preview' : inlineView && inlineView.handle && inlineView.roomId === currentRoomId() && !inlineTerminal.hidden ? 'terminal' : null; // a seat's terminal is a layer too (final-plus 5): the whole screen, only its own header
     if (next === toolLayer) return;
     toolLayer = next;
     if (html && html.dataset) { if (next) html.dataset.wbToollayer = next; else delete html.dataset.wbToollayer; }
@@ -586,6 +587,8 @@ export function createRoomsPage(deps) {
   function closeInlineTerminal(repaint = true) {
     const old = inlineView; inlineView = null; inlineEpoch++;
     inlineTerminal.hidden = true; inlineTerminal.textContent = '';
+    syncToolLayer();
+    if (old?.handle) { const back = inlineOpener; inlineOpener = null; requestAnimationFrame(() => { if (destroyed) return; if (back && back.isConnected && back.offsetParent !== null) back.focus(); else (root.querySelector('.wr-seatsb') || root.querySelector('.wr-roomhead button'))?.focus(); }); } // leaving: focus goes back to what opened it
     try { if (old?.handle) void Promise.resolve(old.handle.dispose()).catch(() => {}); } catch { /* already detached */ }
     if (repaint && st.active !== 'all' && st.status.signedIn) paintRoom();
   }
@@ -594,10 +597,12 @@ export function createRoomsPage(deps) {
     col.classList.toggle('has-terminal', on); inlineTerminal.hidden = !on;
     if (on && inlineTerminal.parentElement !== col) col.appendChild(inlineTerminal);
     if (on) requestAnimationFrame(() => inlineView?.handle?.fit());
+    syncToolLayer();
   }
   async function openInlineTerminal(roomId, v, s) {
     if (!st.shown || !st.status.signedIn || currentRoomId() !== roomId || !deps.openSeatTerminalInline || !seatsOf(viewOf(roomId)).some(seat => seat.id === s.id)) return;
     if (inlineView?.roomId === roomId && inlineView.seatId === s.id) { inlineView.handle?.fit(); return; }
+    if (!inlineView) inlineOpener = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
     closeInlineTerminal(false);
     const request = window.wb.rooms.bind(), ownerEpoch = accountEpoch;
     const selected = { roomId, seatId: s.id, epoch: ++inlineEpoch, handle: null };
@@ -608,9 +613,11 @@ export function createRoomsPage(deps) {
     paintRoom();
     try {
       const handle = await deps.openSeatTerminalInline({ room: roomId, seat: s.id, handle: s.handle,
-        roomName: v.room.name, vendor: s.vendor || s.occupant?.vendor, host: inlineTerminal, current, onClose: () => { if (current()) closeInlineTerminal(); } });
+        roomName: v.room.name, vendor: s.vendor || s.occupant?.vendor, host: inlineTerminal, current,
+        stateWord: () => { const seat = seatsOf(viewOf(roomId)).find(x => x.id === s.id); return seat ? seatState(seat) : ''; }, onClose: () => { if (current()) closeInlineTerminal(); } }); // stateWord: the seat's state in the Seats sheet's words, under its name in the phone layer's header
       if (!current()) { if (handle) void Promise.resolve(handle.dispose()).catch(() => {}); return; }
       selected.handle = handle;
+      if (handle) { syncToolLayer(); requestAnimationFrame(() => { if (current()) inlineTerminal.querySelector('.pane-back')?.focus(); }); } // the layer opens on its arrow
       if (!handle) inlineTerminal.textContent = "Couldn't open this terminal. Select Room chat to return, then try the seat again.";
     } catch {
       if (current()) inlineTerminal.textContent = "Couldn't open this terminal. Select Room chat to return, then try the seat again.";

@@ -22,6 +22,7 @@
     "src/renderer/web-setup/onboarding.css",
     "src/renderer/widgets/web-widgets.css",
     "src/renderer/web-plugins/page.css",
-    "src/renderer/web-terminal/keypad.css"
+    "src/renderer/web-terminal/keypad.css",
+    "src/renderer/web-terminals/phone.css"
   ]
 }
