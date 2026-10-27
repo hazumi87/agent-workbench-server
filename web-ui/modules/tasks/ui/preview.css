@@ -1,0 +1,164 @@
+/* Tasks preview and window (the design's design, styleguide/mockups/workbench-tasks-tool). Colours are the
+   app's M3 roles, set by the host's theme message; the fallbacks are the light scheme from #428DF0. */
+:root {
+  --md-sys-color-primary: #275fa7; --md-sys-color-on-primary: #f8f8ff;
+  --md-sys-color-surface: #f9f9ff; --md-sys-color-surface-container-low: #f0f3ff; --md-sys-color-surface-container-high: #dee8ff;
+  --md-sys-color-surface-container-highest: #d6e3ff; --md-sys-color-on-surface: #1b3355; --md-sys-color-on-surface-variant: #496085;
+  --md-sys-color-outline-variant: #9cb3dc; --md-sys-color-secondary-container: #cffbe2; --md-sys-color-on-secondary-container: #3b624f;
+  --md-sys-color-error: #ac3434; --md-sys-color-on-error: #fff7f6;
+  --work: color-mix(in srgb, var(--md-sys-color-primary) 70%, var(--md-sys-color-surface));
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--md-sys-color-surface-container-low); color: var(--md-sys-color-on-surface); font: 400 13px/18px 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif; }
+.tp { padding: 8px 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+.wait, .err, .none { margin: 8px 0; color: var(--md-sys-color-on-surface-variant); }
+.err { color: var(--md-sys-color-error); }
+.popnote { margin: 0 0 8px; font-size: 13px; line-height: 18px; color: var(--md-sys-color-error); } /* a refused pop-out, in its words */
+.tools { display: flex; justify-content: flex-end; }
+.ib { width: 32px; height: 32px; border: 0; border-radius: 999px; background: transparent; color: var(--md-sys-color-on-surface-variant); cursor: pointer; }
+.ib:focus-visible, .chip:focus-visible, .seg button:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset: 2px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 999px; overflow: hidden; }
+.seg button { height: 32px; border: 0; background: transparent; color: var(--md-sys-color-on-surface); font-family: inherit; font-weight: 500; font-size: 13px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--md-sys-color-outline-variant); }
+.seg button[aria-pressed="true"] { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { height: 28px; padding: 0 10px; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px; background: transparent; color: inherit; font-family: inherit; font-weight: 500; font-size: 12px; cursor: pointer; }
+.chip[aria-pressed="true"] { border-color: transparent; background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.sum { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 10px 12px; border-radius: 12px; background: var(--md-sys-color-surface); }
+.sum b { display: block; font-family: inherit; font-weight: 600; font-size: 18px; line-height: 22px; }
+.sum b.err { color: var(--md-sys-color-error); margin: 0; }
+.sum b.f { font-size: 13px; line-height: 17px; }
+.sum small, .plan { font-size: 11px; color: var(--md-sys-color-on-surface-variant); }
+.row { padding: 8px; border-radius: 12px; display: flex; flex-direction: column; gap: 6px; }
+.row.need { background: color-mix(in srgb, var(--md-sys-color-error) 8%, transparent); }
+.row .tt { font-weight: 500; }
+.meta { display: flex; gap: 6px; font-size: 11px; color: var(--md-sys-color-on-surface-variant); min-width: 0; }
+.gp { padding: 1px 7px; border-radius: 999px; background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface); }
+.bar { display: flex; align-items: center; gap: 8px; }
+.track { flex: 1; height: 6px; border-radius: 999px; overflow: hidden; background: var(--md-sys-color-surface-container-highest); }
+.track i { display: block; height: 100%; background: var(--md-sys-color-primary); }
+.bar b { width: 34px; text-align: right; font-size: 12px; }
+.needchip { padding: 2px 8px; border-radius: 6px; background: var(--md-sys-color-error); color: var(--md-sys-color-on-error); font-weight: 600; font-size: 12px; }
+.more { height: 32px; border: 0; background: transparent; color: var(--md-sys-color-primary); font-family: inherit; font-weight: 600; font-size: 13px; text-align: left; cursor: pointer; }
+.ln { padding: 4px 0 6px; }
+.lh { font-size: 12px; font-weight: 600; padding-bottom: 4px; }
+.lane { position: relative; height: 16px; border-radius: 4px; overflow: hidden; background: var(--md-sys-color-surface-container-high); }
+.lane .d { position: absolute; top: 0; bottom: 0; }
+.lane .d.n1 { background: color-mix(in srgb, var(--md-sys-color-primary) 38%, var(--md-sys-color-surface-container-high)); }
+.lane .d.n2 { background: color-mix(in srgb, var(--md-sys-color-primary) 62%, var(--md-sys-color-surface-container-high)); }
+.lane .d.n3 { background: color-mix(in srgb, var(--md-sys-color-primary) 82%, var(--md-sys-color-surface-container-high)); }
+.lane .d.n4, .lane .d.n5, .lane .d.n6, .lane .d.n7, .lane .d.n8 { background: var(--md-sys-color-primary); }
+.lane .ns { position: absolute; bottom: 0; height: 4px; background: var(--md-sys-color-error); }
+.marks { position: relative; height: 9px; margin-top: 2px; }
+.marks .mk { position: absolute; top: 1px; width: 6px; height: 6px; background: var(--md-sys-color-on-surface); transform: translateX(-50%) rotate(45deg); }
+.note { font-size: 11px; color: var(--md-sys-color-on-surface-variant); }
+
+/* S3, the window: the content capped at 880 px from 16 px, the View switch 360 px; at 640 px and
+   below the window is laid out as the preview is. The caption under the timeline says what the lanes show. */
+.rf { margin: 4px 0 0; font-size: 11px; color: var(--md-sys-color-on-surface-variant); }
+@media (min-width: 641px) {
+  html[data-surface="window"] #app { max-width: 880px; padding-left: 16px; }
+  html[data-surface="window"] .seg { width: 360px; }
+}
+.row.dim .tt, .row.dim .meta { color: var(--md-sys-color-on-surface-variant); } /* Room Tasks' "Not pinned", last and dimmer */
+
+/* ---- Expanded (the web; the owner's go 2026-10-26, the design's Tasks §4 "On the web"): the page fills the room's area and
+   draws its own header; By % done | Timeline | By seat; group chips with counts; an hour axis with "now"; the seat rows
+   (260 px labels) and the hatched quiet stretch. 44 px targets, 48 on a phone. Scoped so the column and window keep theirs. */
+/* the design's ring colours, fixed in both schemes: working sky, needs-you coral, each with its own ink */
+html[data-layout="expanded"] { --x-work: #38bdf8; --x-work-ink: #0b3a55; --x-need: #ff5c4d; --x-need-ink: #3a0a06; }
+html[data-layout="expanded"] body { background: var(--md-sys-color-surface-container-low); }
+html[data-layout="expanded"] #app { padding: 12px 24px 24px; display: flex; flex-direction: column; gap: 12px; }
+[data-layout="expanded"] .i { width: 18px; height: 18px; flex: none; }
+[data-layout="expanded"] .i.plan { width: 14px; height: 14px; color: var(--md-sys-color-on-surface-variant); }
+[data-layout="expanded"] .xh { display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 8px 12px; }
+[data-layout="expanded"] .xh.noback { grid-template-columns: 1fr auto; }
+.tools .ib .i { width: 18px; height: 18px; }
+[data-layout="expanded"] .ib.back { width: 44px; height: 44px; display: grid; place-items: center; color: var(--md-sys-color-on-surface); }
+[data-layout="expanded"] .xt h1 { margin: 0; font-family: inherit; font-weight: 600; font-size: 22px; line-height: 28px; }
+[data-layout="expanded"] .xt .sub { margin: 2px 0 0; font-size: 13px; color: var(--md-sys-color-on-surface-variant); }
+[data-layout="expanded"] .seg { grid-template-columns: repeat(3, auto); }
+[data-layout="expanded"] .seg button { height: 44px; padding: 0 16px; display: inline-flex; align-items: center; gap: 8px; }
+[data-layout="expanded"] .chips { flex-wrap: nowrap; overflow-x: auto; gap: 8px; scrollbar-width: thin; }
+[data-layout="expanded"] .chip { flex: none; height: 44px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+[data-layout="expanded"] .chip .n { color: var(--md-sys-color-on-surface-variant); }
+[data-layout="expanded"] .xbody { padding: 12px 16px 16px; border-radius: 16px; background: var(--md-sys-color-surface); overflow-x: hidden; }
+[data-layout="expanded"] .xbody.view-list { padding: 8px; }
+
+/* the time views: label column 260 px, then the lanes; ticks and the now line in the lanes' coordinates */
+[data-layout="expanded"] .axis, [data-layout="expanded"] .sr { display: grid; grid-template-columns: 260px minmax(0, 1fr); column-gap: 12px; }
+[data-layout="expanded"] .axis .ticks { position: relative; height: 20px; font-size: 11.5px; color: var(--md-sys-color-on-surface-variant); }
+[data-layout="expanded"] .axis .tk { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+[data-layout="expanded"] .axis .tk.now { transform: translateX(-100%); color: var(--md-sys-color-primary); font-weight: 600; }
+[data-layout="expanded"] .plot { position: relative; display: flex; flex-direction: column; gap: 6px; }
+[data-layout="expanded"] .nowline { position: absolute; top: -4px; bottom: 0; right: 0; width: 2px; background: var(--md-sys-color-primary); pointer-events: none; }
+[data-layout="expanded"] .grp, [data-layout="expanded"] .lanebox { display: flex; flex-direction: column; gap: 2px; padding-bottom: 6px; }
+[data-layout="expanded"] .gh { display: flex; align-items: center; gap: 6px; min-height: 28px; font-size: 13px; }
+[data-layout="expanded"] .gh .cnt { font-size: 11.5px; color: var(--md-sys-color-on-surface-variant); }
+[data-layout="expanded"] .gh .right { margin-left: auto; padding-right: 12px; font-size: 12px; color: var(--md-sys-color-on-surface-variant); } /* ends before the now line */
+[data-layout="expanded"] .lanebox.room { padding: 6px 8px 8px; border-radius: 10px; background: var(--md-sys-color-surface-container-low); }
+[data-layout="expanded"] .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--md-sys-color-primary); }
+[data-layout="expanded"] .dot.grp { background: var(--md-sys-color-on-surface); }
+[data-layout="expanded"] .dot.s-on { background: var(--x-work); }
+[data-layout="expanded"] .dot.s-wait { background: var(--x-need); }
+[data-layout="expanded"] .dot.s-quiet, [data-layout="expanded"] .dot.s-idle { background: transparent; box-shadow: inset 0 0 0 1.5px var(--md-sys-color-on-surface-variant); }
+[data-layout="expanded"] .dot.s-left { background: transparent; box-shadow: none; border: 1.5px dotted var(--md-sys-color-on-surface-variant); }
+[data-layout="expanded"] .sr { align-items: center; min-height: 36px; }
+[data-layout="expanded"] .who { display: flex; align-items: center; gap: 6px; min-width: 0; padding-left: 14px; }
+[data-layout="expanded"] .who .h { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+[data-layout="expanded"] .tag { font-size: 11px; color: var(--md-sys-color-on-surface-variant); }
+[data-layout="expanded"] .quiet { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border: 1px dashed var(--md-sys-color-on-surface-variant); border-radius: 999px; font-size: 11.5px; white-space: nowrap; color: var(--md-sys-color-on-surface); }
+[data-layout="expanded"] .quiet .i { width: 13px; height: 13px; }
+[data-layout="expanded"] .who .cur { display: none; }
+[data-layout="expanded"] .sr.left .who, [data-layout="expanded"] .sr.left .lane { opacity: .55; }
+[data-layout="expanded"] .lt { position: relative; min-width: 0; }
+[data-layout="expanded"] .lane { height: 24px; border-radius: 4px; background: var(--md-sys-color-surface-container-high); }
+[data-layout="expanded"] .lane.gl { height: 18px; }
+[data-layout="expanded"] .lane .st { position: absolute; top: 0; bottom: 0; border-radius: 4px; padding-left: 6px; font-family: inherit; font-weight: 400; font-size: 11.5px; line-height: 24px; font-style: normal;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+[data-layout="expanded"] .lane .st.w { background: var(--x-work); color: var(--x-work-ink); }
+[data-layout="expanded"] .lane .st.n { background: var(--x-need); color: var(--x-need-ink); }
+[data-layout="expanded"] .lane .st.q { padding: 0; border-radius: 0 4px 4px 0;
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--md-sys-color-on-surface-variant) 55%, transparent) 0 1.5px, transparent 1.5px 6px); }
+[data-layout="expanded"] .lane .ns { height: 4px; }
+[data-layout="expanded"] .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: 11.5px; color: var(--md-sys-color-on-surface-variant); }
+[data-layout="expanded"] .legend span { display: inline-flex; align-items: center; gap: 6px; }
+[data-layout="expanded"] .lg { display: inline-block; width: 14px; height: 8px; border-radius: 2px; }
+[data-layout="expanded"] .lg.w { background: var(--x-work); }
+[data-layout="expanded"] .lg.n { background: var(--x-need); }
+[data-layout="expanded"] .lg.m { width: 7px; height: 7px; border-radius: 0; background: var(--md-sys-color-on-surface); transform: rotate(45deg); }
+[data-layout="expanded"] .lg.q { background: repeating-linear-gradient(135deg, var(--md-sys-color-on-surface-variant) 0 1.5px, transparent 1.5px 5px); }
+
+/* a phone: the header wraps (the switch on its own line), each seat's name over its lane, the chips scroll sideways, 48 px targets */
+@media (max-width: 600px) {
+  html[data-layout="expanded"] #app { padding: 8px 12px 16px; }
+  [data-layout="expanded"] .xh { grid-template-columns: 48px 1fr; }
+  [data-layout="expanded"] .xh.noback { grid-template-columns: 1fr; }
+  [data-layout="expanded"] .ib.back { width: 48px; height: 48px; }
+  [data-layout="expanded"] .seg { grid-column: 1 / -1; grid-template-columns: repeat(3, 1fr); }
+  [data-layout="expanded"] .seg button { height: 48px; padding: 0 8px; justify-content: center; }
+  [data-layout="expanded"] .seg button .i { display: none; }
+  [data-layout="expanded"] .chip { height: 48px; }
+  [data-layout="expanded"] .xbody { padding: 8px; }
+  [data-layout="expanded"] .axis, [data-layout="expanded"] .sr { grid-template-columns: minmax(0, 1fr); }
+  [data-layout="expanded"] .axis .tk.odd, [data-layout="expanded"] .axis .tk.nearnow { display: none; } /* every other hour on a phone (the design's 390 frame), none crowding "now" */
+  [data-layout="expanded"] .lane .st.sm .t { display: none; } /* a phone labels only bars of 30% or more */
+  [data-layout="expanded"] .axis .lbl { display: none; }
+  [data-layout="expanded"] .who { padding: 0 8px 0 4px; } /* the current task stays clear of the now line */
+  [data-layout="expanded"] .who .cur { display: block; flex: 1 1 0; min-width: 0; text-align: right; font-size: 11.5px; color: var(--md-sys-color-on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  [data-layout="expanded"] .who > :not(.cur) { flex: none; }
+}
+/* the expanded Timeline lanes in the same family: depth of work as stronger sky, needs-you coral */
+[data-layout="expanded"] .lane .d.n1 { background: color-mix(in srgb, var(--x-work) 45%, var(--md-sys-color-surface-container-high)); }
+[data-layout="expanded"] .lane .d.n2 { background: color-mix(in srgb, var(--x-work) 70%, var(--md-sys-color-surface-container-high)); }
+[data-layout="expanded"] .lane .d.n3, [data-layout="expanded"] .lane .d.n4 { background: var(--x-work); }
+[data-layout="expanded"] .lane .ns { background: var(--x-need); }
+/* "Open full page": an icon button in the preview column; on a phone ONE filled 48 px button with its words (the design's s10) */
+.tools .ib.full .lbl { display: none; }
+@media (max-width: 600px) {
+  .tools { justify-content: stretch; }
+  .tools .ib.full { width: 100%; height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border-radius: 24px; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);
+    font-family: inherit; font-weight: 500; font-size: 14px; }
+  .tools .ib.full .lbl { display: inline; }
+}

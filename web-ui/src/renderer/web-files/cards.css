@@ -1,0 +1,39 @@
+/* Browser card presentation adapted from the team handoff <commit> class
+   names. Its scratchpad.css contained only desktop .sp-* rules; these scoped
+   rules supply the missing .sc-* styling without desktop placement selectors. */
+.sc-cards { min-width: 0; max-width: 100%; color: var(--md-sys-color-on-surface, #202020); }
+.sc-cards .sc-head { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+.sc-cards .sc-toggle { display: inline-flex; max-width: 100%; border: 1px solid var(--md-sys-color-outline, #777); border-radius: 24px; overflow: hidden; }
+.sc-cards button { min-height: 44px; min-width: 0; max-width: 100%; font: inherit; color: inherit; overflow-wrap: anywhere; cursor: pointer; }
+.sc-cards button:disabled { opacity: .5; cursor: default; }
+.sc-cards button:focus-visible { outline: 3px solid var(--md-sys-color-primary, #385daa); outline-offset: -3px; }
+.sc-cards .sc-seg { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 0; padding: 10px 16px; background: transparent; }
+.sc-cards .sc-seg + .sc-seg { border-left: 1px solid var(--md-sys-color-outline, #777); }
+.sc-cards .sc-seg.is-on { background: var(--md-sys-color-secondary-container, #e4e4ee); color: var(--md-sys-color-on-secondary-container, #202020); }
+.sc-cards .sc-body, .sc-cards .sc-group { min-width: 0; }
+.sc-cards .sc-group + .sc-group { margin-top: 20px; }
+.sc-cards .sc-gh { margin: 12px 0; font-size: 1rem; font-weight: 600; }
+.sc-cards .sc-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 12px; }
+.sc-cards .sc-tile { min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 12px; box-sizing: border-box; border: 1px solid var(--md-sys-color-outline-variant, #ccc); border-radius: 16px; background: var(--md-sys-color-surface-container-low, #f5f5f5); }
+.sc-cards .sc-open { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; text-align: left; border: 0; padding: 6px; background: transparent; }
+.sc-cards .sc-tile > .sc-open { flex: 1 1 160px; }
+.sc-cards .sc-name { min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.sc-cards .sc-meta { flex-basis: 100%; font-size: .85rem; color: var(--md-sys-color-on-surface-variant, #555); }
+.sc-cards .sc-icon { flex-shrink: 0; }
+.sc-cards .sc-copy, .sc-cards .sc-more, .sc-cards .sc-retry { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--md-sys-color-outline, #777); border-radius: 12px; padding: 10px 12px; background: transparent; }
+.sc-cards .sc-new { display: inline-block; border-radius: 10px; padding: 2px 8px; font-size: .75rem; background: var(--md-sys-color-primary-container, #dae1ff); color: var(--md-sys-color-on-primary-container, #172957); }
+.sc-cards .sc-table { max-width: 100%; overflow-x: auto; }
+.sc-cards .sc-th, .sc-cards .sc-tr { display: grid; grid-template-columns: minmax(170px, 2fr) minmax(64px, .7fr) minmax(64px, .7fr) minmax(80px, .8fr) minmax(110px, 1fr) minmax(150px, 1.3fr); min-width: 760px; align-items: center; gap: 8px; }
+.sc-cards .sc-th { font-weight: 600; border-bottom: 1px solid var(--md-sys-color-outline-variant, #ccc); }
+.sc-cards .sc-thc, .sc-cards .sc-td { min-width: 0; padding: 8px 4px; overflow-wrap: anywhere; }
+.sc-cards .sc-tr { border-bottom: 1px solid var(--md-sys-color-outline-variant, #ccc); }
+.sc-cards .sc-td-act { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.sc-cards .sc-empty, .sc-cards .sc-error { padding: 20px 0; overflow-wrap: anywhere; }
+.sc-cards .sc-empty-title { font-weight: 600; }
+.sc-cards .sc-empty-text { color: var(--md-sys-color-on-surface-variant, #555); }
+.sc-cards .sc-more { margin-top: 16px; }
+@media (max-width: 599px) {
+  .sc-cards .sc-head { justify-content: flex-start; }
+  .sc-cards .sc-toggle { width: 100%; }
+  .sc-cards .sc-seg { flex: 1; }
+}

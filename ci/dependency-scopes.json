@@ -1,0 +1,6 @@
+{
+  "pty-broker": "server-runtime",
+  "briefing-table": "server-runtime",
+  "web-ui/build-tools": "web-build-and-browser",
+  "web-ui": "source-input-only"
+}

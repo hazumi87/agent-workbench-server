@@ -1,0 +1,5 @@
+Browser didn't open? Use the url below to sign in
+
+https://claude.ai/oauth/authorize?code=true&client_id=...
+
+Paste code here if prompted >

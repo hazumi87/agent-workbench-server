@@ -1,0 +1,111 @@
+.wb-web-folder-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  box-sizing: border-box;
+  background: rgb(0 0 0 / 40%);
+}
+.wb-web-folder-picker[hidden] { display: none; }
+.wb-web-folder-picker .wb-web-folder-picker__dialog {
+  width: 520px;
+  max-width: 100%;
+  max-height: calc(100dvh - 32px);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  box-sizing: border-box;
+  border: 1px solid var(--md-sys-color-outline, #777);
+  border-radius: 20px;
+  background: var(--md-sys-color-surface, #fff);
+  color: var(--md-sys-color-on-surface, #202020);
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+}
+.wb-web-folder-picker .wb-web-folder-picker__heading { margin: 0; font-size: 1.25rem; }
+.wb-web-folder-picker .wb-web-folder-picker__path,
+.wb-web-folder-picker .wb-web-folder-picker__status { margin: 0; min-width: 0; }
+.wb-web-folder-picker .wb-web-folder-picker__path {
+  width: 100%;
+  max-width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--md-sys-color-outline, #777);
+  border-radius: 8px;
+  background: var(--md-sys-color-surface, #fff);
+  color: inherit;
+  font: inherit;
+}
+.wb-web-folder-picker .wb-web-folder-picker__tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.wb-web-folder-picker .wb-web-folder-picker__hidden-label { min-height: 44px; display: flex; align-items: center; gap: 8px; }
+.wb-web-folder-picker .wb-web-folder-picker__hidden {
+  appearance: none; flex: none; display: grid; place-content: center;
+  width: 20px; height: 20px; margin: 0; padding: 0; box-sizing: border-box;
+  border: 2px solid var(--md-sys-color-on-surface-variant); border-radius: 3px;
+  background: var(--md-sys-color-surface); cursor: pointer;
+}
+.wb-web-folder-picker .wb-web-folder-picker__hidden:checked {
+  border-color: var(--md-sys-color-primary); background: var(--md-sys-color-primary);
+}
+.wb-web-folder-picker .wb-web-folder-picker__hidden:checked::after {
+  content: ""; width: 5px; height: 10px; margin-top: -2px;
+  border: solid var(--md-sys-color-on-primary); border-width: 0 2px 2px 0; transform: rotate(45deg);
+}
+.wb-web-folder-picker .wb-web-folder-picker__hidden:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary); outline-offset: 3px;
+}
+.wb-web-folder-picker .wb-web-folder-picker__hidden:disabled { opacity: .5; cursor: default; }
+.wb-web-folder-picker .wb-web-folder-picker__limit { margin: 0; }
+.wb-web-folder-picker [hidden] { display: none; }
+.wb-web-folder-picker .wb-web-folder-picker__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+.wb-web-folder-picker .wb-web-folder-picker__item { margin: 0; padding: 0; }
+.wb-web-folder-picker button {
+  min-height: 44px;
+  max-width: 100%;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--md-sys-color-outline, #777);
+  border-radius: 12px;
+  background: var(--md-sys-color-surface-container, #f3f3f3);
+  color: inherit;
+  font: inherit;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  cursor: pointer;
+}
+.wb-web-folder-picker button:disabled { opacity: .5; cursor: default; }
+.wb-web-folder-picker button:focus-visible { outline: 3px solid var(--md-sys-color-primary, #385daa); outline-offset: 2px; }
+.wb-web-folder-picker .wb-web-folder-picker__folder { width: 100%; text-align: left; margin-bottom: 6px; }
+.wb-web-folder-picker .wb-web-folder-picker__up { align-self: flex-start; }
+.wb-web-folder-picker .wb-web-folder-picker__up[hidden] { display: none; }
+.wb-web-folder-picker .wb-web-folder-picker__actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+@media (max-width: 599px) {
+  .wb-web-folder-picker { align-items: end; padding: 0; }
+  .wb-web-folder-picker .wb-web-folder-picker__dialog {
+    width: 100%;
+    max-height: 95dvh;
+    border-radius: 20px 20px 0 0;
+    padding: 16px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+  .wb-web-folder-picker .wb-web-folder-picker__choose { flex: 1; }
+  .wb-web-folder-picker .wb-web-folder-picker__hidden-label { min-height: 48px; }
+}
+
+.wb-web-folder-picker .wb-web-folder-picker__address,
+.wb-web-folder-picker .wb-web-folder-picker__create-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.wb-web-folder-picker .wb-web-folder-picker__address .wb-web-folder-picker__path { flex: 1; width: auto; min-width: 180px; }
+.wb-web-folder-picker .wb-web-folder-picker__name { flex: 1; min-width: 100px; max-width: 100%; min-height: 44px; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--md-sys-color-outline, #777); border-radius: 8px; background: var(--md-sys-color-surface, #fff); color: inherit; font: inherit; }
+.wb-web-folder-picker .wb-web-folder-picker__create-status { margin: 0; color: var(--md-sys-color-error, #b3261e); }
+.wb-web-folder-picker .wb-web-folder-picker__create-row[hidden] { display: none; }

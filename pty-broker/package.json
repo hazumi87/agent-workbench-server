@@ -1,0 +1,23 @@
+{
+  "name": "pty-broker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "PTY session holder for the Workbench server: terminals survive engine reconnects.",
+  "scripts": {
+    "broker": "tsx src/main.ts",
+    "start": "tsx src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node test/broker.test.mjs"
+  },
+  "dependencies": {
+    "node-pty": "^1.1.0",
+    "ws": "^8.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

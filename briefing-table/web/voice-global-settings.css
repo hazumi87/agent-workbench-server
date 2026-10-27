@@ -1,0 +1,35 @@
+/* VOICE — your settings for every room (web/voice-global-settings.mjs).
+   Loaded by the module itself. The Settings page's pv-* classes carry the
+   labels, notes, messages, inputs and the Save button (web/settings.css);
+   this sheet covers only what that page has no class for: the master switch,
+   the switch rows and the paired number fields. Tokens only. */
+.vgs { display: grid; gap: 4px; font: 400 13px var(--font); color: var(--text); min-width: 0; }
+.vgs-hd { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.vgs-master { margin: 0; }
+.vgs-lede { margin: 0 0 4px; }
+.vgs-switch { position: relative; flex: none; width: 34px; height: 20px; border-radius: 10px; border: 1px solid var(--border2); background: var(--surface2); padding: 0; cursor: pointer; }
+.vgs-knob { position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--dim); transition: left .15s; }
+.vgs-switch[aria-checked="true"] { border-color: var(--room-accent, var(--teal)); background: color-mix(in srgb, var(--room-accent, var(--teal)) 30%, transparent); }
+.vgs-switch[aria-checked="true"] .vgs-knob { left: 17px; background: var(--room-accent, var(--teal)); }
+.vgs-switch:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.vgs-rest.off { opacity: .42; }
+.vgs-field { display: grid; gap: 2px; margin-top: 12px; min-width: 0; align-content: start; }
+.vgs-field > a.pv-btn { justify-self: start; text-decoration: none; } /* the Conversation test page link */
+.vgs-field > .pv-note { margin-top: 4px; }
+.vgs-sub { margin-top: 8px; }
+.vgs-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.vgs-num { width: 100%; box-sizing: border-box; font-family: var(--mono); }
+.vgs-num:disabled { color: var(--dim); opacity: .6; }
+.vgs-check { display: flex; align-items: flex-start; gap: 7px; font-size: 13px; color: var(--text); margin-top: 4px; }
+.vgs-check input { margin-top: 3px; flex: none; }
+.vgs-check .pv-note { margin: 0; }
+.vgs-fixed { align-items: center; color: var(--dim); }
+.vgs-words { display: grid; gap: 2px; }
+.vgs-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 12px; }
+.vgs-acts .pv-msg { margin: 0; }
+@media (max-width: 600px) {
+  .vgs-pair { grid-template-columns: 1fr; }
+  .vgs-switch { width: 44px; height: 26px; border-radius: 13px; }
+  .vgs-knob { top: 4px; left: 4px; width: 16px; height: 16px; }
+  .vgs-switch[aria-checked="true"] .vgs-knob { left: 22px; }
+}

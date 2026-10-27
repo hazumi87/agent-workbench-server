@@ -1,0 +1,37 @@
+{
+  "about": "Address rules (User [ref]/[ref], toolkit [ref]). (1) 'mentions': the @handles a line ADDRESSES, i.e. those left after code (fenced and `inline`) and quoted text (\"...\" and curly quotes) are removed, lowercased, in order, with the page's mention shape /(?<![A-Za-z0-9_.@-])@([A-Za-z0-9]+(?:-[A-Za-z0-9]+)*)/g. (2) 'alias': convertUserAlias(text, handle): every @user outside code and quotes becomes @<handle>. Quote rules: a straight double quote opens only at the start of the text or after whitespace or ( [ {, so 5\" pipe is not a quote; it closes at the first double quote followed by the end, whitespace or . , ; : ! ? ) ] }; curly quotes open at U+201C and close at the next U+201D; a span is at most 400 characters and never crosses a newline; an unmatched quote is left alone; apostrophes never count. The engine (src/server/room-commands.ts) and the Workbench copy must agree on every case. Newlines are written as \\n.",
+  "mentions": [
+    { "name": "plain address", "text": "@bee please run it", "mentions": ["bee"] },
+    { "name": "quoted @user is not an address", "text": "he said \"@user ping\" ok", "mentions": [] },
+    { "name": "curly quotes", "text": "“@bee” is a name", "mentions": [] },
+    { "name": "5\" pipe is not a quote", "text": "5\" pipe for @bee", "mentions": ["bee"] },
+    { "name": "a quoted word, then an address", "text": "say \"hi\" to @bee", "mentions": ["bee"] },
+    { "name": "unmatched opening quote leaves the text alone", "text": "\"@bee", "mentions": ["bee"] },
+    { "name": "apostrophes never count", "text": "it's @bee's turn", "mentions": ["bee"] },
+    { "name": "a closing quote must be followed by space or punctuation", "text": "\"hi\"@bee", "mentions": ["bee"] },
+    { "name": "code and quotes together", "text": "use `@bee` or \"@ant\"", "mentions": [] },
+    { "name": "two quoted spans and two addresses", "text": "\"a\" @bee \"b\" @ant", "mentions": ["bee", "ant"] },
+    { "name": "a closing quote before a full stop", "text": "He wrote \"@user ok\". Then @bee", "mentions": ["bee"] },
+    { "name": "a curly quote inside a straight one", "text": "\"x “@bee” y\"", "mentions": [] },
+    { "name": "a quote never crosses a newline", "text": "\"line one\n@bee line two", "mentions": ["bee"] },
+    { "name": "an address after a quote on the next line", "text": "\"quoted @user\"\n@bee go", "mentions": ["bee"] },
+    { "name": "mixed case is lowercased", "text": "@Bee and @ANT", "mentions": ["bee", "ant"] },
+    { "name": "an email is not a mention", "text": "mail noreply@example.com", "mentions": [] },
+    { "name": "fenced code is skipped", "text": "```\n@bee\n```\n@ant", "mentions": ["ant"] }
+  ],
+  "alias": [
+    { "name": "leading @user", "text": "@user pong: ping", "handle": "owner", "out": "@owner pong: ping" },
+    { "name": "quoted @user stays", "text": "\"@user\" said", "handle": "owner", "out": "\"@user\" said" },
+    { "name": "backticked @user stays", "text": "see `@user` here", "handle": "owner", "out": "see `@user` here" },
+    { "name": "case-insensitive", "text": "@USER ok", "handle": "owner", "out": "@owner ok" },
+    { "name": "@username is a different word", "text": "@username stays", "handle": "owner", "out": "@username stays" },
+    { "name": "an email stays", "text": "noreply@example.com", "handle": "owner", "out": "noreply@example.com" },
+    { "name": "@user-1 is a different handle", "text": "@user-1 x", "handle": "owner", "out": "@user-1 x" },
+    { "name": "several, with punctuation", "text": "thanks @user, and @bee; @user!", "handle": "owner", "out": "thanks @owner, and @bee; @owner!" },
+    { "name": "the handle 'user' is a no-op", "text": "@user hi", "handle": "user", "out": "@user hi" },
+    { "name": "no handle is a no-op", "text": "@user hi", "handle": null, "out": "@user hi" },
+    { "name": "a hyphenated handle", "text": "@user ok", "handle": "owner-h", "out": "@owner-h ok" },
+    { "name": "an unsafe handle is a no-op", "text": "@user ok", "handle": "bad handle", "out": "@user ok" },
+    { "name": "outside a quote, inside another", "text": "@user said \"@user\" and @user", "handle": "owner", "out": "@owner said \"@user\" and @owner" }
+  ]
+}

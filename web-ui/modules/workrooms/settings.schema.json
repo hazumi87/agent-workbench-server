@@ -1,0 +1,23 @@
+{
+  "label": {
+    "type": "string",
+    "title": "Tab label",
+    "default": "Workrooms",
+    "maxLength": 24,
+    "hint": "What the tab in the top bar says."
+  },
+  "terminals": {
+    "type": "boolean",
+    "title": "Open seats in Terminals",
+    "chip": "Preview",
+    "default": false,
+    "hint": "Watch a seat's CLI as a pane. You only type after you choose Take control."
+  },
+  "server": {
+    "type": "string",
+    "title": "Workrooms server URL",
+    "default": "",
+    "maxLength": 200,
+    "hint": "Leave empty to use your account's, or the built-in, address. https://host or https://host:port only."
+  }
+}

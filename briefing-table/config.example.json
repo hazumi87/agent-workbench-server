@@ -1,0 +1,15 @@
+{
+  "_comment": "Runtime config for the Workbench engine, read at boot (no rebuild). Copy to config.json and edit. config.json is gitignored — it is per-machine runtime state, not source.",
+
+  "_reapMs_WARNING": "DEFAULT IS 0 (never reap) as of 2026-08-24. Viewer absence is NOT evidence of abandonment — KB design-notes-id tested it: on iOS any foreground loss drops the socket, and its verdict was 'idle_seconds is NOT a reliable user-is-gone signal'. A 12h value once killed five live agent sessions overnight when a laptop lid closed. The broker exists so viewers are disposable. Do not raise this without reading src/engine/sessions.ts.",
+  "_reapMs": "TIME lever: ms a detached (no-viewer) session may live before the reaper kills it. 0 (or negative) = NEVER reap / pin everything (the warm-session stopgap). Wins over the HARBOR_WB_REAP_MS env var. 43200000 = 12h (production safety net), 3600000 = 1h, 0 = pinned.",
+  "reapMs": 43200000,
+
+  "_debugUi": "DEV lever: true shows developer-only controls in the windows — currently the ⟳ soft-reload button (reloads the app UI without dropping the resident CLI). Turn OFF when done working on the app; ON to troubleshoot. Read at boot (restart to apply). Env HARBOR_WB_DEBUG_UI=1 forces it on. Exposed on /health as debugUi.",
+  "debugUi": true,
+
+  "_switches": "Assemble-room switches (the design notes §5.3). RE-READ LIVE on every request (mtime-cached): a flip needs no restart. A missing or unparseable file reads every switch at its SAFE DEFAULT (shown here), never the last good value; only the exact literal (true / \"warn\") turns one on. Every transition is logged; /health shows them as flags. Moving a switch away from its default is Owner's go (D14); collisionGuard \"warn\" is his rollback lever only.",
+  "seatRestorable": false,
+  "upgrade": false,
+  "collisionGuard": "enforce"
+}

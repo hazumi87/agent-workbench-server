@@ -1,0 +1,8 @@
+/* Variant B: preserve the identity square; the existing ring replaces its inset. */
+.ra-room-context { display:contents; }
+.wr-rail .sr-plate.ra-room-active { position:relative; }
+.wr-rail .sr-plate.ra-room-active::after { display:none; }
+.ra-room-chip { position:absolute; inset:3px; display:grid; place-items:center; border-radius:3px; background:var(--md-sys-color-surface-container-lowest); pointer-events:none; }
+.wr-rrow.sub .ra-room-chip { inset:2px; border-radius:2px; }
+
+.ra-room-live { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0; }

@@ -1,0 +1,15 @@
+{
+  "source": "chan-probe r5 (claude-code 2.1.282, server pty via python pty + pyte, 140x50, synthetic probe text only)",
+  "cols": 140,
+  "rows": 50,
+  "marks": [
+    {
+      "t": 1790340414,
+      "expect": {
+        "composer": "clean",
+        "surface": "composer",
+        "evidence": "cc.composer.dim"
+      }
+    }
+  ]
+}

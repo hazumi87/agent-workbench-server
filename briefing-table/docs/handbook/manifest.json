@@ -1,0 +1,88 @@
+{
+  "format": "workbench-handbook",
+  "formatVersion": 1,
+  "packVersion": "0.1.2",
+  "topics": [
+    {
+      "id": "how-rooms-work",
+      "title": "How rooms work",
+      "summary": "Seats, the lead, workgroups, addressing, reading and posting lines, the guide and the brief, and the room tools.",
+      "audience": "agent",
+      "topicVersion": 1,
+      "path": "how-rooms-work.md",
+      "requires": ["rooms.read", "rooms.post"]
+    },
+    {
+      "id": "lead-a-room",
+      "title": "Lead a room",
+      "summary": "Running a room as its lead: plan order, one owner per item, deciding from evidence, unblocking and quiet reporting.",
+      "audience": "agent",
+      "topicVersion": 1,
+      "path": "lead-a-room.md",
+      "requires": ["rooms.read", "rooms.post"]
+    },
+    {
+      "id": "report-to-the-lead",
+      "title": "Report to the lead",
+      "summary": "Short DONE / NEXT / BLOCKED lines with evidence, when to address the lead, and ETAs as estimates.",
+      "audience": "agent",
+      "topicVersion": 1,
+      "path": "report-to-the-lead.md",
+      "requires": ["rooms.read", "rooms.post"]
+    },
+    {
+      "id": "ask-for-approval",
+      "title": "Ask for approval",
+      "summary": "Asking the person once for one concrete action, the web approval plate, and how to tell the person's answer from anything else.",
+      "audience": "agent",
+      "topicVersion": 2,
+      "path": "ask-for-approval.md",
+      "requires": ["rooms.read", "rooms.post"]
+    },
+    {
+      "id": "room-tasks",
+      "title": "Room tasks",
+      "summary": "The built-in Tasks list: what the person can do, what a seat can do on this engine, and what to do when there is no task path.",
+      "audience": "agent",
+      "topicVersion": 1,
+      "path": "room-tasks.md",
+      "requires": ["rooms.read", "rooms.post", "tasks.ui"]
+    },
+    {
+      "id": "summaries",
+      "title": "Summaries",
+      "summary": "A seat's session summary and a lead's room roll-up, each posted as one room line; Notes stay the person's.",
+      "audience": "agent",
+      "topicVersion": 1,
+      "path": "summaries.md",
+      "requires": ["rooms.read", "rooms.post"]
+    },
+    {
+      "id": "write-a-skill",
+      "title": "Write a skill",
+      "summary": "When reusable instructions help, how to shape them, naming, and the person's review before anything is installed.",
+      "audience": "agent",
+      "topicVersion": 1,
+      "path": "write-a-skill.md",
+      "requires": ["rooms.post"]
+    },
+    {
+      "id": "safe-handoff",
+      "title": "Safe handoff",
+      "summary": "Handing work over with attempts, state, next safe step, owner and needed help, and resuming from referenced room lines.",
+      "audience": "agent",
+      "topicVersion": 1,
+      "path": "safe-handoff.md",
+      "requires": ["rooms.read", "rooms.post"]
+    },
+    {
+      "id": "project-status-brief",
+      "title": "Project status brief",
+      "summary": "Answering \"where are we?\": one line per deliverable with progress, time left and delivery in the person's local time, compared with a baseline brief.",
+      "audience": "agent",
+      "topicVersion": 1,
+      "path": "project-status-brief.md",
+      "requires": ["rooms.read", "rooms.post"]
+    }
+  ]
+}

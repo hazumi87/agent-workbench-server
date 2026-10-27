@@ -1,0 +1,37 @@
+/* ===========================================================================
+   hwb-watermark.css — the terminal pane's project watermark (window-chrome v21)
+   Rulings (2026-09-18/19, record: the design decisions page.html):
+     W13 backlit · W5 directional wash in the PROJECT hue only · origin ll-mid
+     by default · line style per logo, chosen in the engine's icon editor ·
+     uniform glow · each recipe keeps its own scale / opacity.
+
+   The engine injects the stored project SVG INLINE (not <img>) and applies:
+     .wm-pane                     on the terminal pane; set --wm-pc (recipe color)
+     .wm-at-<logo.washFrom>       ul | ur | ll | lr | c | ll-mid  (default ll-mid)
+     .wm-backlit                  a WRAPPER around the mark, when logo.backlit
+     .wm                          on the <svg>; set --wm-op from logo.opacity
+     .wm-line-<logo.line>         outline | blueprint | hatch | engrave | halftone
+                                  (none → flat fill, today's rendering)
+   The stored art is never edited: fills are overridden by CSS, and the three
+   patterned styles are CSS masks, so there are no defs or ids to manage.
+   NO HEX VALUES. Everything painted derives from --wm-pc, hue-only.
+   =========================================================================== */
+.wm-pane{
+  --wm-at:25% 75%;                                                                   /* ll-mid (default) */
+  --wm-term:oklch(from var(--wm-pc,var(--dim2)) .160 clamp(0,calc(c * .15),.028) h);
+  --wm-wash:oklch(from var(--wm-pc,var(--dim2)) .300 clamp(0,calc(c * .40),.065) h);
+  --wm-glow:oklch(from var(--wm-pc,var(--dim2)) .600 clamp(0,calc(c * .90),.140) h);
+  --wm-ink: oklch(from var(--wm-pc,var(--dim2)) .820 clamp(0,calc(c * .60),.110) h);
+  background:radial-gradient(ellipse 130% 130% at var(--wm-at),var(--wm-wash) 0%,var(--wm-term) 62%);}
+.wm-at-ul{--wm-at:0% 0%} .wm-at-ur{--wm-at:100% 0%} .wm-at-ll{--wm-at:0% 100%}
+.wm-at-lr{--wm-at:100% 100%} .wm-at-c{--wm-at:50% 50%} .wm-at-ll-mid{--wm-at:25% 75%}
+.wm{display:block;color:var(--wm-ink,var(--text));opacity:var(--wm-op,.22);overflow:visible;pointer-events:none;}
+.wm :is(path,circle,rect,polygon,ellipse,polyline,line){fill:currentColor;stroke:none;}
+.wm-line-outline :is(path,circle,rect,polygon,ellipse,polyline,line){fill:none;stroke:currentColor;stroke-width:1px;vector-effect:non-scaling-stroke;stroke-linejoin:round;}
+.wm-line-blueprint :is(path,circle,rect,polygon,ellipse,polyline,line){fill:color-mix(in srgb,currentColor 22%,transparent);stroke:currentColor;stroke-width:1px;vector-effect:non-scaling-stroke;stroke-linejoin:round;}
+.wm-line-hatch   {-webkit-mask-image:repeating-linear-gradient(45deg,black 0 1.6px,transparent 1.6px 5px);mask-image:repeating-linear-gradient(45deg,black 0 1.6px,transparent 1.6px 5px);}
+.wm-line-engrave {-webkit-mask-image:repeating-linear-gradient(0deg,black 0 1px,transparent 1px 3px);mask-image:repeating-linear-gradient(0deg,black 0 1px,transparent 1px 3px);}
+.wm-line-halftone{-webkit-mask-image:radial-gradient(circle,black 0 1.05px,transparent 1.25px);-webkit-mask-size:4px 4px;
+                  mask-image:radial-gradient(circle,black 0 1.05px,transparent 1.25px);mask-size:4px 4px;}
+/* W13 backlit — on a WRAPPER (a masked element would clip its own glow). Uniform strength. */
+.wm-backlit{filter:drop-shadow(0 0 14px var(--wm-glow)) drop-shadow(0 0 34px color-mix(in srgb,var(--wm-glow) 70%,transparent));}

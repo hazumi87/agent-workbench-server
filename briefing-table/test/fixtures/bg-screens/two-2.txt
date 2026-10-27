@@ -1,0 +1,27 @@
+# claude 2.1.299 (Claude Code) | model haiku | +20s after prompt
+# ---- rendered screen (140x45, trimmed) ----
+ ▐▛███▛█   Claude Code v2.1.299
+▝▜██████▀  Haiku 5.5 · Claude Max
+ ▝▝   ▝▝   /tmp/bgcap-pvuAcX
+
+
+❯ Run sleep 80 in the background using the Bash tool with run_in_background, then run sleep 85 in the background the same way. Then stop
+  and wait. Reply only "started".
+
+● Bash(sleep 80)
+  ⎿  Running in the background (↓ to manage)
+  ⎿  Allowed by auto mode classifier
+
+● Bash(sleep 85)
+  ⎿  Running in the background (↓ to manage)
+  ⎿  Allowed by auto mode classifier
+
+● started
+
+✻ Sautéed for 4s · done 7:48 PM · 2 shells still running
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  svc-ops@homeserver:/tmp/bgcap-pvuAcX
+  ⏵⏵ auto mode on · 2 shells · ← 2 agents

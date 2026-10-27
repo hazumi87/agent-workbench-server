@@ -1,0 +1,17 @@
+/* THE PHONE MENU'S ROWS [phone menu] (the design system handoff 1.O): shared by the room page's menu sheet and the agent page's (the sheets' own chrome
+   is room.css / places-sheet.css) */
+.ph-wbrow { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 0 16px; border: 0; border-bottom: 1px solid var(--border); background: none; color: var(--sky); text-align: left; cursor: pointer; font: 15px var(--font); }
+.ph-wbrow:active { background: var(--cap-hover); }
+.ph-wbrow:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+.ph-wbrow .ic { width: 22px; height: 22px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.ph-wbrow .wt { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; }
+.ph-wbrow b { font-weight: 600; }
+.ph-wbrow small { font-size: 12px; color: var(--dim); }
+.ph-wbrow .pc { flex: none; color: var(--dim2, var(--dim)); }
+.ph-roomrow { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 0 16px; border: 0; border-bottom: 1px solid var(--border); background: none; color: var(--text); text-align: left; cursor: pointer; font: 15px var(--font); }
+.ph-roomrow:active { background: var(--cap-hover); }
+.ph-roomrow:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+.ph-roomrow .wt { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; }
+.ph-roomrow b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ph-roomrow small { font-size: 12px; color: var(--dim); }
+.ph-roomrow .pc { flex: none; color: var(--dim2, var(--dim)); }

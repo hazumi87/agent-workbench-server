@@ -1,0 +1,42 @@
+.wb-starter-grid { grid-column:1 / -1; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); gap:12px; width:100%; }
+.wb-starter-card,.wb-starter-controls { background:var(--md-sys-color-surface-container); color:var(--md-sys-color-on-surface); border:1px solid var(--md-sys-color-outline-variant); border-radius:var(--shape-l,16px); padding:16px; }
+.wb-starter-card h2,.wb-starter-controls h3 { margin:0 0 8px; font:var(--font); font-size:18px; font-weight:600; }
+.wb-starter-card p,.wb-starter-state { color:var(--md-sys-color-on-surface-variant); font-size:13px; }
+.wb-starter-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.wb-starter-seat { display:grid; grid-template-columns:28px minmax(0,1fr) auto; align-items:center; gap:10px; padding:8px 0; text-align:left; }
+.wb-starter-plate { width:28px; height:28px; border-radius:var(--shape-s,8px); display:grid; place-items:center; background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); font:500 11px/16px var(--font); }
+.wb-starter-name { font:500 14px/20px var(--font); text-align:left; }
+.wb-starter-state { align-self:flex-start; border-radius:var(--shape-full,999px); padding:2px 8px; background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); font:500 12px/16px var(--font); max-width:100%; box-sizing:border-box; }
+.wb-starter-seat-label { display:flex; flex-direction:column; gap:4px; min-width:0; overflow-wrap:anywhere; }
+.wb-starter-controls { margin:8px 12px; flex:none; }
+.wb-starter-controls[hidden],.wb-starter-grid[hidden] { display:none; }
+.wb-starter-button { height:40px; padding:0 20px; border:0; border-radius:var(--shape-full,999px); font:500 14px/20px var(--font); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px; flex:none; }
+.wb-starter-button.tonal { background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); }
+.wb-starter-button.filled { background:var(--md-sys-color-primary); color:var(--md-sys-color-on-primary); }
+.wb-starter-button.tonal:hover:not(:disabled) { background:color-mix(in srgb,var(--md-sys-color-secondary-container) 90%,var(--md-sys-color-on-secondary-container)); }
+.wb-starter-button:disabled { background:color-mix(in srgb,var(--md-sys-color-on-surface) 10%,transparent); color:color-mix(in srgb,var(--md-sys-color-on-surface) 38%,transparent); cursor:default; }
+.wb-starter-seat .wb-starter-button { height:32px; padding:0 14px; }
+.wb-starter-message { margin-top:12px; padding:12px; border-radius:var(--shape-s,8px); background:var(--md-sys-color-surface-container-high); color:var(--md-sys-color-on-surface); font:400 14px/20px var(--font); }
+.wb-starter-message p { margin:0 0 12px; }
+.wb-starter-grid button:focus-visible,.wb-starter-controls button:focus-visible { outline:2px solid var(--md-sys-color-primary); outline-offset:3px; }
+.wb-starter-refusal { color:var(--md-sys-color-on-surface); overflow-wrap:anywhere; }
+@media(max-width:480px) { .wb-starter-heading { align-items:flex-start; flex-wrap:wrap; } .wb-starter-controls { margin:6px; padding:12px; } }
+
+.wb-starter-roster { max-height:25vh; overflow:auto; }
+.wb-starter-messages { max-height:35vh; overflow:auto; }
+.wb-starter-message-title { display:block; margin-bottom:6px; font:500 14px/20px var(--font); }
+.wb-starter-team { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:12px; font:400 14px/20px var(--font); }
+
+.wb-starter-card .wb-starter-meta { font:400 12px/18px var(--font); }
+.wb-starter-groups { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0; }
+.wb-starter-chip { border-radius:var(--shape-full,999px); padding:3px 10px; background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); font:500 12px/18px var(--font); }
+.wb-starter-quiet { grid-column:1 / -1; justify-self:start; background:none; border:0; padding:6px 0; color:var(--md-sys-color-on-surface-variant); font:400 12px/18px var(--font); cursor:pointer; text-decoration:underline; }
+.wb-starter-quiet:focus-visible { outline:2px solid var(--md-sys-color-primary); outline-offset:3px; border-radius:var(--shape-xs,4px); }
+
+/* Keep the inline notice exactly 12px below the action, without a text baseline gap. */
+.wb-starter-card > .wb-starter-button { display:flex; width:max-content; }
+
+.wb-starter-card > .wb-starter-message > :last-child { margin:0; }
+
+.wb-starter-recovery { grid-column:1 / -1; margin:0; color:var(--md-sys-color-on-surface-variant); font:400 14px/20px var(--font); }
+.wb-starter-recovery .wb-starter-quiet { padding:0; font:inherit; }

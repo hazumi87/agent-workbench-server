@@ -1,0 +1,7 @@
+.wb-approval-segment{display:flex;gap:8px;flex-wrap:wrap}
+.wb-approval-segment button{font:inherit;min-height:44px;min-width:44px;padding:8px 16px;border:1px solid var(--md-sys-color-outline);border-radius:20px;background:var(--md-sys-color-surface-container);color:var(--md-sys-color-on-surface);cursor:pointer}
+.wb-approval-segment button[aria-checked=true]{background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container);border:2px solid var(--md-sys-color-on-secondary-container);font-weight:600}
+.wb-approval-segment button span{margin-inline-start:8px}
+.wb-approval-segment button:disabled{opacity:.6;cursor:default}
+.wb-approval-segment button:focus-visible{outline:2px solid var(--md-sys-color-primary);outline-offset:3px}
+@media(max-width:600px){.wb-approval-segment button{padding:8px 12px}}

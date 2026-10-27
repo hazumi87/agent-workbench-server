@@ -1,0 +1,1 @@
+{ "id": "no-provides", "name": "No provides", "version": "0.1.0", "class": "tool", "contexts": ["dashboard"], "actions": "actions.json" }

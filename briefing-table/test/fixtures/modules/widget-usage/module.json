@@ -1,0 +1,11 @@
+{
+  "id": "usage",
+  "name": "Usage",
+  "version": "0.1.0",
+  "description": "Claude, Codex and the server at a glance for one node: concentric rings that go green, yellow and red as a limit fills, wide or tall, in a screen widget the person can drag.",
+  "class": "widget",
+  "icon": "donut_large",
+  "contexts": ["app"],
+  "widget": { "realm": "app", "sizes": { "wide": [680, 152], "tall": [236, 336] }, "page": "ui/widget.html", "transparent": false },
+  "permissions": ["ui.widget"]
+}

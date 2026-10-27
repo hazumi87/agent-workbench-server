@@ -1,0 +1,5 @@
+{
+  "_comment": "Copy to web/ui-config.json (gitignored) and set per host. publicUrl = this engine's public hostname URL; accountUrl = optional, the account page if it lives elsewhere.",
+  "publicUrl": "https://<this-host>example.ts.net:<serve-port>",
+  "accountUrl": ""
+}

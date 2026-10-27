@@ -1,0 +1,21 @@
+node_modules/
+working/
+dist/
+.env
+__pycache__/
+engine.log
+data/
+config.json
+broker.log
+secrets/
+
+# Probe output — screenshots are evidence for a human, not source (global rule:
+# no large binaries in git). Regenerate with `node test/icons-page.probe.mjs`.
+test/*.png
+
+# per-checkout UI config (public hostname, account page location)
+web/ui-config.json
+
+# v21 UI probe screenshots (test/v21-ui.probe.mjs) — evidence, not source
+v21-shots/
+sbom/

@@ -1,0 +1,2033 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- global color palette, first paint (hub V2): see web/palette-boot.js -->
+  <script src="/palette-boot.js"></script>
+<meta charset="utf-8">
+<title>Harbor · Shell</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<!-- vendored, never edited: the design system window-chrome v21 (tokens + chrome + ring) -->
+<link rel="stylesheet" href="/assets/aurora/window-chrome/tokens.css">
+<link rel="stylesheet" href="/assets/aurora/window-chrome/hwb-chrome.css">
+<!-- v20 draws every tab's state as `.ring`; the ring styles live in their own
+     sheet and the chrome sheet does not import it. Without this link the tab
+     rings paint as unstyled black circles. (2026-09-15) -->
+<link rel="stylesheet" href="/assets/aurora/window-chrome/hwb-ring.css">
+<!-- the ONLY host-specific CSS (app-region plumbing) -->
+<link rel="stylesheet" href="/vendor/hwb/hwb-host.css">
+<!-- light-palette overrides for the vendored chrome's dark-pinned tab tones
+     (html[data-mode=light], set by palette-boot.js). the design system folds this into
+     window-chrome v34; drop this link and the .hwb-tab block then. -->
+<link rel="stylesheet" href="/light-mode.css">
+<!-- Chat | CLI tabs in the session bar (Owner 2026-10-05) -->
+<link rel="stylesheet" href="/agent-chat.css">
+<link rel="stylesheet" href="/room-line-markdown.css">
+<style>
+  /* The window ring honours the host's motion pause exactly as the pip did
+     (hwb-chrome.css pauses `.hwb-pip` animations under .is-motion-paused). */
+  .hwb.is-motion-paused .hwb-winring * { animation: none !important; }
+  .hwb-winring { display: inline-block; line-height: 0; }
+
+  /* Separator for the status menu's whole-application group. Declared HERE and
+     not in hwb-host.css: that sheet is vendored, and one hairline is not worth
+     a fork of it. the design system own tokens, so it is their language either way. */
+  .hwb-actmenu-sep {
+    height: 1px; margin: 4px 6px;
+    background: var(--border, #2a3441);
+  }
+
+  /* v21 SESSION BAR placement. The bar itself is the bundle's (.hwb-sbar,
+     hwbRenderSessionBar); these two lines only let it take its 40px row in our
+     flex column and let `hidden` win over the bundle's display:flex — hidden
+     while the CLI Manager tab is selected (it is not a session: no project, no
+     brand, nothing for the bar to say) or before a page has reported one. */
+  .hwb-sbar { flex: 0 0 auto; }
+  .hwb-sbar[hidden] { display: none; }
+
+  /* PER-TAB REFRESH ON A NARROW SELECTED TAB (decision, 2026-09-19).
+     the design system v21 note: at the 150px minimum the selected tab — which always
+     shows both ⟳ and ✕ — has room for only a few title characters. The v21
+     CHANGELOG offers no built-in option for this (its width tiers only collapse
+     the notice rail), so rather than raise the bundle's 150px minimum we hide
+     the ⟳ on a SELECTED tab narrower than 170px: the title keeps its room and
+     the ✕ (the 1d close-or-end popover) stays. F5 still refreshes the tab, and
+     hover on an unselected tab still shows its ⟳. The query is on the bundle's
+     own `hwbtab` size container, whose CONTENT box is the tab minus the v21
+     padding (6px a side), so a 170px tab = 158px here. */
+  @container hwbtab (width < 158px) {
+    .hwb-tab.is-active .trefresh { display: none; }
+  }
+
+  /* A NEWER CHROME IS SERVED THAN THIS WINDOW RUNS (shell-update.mjs). A dot on
+     the status cell, which is where the reload lives — a marker that does not
+     point at its own remedy is just a worry. Deliberately quiet and static: it
+     is news, not an alarm, and the window is still perfectly usable. */
+  /* The `+` is reserved for summon/groups and has no behaviour yet (2026-09-21);
+     `hidden` needs the display override because the bundle sets display:flex on
+     the class, the same trap .mgr-modal[hidden] documents. */
+  .hwb-newtab[hidden] { display: none !important; }
+  /* The corner is a MENU now, not a status light (2026-09-21). Sized and
+     centred like the ring it replaces so tier-1 geometry is unchanged — the
+     154px drag reserve and the caption rects are asserted, and a taller cell
+     would move them. */
+  .hwb-burger { display: block; color: var(--dim, #8a8f98); }
+  .hwb-act:hover .hwb-burger { color: var(--text, #e6e6e6); }
+  .hwb-act:focus-visible { outline: 1px solid var(--text); outline-offset: 1px; }
+  /* The hub chip in a window that holds no Manager tab: it OPENS one here, so it
+     reads as available rather than as the current view. */
+  .hwb-tab.is-hub.is-absent { opacity: .72; }
+  .hwb-tab.is-hub.is-absent:hover { opacity: 1; }
+
+  .hwb-act.has-update { position: relative; }
+  .hwb-act.has-update::after {
+    /* bottom-right of the burger (Owner 2026-09-28: at the top it sat so high he
+       never saw it) */
+    content: ''; position: absolute; bottom: 2px; right: 2px;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--sky, #4aa3df);
+    box-shadow: 0 0 0 1.5px var(--nav, #11151a);
+    pointer-events: none;
+  }
+
+  /* ==========================================================================
+     W3/W4 tab shell, PORTED TO the design system WINDOW CHROME v2 (2026-08-07).
+
+     WHAT CHANGED FROM v1 — the tab strip is no longer its own row under the
+     bar. v2 §4 retires "tier 1 is sacred": the tabs live INSIDE tier 1
+     (Chrome/Edge model) and the active tab IS the title. The v1 invariant
+     dragWidth(W) === W-138 is retired with it; the replacement is
+     dragWidth(W) >= 154 && maxRect(W).x === W-92, enforced structurally by
+     .hwb-dead's 154px hard reserve and asserted by hwbAssertInvariants().
+
+     Layout (flex column, top to bottom):
+       .hwb  ← the root WRAPS THE STAGE: --d-termbg / --d-ghost are declared on
+               it, so the iframe stage must be a descendant or it falls back to
+               transparent.
+         .hwb-bar    tier 1: pip · title (solo) OR .hwb-tabs (tabbed) · 154px
+                     reserve · caption cluster
+         .hwb-seam   3px, hidden by the component while .is-tabbed (the rail is
+                     the seam)
+         #stage      stacked iframes, one per tab, inactive display:none
+       #log          90px debug row, ?debug=1 only (outside .hwb — scaffolding)
+
+     Query: ?kind=solo|manager  ?title=...  ?tabs=url,url (each URL-encoded)
+            ?debug=1
+
+     TAB ROW VISIBILITY — "hidden at one tab, materialises on drag" (v2 §8 Q1,
+     settled): a window holding <=1 tab is NOT .is-tabbed and shows a classic
+     title. When the host announces {event:'dock:dragging', active:true} the row
+     materialises so the window can be a drop target, and reverts on false
+     unless a tab actually landed.
+     ========================================================================== */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    display: flex; flex-direction: column;
+    font-family: var(--font);
+    background: var(--ink); color: var(--text);
+  }
+
+  .hwb { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  .hwb-bar, .hwb-seam { flex: 0 0 auto; }
+
+  #stage {
+    flex: 1 1 auto; min-height: 0; position: relative;
+    background: var(--d-termbg);       /* DERIVED from the active tab's base */
+  }
+  #stage iframe { width: 100%; height: 100%; border: 0; display: block; background: var(--d-termbg); }
+
+  /* A TOUCH TABLET IN A PLAIN BROWSER [ipad tabs] (web/touch-ui.mjs, web/ipad-shell-gate.mjs): there is no window host, so the
+     caption cluster (minimize / maximize / close) has nothing to talk to, and the soft keyboard shrinks THIS page to what it
+     leaves (the tabs' frames follow: {hwbKb} below). */
+  html.touch-wide .hwb-caps, html.no-host .hwb-caps { display: none; }
+  html.kb-up body { height: var(--vvh, 100%); position: relative; top: var(--vv-top, 0px); }
+
+  #log {
+    flex: 0 0 90px; overflow-y: auto; background: #0b0e11;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono); font-size: 12px; padding: 6px 10px;
+    white-space: pre-wrap; word-break: break-all;
+  }
+  #log[hidden] { display: none; }
+
+  /* ROOM CHARACTER [rooms/character] (the design system room-character v1.1): inside a
+     room (level 2) the F1 room row wears the room's identity like an agent
+     tab — its colour's wash (the per-tab --d-barwash*, from --base) and the
+     room art as the unselected-tab watermark. The folder glyph stays as the
+     "this is a room" marker. Only a room with a colour (or a lead) is dressed;
+     otherwise the bundle's manila row is untouched. */
+  .hwb-tab.is-room.rc-dressed { --tab-bg: var(--d-barwash-i); background: var(--tab-bg); }
+  .hwb-tab.is-room.rc-dressed.is-active { --tab-bg: var(--d-barwash); }
+  .hwb-tab.is-room.rc-dressed .tname { color: var(--d-title-i); }
+  .hwb-tab.is-room.rc-dressed.is-active .tname { color: var(--d-title); }
+  .hwb-tab.is-room.rc-dressed:not(.is-active) .tlogo { display: block; }
+</style>
+</head>
+<body>
+  <!-- ===================== THE COMPONENT — hwb-example.html markup ===================== -->
+  <div class="hwb st-idle" id="win" style="--base:#5a6672" data-state="idle">
+    <div class="hwb-bar">
+      <div class="hwb-lead"></div>
+      <!-- A MENU, NOT A FOURTH STATUS LIGHT (Owner, 2026-09-21): "it's kind of
+           difficult to track when it's flashing, the cli manager is flashing, a
+           tab is flashing and the area to the right of the tabs is flashing."
+           The window-level ring said nothing a tab was not already saying, so
+           it was noise competing with the signal. The alarm belongs on the
+           SOURCE you can see — the tab — and this cell goes back to being what
+           it behaves like: the menu opener. -->
+      <div class="hwb-act" role="button" tabindex="0" aria-haspopup="menu" title="Window menu">
+        <svg class="hwb-burger" viewBox="0 0 16 16" aria-hidden="true" width="14" height="14">
+          <path d="M2 4h12M2 8h12M2 12h12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="hwb-gutter"></div>
+      <div class="hwb-title">
+        <span class="hwb-titletext"></span>
+        <span class="hwb-chip attention">Needs you<span class="hwb-agg"></span></span>
+        <span class="hwb-chip severed">Disconnected</span>
+        <span class="hwb-chip ended">Ended</span>
+      </div>
+      <div class="hwb-tabs"></div>
+      <div class="hwb-dead"></div>
+      <div class="hwb-caps" data-region="caption-cluster">
+        <button class="hwb-cap" data-cap="minimize" aria-label="Minimize"><span class="hwb-capglyph"><svg viewBox="0 0 10 10"><path d="M1 5h8"/></svg></span></button>
+        <button class="hwb-cap" data-cap="maximize" aria-label="Maximize"><span class="hwb-capglyph"><svg viewBox="0 0 10 10"><rect x="1" y="1" width="8" height="8"/></svg></span></button>
+        <button class="hwb-cap close" data-cap="close" aria-label="Close window"><span class="hwb-capglyph"><svg viewBox="0 0 10 10"><path d="M1 1l8 8M9 1l-8 8"/></svg></span></button>
+      </div>
+    </div>
+    <div class="hwb-seam"></div>
+    <!-- v21 SESSION BAR for the selected tab: project mark · project name ·
+         session title … brand watermark · messages / handoff / links. The
+         bundle renders it (renderSessionBar below); the data comes from the
+         tab's own page ({hwbBar}), and its icons go back to that page. -->
+    <div class="hwb-sbar" id="sbar" hidden></div>
+    <div id="stage"></div>
+  </div>
+  <!-- ===================== to here ===================== -->
+  <div id="log" hidden></div>
+
+<script type="module">
+'use strict';
+
+import {
+  hwbSetBase, hwbSetState, hwbSetExit, hwbSetLead, hwbRenderTabs, hwbAssertInvariants,
+  hwbRenderSessionBar,
+} from '/assets/aurora/window-chrome/hwb-chrome.js';
+/* brand-marks v1 lives in the engine's pinned copy (web/aurora/brand-marks);
+   same origin, so the shell imports it from there rather than a third copy. */
+import { brandMarkPath } from '/aurora/brand-marks/aurora-brand-marks.js';
+import { LOGO_PRESETS } from '/assets/aurora/window-chrome/hwb-logo-presets.js';
+/* MCP indicator (window-chrome v27): namespace lookup, so a pre-v27 pin is a
+   no-op rather than a link error that would take the shell down */
+import * as hwbChromeNS from '/assets/aurora/window-chrome/hwb-chrome.js';
+import { createMcpView, trackInFlight } from '/mcp-bar.mjs';
+import { HWB_CHROME_ALIAS, hwbRing, hwbRingFromChrome, hwbRingLabel } from '/assets/aurora/window-chrome/hwb-ring.js';
+/* The tab set, written down — see web/shell-tabs.mjs for why a reload used to
+   empty the window and why sessionStorage (not localStorage) is the right
+   scope. Ours, not the design system: it is engine policy about OUR tab model. */
+import {
+  readTabSet, writeTabSet, clearTabSet, planInitialTabs, isReloadKey,
+  paneidFromTabUrl, routeBundleEvent, BUNDLE_EVENTS, BAR_EVENTS, barActionFor,
+} from '/shell-tabs.mjs';
+import { watchForUpdate } from '/shell-update.mjs';
+import { createMic, attachMic, MIC_EVENT } from '/voice-mic.mjs';
+import { createViewTabs, attachViewTabs, VIEW_EVENT } from '/agent-chat.mjs';
+import { relayExternal, openExternal } from '/open-external.mjs'; // links out of a tab (Owner 2026-09-28)
+const micEl = createMic(); // ONE for the shell's life, re-attached on every bar render
+const viewTabsEl = createViewTabs(); // Chat | CLI, likewise; null state = a shell / command bridge, no tabs
+
+/* The window-level glyph. Same derivation as solo.js paintRing() and the
+   manager's ringSpecFor(): engine chrome token -> HWB_CHROME_ALIAS -> ring spec.
+   `attached` is always true here — a shell window IS a viewer by definition.
+   v21: drawn on a brand plate (no viewer dot anywhere) — the single session's
+   brand in a one-tab window, `generic` for a tabbed window's aggregate, which
+   stands for many sessions and so for no one brand. */
+/* The window-level ring is RETIRED (Owner, 2026-09-21): four things pulsing at
+   once — window, Manager, tab, and the chip beside the tabs — is not four
+   signals, it is none. The alarm now lives on the SOURCE that is visible, which
+   is the tab; when the session has no tab in this window it falls back to the
+   CLI Manager chip. The corner is a menu opener and says so with a hamburger.
+   paintWindowRing is gone rather than left dark: a painter nobody calls is the
+   next reader's puzzle. */
+
+/* Logo resolution map: bundle presets as the floor, ENGINE presets merged on
+   top. The engine's /vendor module is the authoritative superset — it is where
+   the Manager lands newly loaded marks — while the bundle's 5-key subset only
+   covers the installation's originals. Engine down → bundle floor still renders. */
+const LOGOS = Object.assign({}, LOGO_PRESETS);
+/* The engine's preset superset — a DIRECT same-origin import now that this
+   shell is served by the engine itself (P3). This replaced the window-host's
+   /engine-logos.js proxy, which existed only because the shell used to live on
+   a different origin than :7420; the proxy dies with the toolkit's copy at
+   step 5. Kept as a dynamic import so a missing/edited vendor module degrades
+   to the bundle subset instead of blanking the shell. */
+import('/vendor/aurora-logo-presets.js')
+  .then(function (m) {
+    Object.assign(LOGOS, m.LOGO_PRESETS || {});
+    log('logo presets: engine superset merged (' + Object.keys(LOGOS).length + ' keys)');
+    renderTabs();
+  })
+  .catch(function () {
+    log('logo presets: engine superset unavailable — bundle subset only');
+  });
+
+/* §7.5 alias, v18: IMPORTED from the bundle, not implemented here — one table,
+   two consumers, zero drift. The export maps chrome→engine; inbound engine
+   messages need the inverse. Insertion order makes active-idle→idle win over
+   the watching row (watching is a chrome-side modifier, not an engine state). */
+const ENGINE_TO_CHROME = {};
+Object.entries(HWB_CHROME_ALIAS).forEach(function (pair) {
+  if (!(pair[1] in ENGINE_TO_CHROME)) { ENGINE_TO_CHROME[pair[1]] = pair[0]; }
+});
+/* No overrides: since window-chrome v26 the bundle's alias table carries
+   `restorable` (its own chrome state, ranked between idle and ended - a
+   dehydrated session is not ended, it can be brought back), exactly as v21
+   added `background`. The old ENGINE_TO_CHROME['restorable'] = 'ended' row
+   is gone on purpose. */
+import { hwbHostInit } from '/vendor/hwb/hwb-host.js';
+import { mountTouchUi, isTouchWide, phoneSized } from '/touch-ui.mjs'; // html.touch-wide: no caption cluster, keyboard follows [ipad tabs]
+import { trackSoftKeyboard } from '/soft-keyboard.mjs';
+
+/* A PHONE NEVER STAYS IN THE SHELL (Owner 2026-10-05: an iPhone landed here from the iPad gate and was unusable). A phone-sized
+   touch screen opened at the top level goes back to its page, bare: the first ?tabs= entry, else the CLI Manager. */
+if (window.parent === window && phoneSized() && window.matchMedia?.('(pointer: coarse)')?.matches) {
+  let first = '/manager.html';
+  try {
+    const t = new URLSearchParams(location.search).get('tabs');
+    const one = t || '';
+    if (one.startsWith('/') && !one.startsWith('//')) first = one;
+  } catch { /* keep the manager */ }
+  location.replace(first);
+  await new Promise(() => {}); // this page does not start: it is being replaced
+}
+
+mountTouchUi();
+if (!(window.chrome && window.chrome.webview)) document.documentElement.classList.add('no-host'); // a plain browser tab (desktop or tablet): no caption cluster [desktop shell]
+const root = document.getElementById('win');
+const stripEl = root.querySelector('.hwb-tabs');
+const titleEl = root.querySelector('.hwb-titletext');
+const stageEl = document.getElementById('stage');
+const sbarEl = document.getElementById('sbar');
+
+/* THE SOFT KEYBOARD, ONCE, FOR EVERY TAB [ipad tabs]: on a touch tablet this page tracks the keyboard and shrinks to what it
+   leaves (html.kb-up above), so each tab's frame is already the visible height. A frame's own visualViewport cannot see the
+   keyboard, so it is TOLD ({hwbKb:{up}}; web/soft-keyboard.mjs follows it): the composer stays in view and the CLI keypad
+   knows the keys are up. Sent on every change and to every frame as it loads. */
+if (isTouchWide()) {
+  const tellFrames = function () {
+    const up = document.documentElement.classList.contains('kb-up');
+    for (const f of stageEl.querySelectorAll('iframe')) {
+      try { f.contentWindow.postMessage({ hwbKb: { up } }, location.origin); } catch (e) { /* gone */ }
+    }
+  };
+  trackSoftKeyboard({ event: 'shell-kb' });
+  window.addEventListener('shell-kb', tellFrames);
+  stageEl.addEventListener('load', tellFrames, true);
+}
+
+/* The hub keeps a PLAIN GRID GLYPH (v2 §5) — it is not a session and has no
+   project logo, which is exactly what makes it read as different. */
+const HUB_MARK = '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="8.5" height="8.5"/>'
+  + '<rect x="13.5" y="2" width="8.5" height="8.5"/><rect x="2" y="13.5" width="8.5" height="8.5"/>'
+  + '<rect x="13.5" y="13.5" width="8.5" height="8.5"/></svg>';
+
+/* Neutral base: the hub takes no identity, and a tabbed window whose hub is
+   active must not borrow a session's hue. Matches hwb-chrome.css's own
+   --rail-base fallback. */
+const NEUTRAL_BASE = '#5a6672';
+
+/* v2 §1: ONE base per window/tab, everything derives from it in CSS. Tabs that
+   arrive without one (?tabs=, plain adopts) get a preset in creation order so
+   two sessions in a window are never the same colour by accident. */
+const ID_BASES = ['var(--id-cobalt)', 'var(--id-green)', 'var(--id-orange)',
+  'var(--id-violet)', 'var(--id-orchid)'];
+
+/* ---- query parsing --------------------------------------------------------
+   ?tabs= is read from the RAW query and split on ',' BEFORE decoding: each URL
+   is individually URL-encoded, so a comma inside a URL arrives as %2C — a
+   URLSearchParams.get() would decode it first and corrupt the split. */
+function rawParam(name) {
+  const parts = location.search.replace(/^\?/, '').split('&');
+  for (const kv of parts) {
+    const i = kv.indexOf('=');
+    const k = i < 0 ? kv : kv.slice(0, i);
+    if (k === name) { return i < 0 ? '' : kv.slice(i + 1); }
+  }
+  return null;
+}
+const q = new URLSearchParams(location.search);
+const KIND = q.get('kind') === 'manager' ? 'manager' : 'solo';
+const INIT_TITLE = q.get('title') || (KIND === 'manager' ? 'Harbor · Workbench' : 'Harbor');
+const DEBUG = q.get('debug') === '1';
+
+/* ---- debug log row (the verification instrument, ?debug=1 only) ---- */
+const logEl = document.getElementById('log');
+if (DEBUG) { logEl.hidden = false; }
+function log(line) {
+  if (!DEBUG) { return; }
+  const ts = new Date().toISOString().substr(11, 12);
+  logEl.textContent += '[' + ts + '] ' + line + '\n';
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+/* ==== tab model ==========================================================
+   tabs = [{ id, url, title, state, sessionId, base, logoKey, iframe }]
+   state ∈ idle|streaming|background|watching|waiting|waiting-seen|disconnected|ended
+   (waiting-seen, window-chrome v33 / ticket: blocked on a prompt the user
+   has SEEN — still coral, nothing moves, still counted as blocked)
+   base/logoKey are the two NEW v2 fields; they ride tabs:state and tab:adopt
+   so identity survives a dock-merge or a tear-off.
+   `bar` (v21) is the page's session-bar data — project {name, mark, color},
+   title, brand, brandColor, counts. IN MEMORY ONLY: it carries an SVG, and
+   neither the host mirror nor the stored tab set (both whitelist their
+   fields) ever sees it; the page re-reports it on every load.            */
+const STATES = ['idle', 'streaming', 'background', 'watching', 'waiting', 'waiting-seen', 'disconnected', 'ended'];
+const tabs = [];
+let activeId = null;
+let seq = 0;
+
+/* ==== WORKROOM LEVEL 2 (item 3; workrooms.md §2.6, the design system workroom-nav v2)
+   Selecting a workroom tab ENTERS it: the row becomes that room's level —
+   the room line (F1 folder-chat, the landing, so one click still shows the
+   line) + one tab per seat, lead first + A2 add — and the N3 crumb goes back
+   up. MEMBER TABS ARE NOT TABS of this window: they never enter tabs[], so the
+   host inventory, the sessionStorage set, tear-off and the hub are untouched.
+   They are frames owned by the room tab (t.memberFrames), created on first
+   select and removed with it.
+   BEHIND A FLAG (?rooms=2) until window-chrome v24 draws N3/F1/A2; with an
+   older bundle the `room:` option is ignored and the hub chip acts as back. */
+const ROOMS2 = q.get('rooms') === '2';
+let roomView = null;   // {tabId, sel: 'chat' | 'm:<seatId>', prev}
+let badge = null;              /* hub's LIVE-session count, pushed by the page */
+let dockMaterialised = false;  /* tab row shown only for an in-flight drag */
+
+/* ==== host bridge ======================================================== */
+const bridge = hwbHostInit(root, {
+  log: log,
+  logSends: true,
+  /* The caption × closes the WINDOW, never a tab (Owner 2026-09-30: "it closes
+     a tab … it is supposed to close the cli-manager interface … relaunch from
+     the systray"). Every session keeps running: a window going away only
+     DETACHES (CLOSE-KILL retired, src/server/index.ts), so each shows as "no
+     window" in the Manager. End/Park stays on each tab's own ×. */
+  onCaptionClose: function () {
+    log('caption × — closing the window; sessions keep running');
+    bridge.close();
+  },
+  onAdopt: function (t) {
+    addTab(t.url, t.title, true, t.state, t.sessionId, t.base, t.logoKey);
+  },
+  onFocusTab: function (match) {
+    const hit = tabs.find(function (t) { return t.sessionId === match; })
+      || tabs.find(function (t) { return t.url === match; });
+    if (hit) {
+      activate(hit.id);
+      log('focus tab: ' + match + ' -> ' + hit.id);
+    } else {
+      log('focus tab: no tab matching ' + match);
+    }
+  },
+  onDockDragging: onDockDragging,
+  /* Vestigial under the per-window Manager (2026-08-18): this shell no longer
+     sends hub:summon, so the host has nothing to answer hub:absent to. Kept
+     because it is the toolkit's callback contract and the behaviour is the one
+     we want anyway — if a hub:absent ever arrives, open a Manager HERE.
+     isHub() matches manager.html, so it lands as the pinned hub chip. */
+  onHubAbsent: function () {
+    log('hub:absent — opening the CLI Manager as this window\'s hub tab');
+    addTab('/manager.html', 'Workbench', true);
+  },
+});
+
+/* Review loop: ?dump=1 measures the DERIVED per-tab colours once the tabs have
+   rendered and ships them to the host log, so the design system can check colour — the
+   thing a screenshot cannot prove — without running anything on this rig. */
+if (q.get('dump') === '1') {
+  window.addEventListener('load', function () {
+    setTimeout(function () { bridge.dumpDerived(); }, 600);
+  });
+}
+
+/* Tab URLs are normalized to ABSOLUTE at add time: the host's tab:tearoff
+   handler only accepts http(s)/file URLs (src/MainWindow.xaml.cs). */
+function absUrl(u) {
+  try { return new URL(u, location.href).href; } catch (e) { return u; }
+}
+function basename(u) {
+  try {
+    const p = new URL(u, location.href);
+    const seg = p.pathname.split('/').filter(Boolean).pop();
+    return seg || p.hostname || u;
+  } catch (e) { return u; }
+}
+
+/* The hub is a REAL TAB whose page is the CLI Manager — it is rendered as the
+   component's hub chip instead of a session chip. Identified by the session id
+   the manager announces, or by its URL for the very first frames. */
+function isHub(t) {
+  if (t.sessionId === 'cli-manager') { return true; }
+  try {
+    const p = new URL(t.url, location.href).pathname;
+    return /(^|\/)(manager|mock-hub)\.html$/.test(p) || p === '/'; // the engine serves the Manager at the root too [ipad hub]
+  } catch (e) { return false; }
+}
+function hubTab() {
+  return tabs.find(isHub) || null;
+}
+
+/* A WORKROOM tab is one whose page is the room page — derived from the URL
+   exactly as isHub() is, so it survives tear-off, re-adopt and the
+   sessionStorage restore with no new field in the tab set (wr §2.6, item 1 of
+   the 2026-09-25 room front-end order). The chrome draws the WR1-B plate for
+   kind:'workroom'; nothing else here treats a room tab differently yet. */
+/* The lead's mark on a workroom tab: a stored custom SVG wins over a preset
+   key, as on session tabs (bar.project.mark before LOGOS[logoKey]). */
+function roomMark(t) {
+  const r = t.roomIdentity;
+  if (!r) { return ''; }
+  return r.mark || ((r.logoKey && LOGOS[r.logoKey]) ? LOGOS[r.logoKey] : '');
+}
+
+/* Tab states the chrome can draw: the shell's own set, plus the ring's
+   RESTORABLE (a dehydrated seat; drawn as the amber restorable ring, which is
+   not the alert a 'disconnected' becomes). Used by workroom surfaces. */
+function tabStateOk(st) {
+  return STATES.indexOf(st) >= 0 || st === 'restorable' || st === 'none';
+}
+
+function isWorkroom(t) {
+  try {
+    return /(^|\/)room\.html$/.test(new URL(t.url, location.href).pathname);
+  } catch (e) { return false; }
+}
+/* A GLOBAL page (Settings, Account) belongs to no session or room, so it takes
+   the neutral base, never the next identity color (Owner 2026-09-30: a brown
+   Settings tab over a grey page). ticket moves it to the global palette.
+   A room app's full page (room-app.html, ticket) is neutral for the same
+   reason: it belongs to a room, not to a session. */
+function isGlobalPage(t) {
+  try {
+    return /(^|\/)(settings|account|room-app)\.html$/.test(new URL(t.url, location.href).pathname);
+  } catch (e) { return false; }
+}
+
+function addTab(url, title, makeActive, state, sessionId, base, logoKey) {
+  const abs = absUrl(url);
+  const t = {
+    id: 't' + (++seq), url: abs, title: title || basename(abs),
+    state: state || 'idle', sessionId: sessionId || null,
+    /* unknown logo keys are KEPT so identity round-trips through the host
+       untouched; the renderer resolves them to '' if this build has no such
+       preset. */
+    base: base || null, logoKey: logoKey || null,
+    iframe: null,
+  };
+  /* v2 §5: the Manager takes NO identity — which is also what gives its own
+     solo window the neutral bar the language already reads as "container". */
+  if (!t.base) {
+    t.base = (isHub(t) || isWorkroom(t) || isGlobalPage(t)) ? NEUTRAL_BASE : ID_BASES[(seq - 1) % ID_BASES.length];
+  }
+  /* Same preset-assignment rule as base: a session with no declared mark gets
+     one, because in the design system design the mark carries most of a tab's identity
+     (the A/B review's loudest delta). The engine's {hwbLogo} overrides this,
+     and the set is OPEN-ENDED — unknown keys ride through untouched.
+     HASHED, not round-robin: every SOLO window's first tab is seq 1, so
+     round-robin dressed the whole installation in keys[0] — the painter's palette
+     on every window (found by Owner). A stable hash of the identity string
+     varies across sessions and survives tear-off/re-adopt unchanged. */
+  /* A WORKROOM takes no hashed stand-in: its tab wears the LEAD project's mark
+     (the design system ruling, room interface: tab watermark) and a room with no lead is a
+     neutral tab. The lead's identity reaching the tab is item 3. */
+  if (!t.logoKey && !isHub(t) && !isWorkroom(t)) {
+    const keys = Object.keys(LOGO_PRESETS);
+    if (keys.length) {
+      /* URL before title: at add time the title is often basename(url) —
+         identical for every tab of the same page — while the URL carries the
+         session-distinct query (?name= / ?recipe=). Hashed identically on
+         re-adopt either way, so the mark survives tear-off. */
+      const idstr = t.sessionId || t.url || t.title;
+      let h = 0;
+      for (let i = 0; i < idstr.length; i++) { h = ((h * 31) + idstr.charCodeAt(i)) >>> 0; }
+      t.logoKey = keys[h % keys.length];
+    }
+  }
+  const f = document.createElement('iframe');
+  f.setAttribute('allow', 'clipboard-read; clipboard-write');
+  f.title = t.title;
+  f.style.display = 'none';
+  armFrameReloadKey(f);          /* before src: the load event must not be missed */
+  armFrameVisibility(f);         /* [perf/poll-traffic] the page learns it is hidden on load */
+  f.src = abs;
+  stageEl.appendChild(f);
+  t.iframe = f;
+  /* the Manager is PINNED FIRST (v2 §5) */
+  if (isHub(t)) { tabs.unshift(t); } else { tabs.push(t); }
+  if (makeActive) {
+    activate(t.id, true);
+  } else {
+    renderTabs();
+  }
+  postTabsState();
+  return t;
+}
+
+function activate(id, force) {
+  const t = tabs.find(function (x) { return x.id === id; });
+  if (!t) { return; }
+  let changed = force || activeId !== id;
+  if (ROOMS2 && isWorkroom(t) && (!roomView || roomView.tabId !== id)) {
+    roomView = { tabId: id, sel: 'chat', prev: activeId !== id ? activeId : null };
+    changed = true;
+    log('room: entered ' + id);
+  } else if (roomView && roomView.tabId !== id) {
+    roomView = null; // selecting any other top-level tab leaves the room
+  }
+  activeId = id;
+  tabs.forEach(function (x) {
+    x.iframe.style.display = (x.id === activeId) ? 'block' : 'none';
+  });
+  showRoomFrame();
+  /* xterm's hidden textarea needs REAL focus (contract) */
+  try { t.iframe.contentWindow.focus(); } catch (e) { /* cross-origin guard */ }
+  if (changed) { renderTabs(); }
+  /* WHICH tab is active is part of the set: a restore that comes back on the
+     wrong tab is a restore the user has to redo by hand. activate() is the only
+     mutation that does not go through postTabsState(), so it persists here. */
+  if (changed) { persistTabs(); }
+}
+
+/* removeTab: local removal ONLY (no messaging) — tearoff needs remove-first
+   semantics per the contract; closeTab layers the last-tab {cmd:'close'} on. */
+function removeTab(id) {
+  const i = tabs.findIndex(function (t) { return t.id === id; });
+  if (i < 0) { return null; }
+  const t = tabs.splice(i, 1)[0];
+  clearClose(t);
+  t.iframe.remove();
+  if (t.memberFrames) {
+    t.memberFrames.forEach(function (f) { f.remove(); });
+    t.memberFrames.clear();
+  }
+  if (roomView && roomView.tabId === id) { roomView = null; }
+  if (activeId === id) {
+    activeId = null;
+    const n = tabs[Math.min(i, tabs.length - 1)];
+    if (n) { activate(n.id, true); }
+  }
+  renderTabs();
+  postTabsState();
+  return t;
+}
+
+/* closeTab — engine contract §4, timeout semantics settled 2026-08-07
+   (briefing-table chose "ack-then-wait-indefinitely"):
+
+     shell → iframe   {hwbClose:true}
+     iframe → shell   {hwbCloseAck:true}                     (optional, fast)
+     iframe → shell   {hwbCloseResult:'ended'|'parked'|'cancel'}
+
+   The 1500ms guard covers ONLY the ack: a page that doesn't speak the protocol
+   (manager.html, static pages) never answers, and its ✕ must still work. Once
+   a page ACKS, we wait INDEFINITELY — what we're waiting on is a human staring
+   at a destructive-choice dialog, and a timer must never race that. An
+   immediate result counts as its own ack. `cancel` is first-class: the tab
+   stays and we never re-ask on our own.
+
+   Wedge belt (their optional suggestion): after 5 min idle post-ack we ABANDON
+   the attempt (log-only, no UX) rather than force-closing — abandoning can't
+   yank a tab out from under an open dialog, and the ✕ works again afterwards.
+   Removing a tab is non-destructive either way: sessions live in the broker. */
+const CLOSE_ACK_MS = 1500;
+const CLOSE_CEILING_MS = 300000;
+
+function closeTab(id) {
+  const t = tabs.find(function (x) { return x.id === id; });
+  if (!t) { return; }
+  if (t.closing) { return; }        // ask already in flight; ignore double-clicks
+  let asked = false;
+  try {
+    if (t.iframe && t.iframe.contentWindow) {
+      t.iframe.contentWindow.postMessage({ hwbClose: true }, '*');
+      asked = true;
+    }
+  } catch (err) { /* cross-origin guard — treat as unanswerable */ }
+  if (!asked) {
+    finishClose(id);
+    return;
+  }
+  t.closing = {
+    acked: false,
+    timer: setTimeout(function () {
+      log('close: no ack from ' + t.id + ' in ' + CLOSE_ACK_MS + 'ms — closing locally');
+      resolveClose(t, 'no-ack');
+    }, CLOSE_ACK_MS),
+  };
+}
+
+/* page acknowledged the ask — stop the ack guard, wait for the human */
+function ackClose(t) {
+  if (!t.closing || t.closing.acked) { return; }
+  clearTimeout(t.closing.timer);
+  t.closing.acked = true;
+  t.closing.timer = setTimeout(function () {
+    log('close: ' + t.id + ' acked but gave no result in ' + (CLOSE_CEILING_MS / 1000)
+      + 's — abandoning the close (tab kept; ✕ will ask again)');
+    clearClose(t);
+  }, CLOSE_CEILING_MS);
+  log('close: ' + t.id + ' acked — waiting indefinitely for the user');
+}
+
+function clearClose(t) {
+  if (t.closing) {
+    clearTimeout(t.closing.timer);
+    t.closing = null;
+  }
+}
+
+function resolveClose(t, result) {
+  clearClose(t);
+  log('close result: ' + t.id + ' -> ' + result);
+  if (result === 'cancel') { return; }   // page kept the session; tab stays
+  finishClose(t.id);                      // 'ended' | 'parked' | 'no-ack'
+}
+
+function finishClose(id) {
+  removeTab(id);
+  if (tabs.length === 0) { bridge.close(); }
+}
+
+/* ==== rendering ==========================================================
+   ALL of tier 1 is the component's business: hwbRenderTabs() owns the chip
+   DOM, the priority-MAX aggregate, the ·N blocked count and the rail. Nothing
+   here re-implements any of that — we only decide WHICH tabs are chips, which
+   one is the hub, and whether the row exists at all.                        */
+/* ALWAYS TABBED (Owner, 2026-09-21). the design system v2 §8 hid the strip at one tab and
+   let the active tab BE the title — good while the strip only held tabs, and
+   wrong once the hub chip must always be reachable: a torn-off window holds
+   exactly one tab, so the strip vanished and took the only way back to the CLI
+   Manager with it. The chip is the way to the Manager now (the `+` is reserved
+   for summon and groups), so the strip that carries it cannot be conditional.
+   `dockMaterialised` is kept in the expression rather than deleted: it is the
+   host's drop-target signal and it costs nothing to leave honest. */
+function wantTabbed() {
+  return true || tabs.length > 1 || dockMaterialised;
+}
+
+/* ---- level-2 helpers --------------------------------------------------- */
+function roomTab() {
+  return roomView ? tabs.find(function (x) { return x.id === roomView.tabId; }) || null : null;
+}
+function memberOf(t, seatId) {
+  const m = t && t.roomModel && t.roomModel.members;
+  return m ? m.find(function (x) { return x.seatId === seatId; }) || null : null;
+}
+/* Which frame the stage shows while inside a room: the room line, or the
+   selected member's frame. Every other member frame is hidden. */
+function showRoomFrame() {
+  tabs.forEach(function (x) {
+    if (!x.memberFrames) { return; }
+    x.memberFrames.forEach(function (f, seatId) {
+      f.style.display = (roomView && roomView.tabId === x.id && roomView.sel === 'm:' + seatId) ? 'block' : 'none';
+    });
+  });
+  const t = roomTab();
+  if (t) {
+    t.iframe.style.display = roomView.sel === 'chat' ? 'block' : 'none';
+  }
+  tellFrameVisibility(); // [perf/poll-traffic]
+}
+function selectInRoom(id) {
+  const t = roomTab();
+  if (!t) { return; }
+  if (id === 'chat') {
+    roomView.sel = 'chat';
+  } else if (typeof id === 'string' && id.indexOf('m:') === 0) {
+    const seatId = id.slice(2);
+    const m = memberOf(t, seatId);
+    const topTab = m && m.url && tabs.find(function (x) { return x !== t && paneidFromTabUrl(x.url) === paneidFromTabUrl(m.url); });
+    if (topTab) {
+      /* already a tab of this window: focus it rather than a second frame */
+      log('room: @' + m.handle + ' is already tab ' + topTab.id + ' -> focusing it');
+      roomView = null;
+      activate(topTab.id, true);
+      return;
+    }
+    if (m && m.url) {
+      t.memberFrames = t.memberFrames || new Map();
+      let f = t.memberFrames.get(seatId);
+      if (!f) {
+        f = document.createElement('iframe');
+        f.setAttribute('allow', 'clipboard-read; clipboard-write');
+        f.title = '@' + m.handle;
+        f.style.display = 'none';
+        armFrameVisibility(f); // [perf/poll-traffic]
+        /* roomframe=1: a room's own view of a member, not a window (the seat
+           menu's Close window neither counts nor closes it) */
+        const src = absUrl(m.url);
+        f.src = src + (src.indexOf('?') >= 0 ? '&' : '?') + 'roomframe=1';
+        stageEl.appendChild(f);
+        t.memberFrames.set(seatId, f);
+        log('room: member frame @' + m.handle + ' ' + m.url);
+      }
+      roomView.sel = id;
+    } else {
+      /* nothing live to show: the room line, filtered to that seat */
+      roomView.sel = 'chat';
+      try { t.iframe.contentWindow.postMessage({ hwbRoomFocusSeat: seatId }, '*'); } catch (e) { /* gone */ }
+    }
+  } else {
+    return;
+  }
+  showRoomFrame();
+  const f = roomView.sel === 'chat' ? t.iframe : t.memberFrames && t.memberFrames.get(roomView.sel.slice(2));
+  try { f.contentWindow.focus(); } catch (e) { /* cross-origin guard */ }
+  renderTabs();
+}
+function leaveRoom() {
+  if (!roomView) { return; }
+  const from = roomView.tabId;
+  const prev = roomView.prev;
+  roomView = null;
+  log('room: left ' + from);
+  const back = (prev && prev !== from && tabs.some(function (x) { return x.id === prev; })) ? prev
+    : (hubTab() ? hubTab().id : null);
+  if (back) {
+    activate(back, true);
+  } else {
+    showRoomFrame();
+    renderTabs();
+  }
+}
+/* A2: add an agent = the room page's own Add member form */
+function addInRoom() {
+  const t = roomTab();
+  if (!t) { return; }
+  roomView.sel = 'chat';
+  showRoomFrame();
+  try { t.iframe.contentWindow.postMessage({ hwbRoomAdd: true }, '*'); } catch (e) { /* gone */ }
+  renderTabs();
+}
+function closeMember(id) {
+  const t = roomTab();
+  const seatId = id.slice(2);
+  const f = t && t.memberFrames && t.memberFrames.get(seatId);
+  if (!f) { return; }
+  /* same promise as a session tab's close: the VIEW goes, the session stays.
+     The page is asked to park first (pins it against the detach reaper). */
+  try { f.contentWindow.postMessage({ hwbClose: true }, '*'); } catch (e) { /* gone */ }
+  setTimeout(function () {
+    f.remove();
+    t.memberFrames.delete(seatId);
+  }, 1500);
+  if (roomView && roomView.sel === id) { roomView.sel = 'chat'; }
+  showRoomFrame();
+  renderTabs();
+}
+
+/* ROOM CHARACTER [rooms/character] + window-chrome v32: a mark's style is the
+   art's {line, backlit}; anything else is dropped here, and hwbMarkClass
+   ignores a line it does not know. Namespace lookup so a pre-v32 pin is a
+   no-op (solid fill), not a link error. */
+function markStyleOf(v) {
+  return v && typeof v === 'object'
+    ? { line: typeof v.line === 'string' ? v.line : 'none', backlit: v.backlit === true }
+    : null;
+}
+function markClass(style) {
+  return (style && typeof hwbChromeNS.hwbMarkClass === 'function') ? hwbChromeNS.hwbMarkClass(style) : '';
+}
+function tabLogoStyle(t) {
+  if (isWorkroom(t)) {
+    return (t.roomIdentity && t.roomIdentity.mark && t.roomIdentity.markStyle) || undefined;
+  }
+  const bar = t.bar || null;
+  return (bar && bar.project && bar.project.mark && markStyleOf(bar.project.markStyle)) || undefined;
+}
+
+/* THE ROOM TITLE BAR FANS OUT FROM ITS TAB (window-chrome v32 .hwb-barwash):
+   the room page's header is the room's session bar, so the shell hands it the
+   selected tab's centre and half-width (hwbPositionBarWash, the bar's own
+   measure) in the frame's coordinates, on every render, resize and strip
+   scroll. Only the room page listens; standalone it keeps the 105px default. */
+let barWashRaf = 0;
+function scheduleBarWash() {
+  if (barWashRaf) { return; }
+  barWashRaf = requestAnimationFrame(function () {
+    barWashRaf = 0;
+    postBarWash();
+  });
+}
+function postBarWash() {
+  const t = roomView ? roomTab() : tabs.find(function (x) { return x.id === activeId; });
+  if (!t || !isWorkroom(t) || !t.iframe || !t.iframe.contentWindow) { return; }
+  if (roomView && roomView.sel !== 'chat') { return; }
+  if (typeof hwbChromeNS.hwbPositionBarWash !== 'function') { return; }
+  const pos = hwbChromeNS.hwbPositionBarWash(root);
+  if (!pos) { return; }
+  const off = t.iframe.getBoundingClientRect().left - root.getBoundingClientRect().left;
+  t.iframe.contentWindow.postMessage({ chrome: 'bar-wash', x: pos.x - off, core: pos.core }, '*');
+}
+window.addEventListener('resize', scheduleBarWash);
+stripEl.addEventListener('scroll', scheduleBarWash, true);
+
+/* ROOM CHARACTER [rooms/character]: the v24 F1 room row takes no base/logo
+   option, so dress it after the render with the room's identity (the same
+   {hwbRoomIdentity} the top-level tab wears): --base for the wash, and the
+   room's mark as its .tlogo watermark. No identity = the bundle's manila. */
+function dressRoomRow(t) {
+  const el = stripEl.querySelector('.hwb-tab.is-room');
+  const r = t.roomIdentity;
+  if (!el || !r || !r.base) {
+    return;
+  }
+  el.classList.add('rc-dressed');
+  el.style.setProperty('--base', r.base);
+  const mark = roomMark(t);
+  if (mark && !el.querySelector('.tlogo')) {
+    const lg = document.createElement('span');
+    lg.className = 'tlogo' + markClass(tabLogoStyle(t));
+    lg.setAttribute('aria-hidden', 'true');
+    lg.innerHTML = mark;
+    el.appendChild(lg);
+  }
+}
+
+function renderRoomLevel(t) {
+  const model = t.roomModel || { members: [] };
+  root.classList.add('is-tabbed');
+  hwbSetBase(root, NEUTRAL_BASE);
+  const members = model.members.map(function (m) {
+    /* NOT through ENGINE_TO_CHROME for restorable: that table gives a SESSION
+       tab ended's face (no chrome analogue yet), but a member tab must say
+       what the roster says (the design system, item 3 FAIL-1). The ring draws
+       restorable; the chrome's aggregate ignores states it does not rank. */
+    const st = m.state === 'restorable' || m.state === 'none' ? m.state : (ENGINE_TO_CHROME[m.state] || m.state);
+    return {
+      id: 'm:' + m.seatId,
+      name: '@' + m.handle,
+      base: m.base || NEUTRAL_BASE,
+      /* the seat's own state, as the roster derives it (restorable included:
+         a ring state of its own, not an alert) */
+      state: tabStateOk(st) ? st : 'ended',
+      /* a member tab is a session tab: its PROJECT mark is the unselected-tab
+         watermark (the bundle omits it on the selected tab) */
+      logo: m.mark || ((m.logoKey && LOGOS[m.logoKey]) ? LOGOS[m.logoKey] : ''),
+      logoStyle: m.mark ? (m.markStyle || undefined) : undefined, // v32 [rooms/character]
+      active: roomView.sel === 'm:' + m.seatId,
+      brand: m.brand || 'generic',
+      brandColor: m.brandColor || undefined,
+      exit: m.exit || undefined,
+      primary: !!m.primary, // B5 (window-chrome v23+)
+      mode: t.roomMode || undefined, // v34: the room's override
+    };
+  });
+  const opts = {
+    tabs: members,
+    hubMark: HUB_MARK,
+    liveCount: (typeof badge === 'number' && isFinite(badge)) ? badge : 0,
+    brandMarkPath: brandMarkPath,
+    onSelect: selectInRoom,
+    /* window-chrome v24 (the design system, 2026-09-25): ‹ back replaces the hub chip,
+       the F1 folder-chat tab leads the row (named for the room), A2 replaces
+       the +. Members are ours, in the room's order, lead flagged primary. */
+    room: {
+      name: t.title,
+      chat: { id: 'chat', name: t.title, active: roomView.sel === 'chat' },
+      onBack: leaveRoom,
+      onAdd: addInRoom,
+    },
+  };
+  hwbRenderTabs(root, opts);
+  dressRoomRow(t);
+  if (!stripEl.querySelector('.hwb-tab.is-room')) {
+    /* PRE-v24 BUNDLE: `room` was ignored. Draw the room line as an ordinary
+       workroom tab in front, keep the + hidden, and make the hub chip the way
+       back up. Only reachable behind ?rooms=2 until the pin is at v24. */
+    opts.tabs = [{ id: 'chat', kind: 'workroom', name: t.title,
+      /* ROOM CHARACTER: the room's colour + art, as on the top-level tab */
+      base: (t.roomIdentity && t.roomIdentity.base) || NEUTRAL_BASE, state: 'idle',
+      logo: roomMark(t), logoStyle: tabLogoStyle(t), active: roomView.sel === 'chat' }].concat(members);
+    hwbRenderTabs(root, opts);
+    const plusEl = stripEl.querySelector('.hwb-newtab');
+    if (plusEl) { plusEl.hidden = true; }
+    const hubEl = stripEl.querySelector('.hwb-tab.is-hub');
+    if (hubEl) {
+      hubEl.title = 'Back to all tabs';
+      hubEl.addEventListener('click', function (e) { e.stopPropagation(); leaveRoom(); });
+    }
+  }
+  bridge.refresh();
+}
+
+function renderTabs() {
+  scheduleBarWash(); // [rooms/character] after this render lands
+  if (roomView) {
+    const rt = roomTab();
+    if (rt) {
+      renderRoomLevel(rt);
+      return;
+    }
+    roomView = null;
+  }
+  const hub = hubTab();
+  const sessions = tabs.filter(function (t) { return t !== hub; });
+  const active = tabs.find(function (t) { return t.id === activeId; }) || tabs[0] || null;
+  const tabbed = wantTabbed();
+  root.classList.toggle('is-tabbed', tabbed);
+
+  if (!tabbed) {
+    /* Single-tab windows KEEP THEIR WASH (v2 §6) — the classic title, and the
+       window wears that one session's identity. */
+    stripEl.replaceChildren();
+    const t = active;
+    titleEl.textContent = t ? t.title : INIT_TITLE;
+    document.title = 'Workbench';
+    hwbSetBase(root, t ? t.base : NEUTRAL_BASE);
+    hwbSetState(root, (t && STATES.indexOf(t.state) >= 0) ? t.state : 'idle');
+    hwbSetExit(root, (t && t.exit) ? t.exit : '');
+    hwbSetLead(root, !!t && t.state === 'waiting');
+    /* No tab row = no selected tab to centre the bar's wash on: clear whatever
+       a tabbed render left, so the bundle's own fallback applies. */
+    root.style.removeProperty('--bar-wash-x');
+    root.style.removeProperty('--bar-wash-core');
+    renderSessionBar(t);
+    bridge.refresh();
+    return;
+  }
+
+  /* --base on the ROOT goes NEUTRAL while tabbed (v2 §6): a tabbed window is a
+     CONTAINER — identity abstains, state aggregates, and identity must not
+     flicker on every tab switch. Per-tab identity rides each chip's own
+     inline --base, which hwbRenderTabs() sets; the rail follows the active tab
+     via --rail-base, which the component sets on the root.
+     (Known component gap, reported upstream: the --d-* properties are declared
+     only on .hwb, so a chip's inline --base does not currently re-derive its
+     wash. When hwb-chrome.css re-declares them on .hwb-tab, per-tab identity
+     lights up here with no change to this file.) */
+  hwbSetBase(root, NEUTRAL_BASE);
+
+  hwbRenderTabs(root, {
+    tabs: sessions.map(function (t) {
+      const bar = t.bar || null;
+      return {
+        id: t.id,
+        kind: isWorkroom(t) ? 'workroom' : undefined,
+        /* the tab label is the SESSION title (the page sends displayName():
+           the conversation's own name, else the project's) */
+        name: t.title,
+        /* workroom: the LEAD project's identity, as the room page hands it
+           over ({hwbRoomIdentity}); neutral while there is none, even for a
+           tab restored from a set stored with a hashed base (the design system ruling:
+           tab watermark = the lead project's mark; no lead = neutral) */
+        base: isWorkroom(t) ? ((t.roomIdentity && t.roomIdentity.base) || NEUTRAL_BASE) : t.base,
+        state: (STATES.indexOf(t.state) >= 0 || (isWorkroom(t) && tabStateOk(t.state))) ? t.state : 'idle',
+        /* The unselected-tab watermark is the PROJECT mark. The page's own mark
+           wins — it is the recipe's real logo, while logoKey may be a hashed
+           preset stand-in for a custom SVG that has no key. */
+        logo: isWorkroom(t) ? roomMark(t)
+          : (bar && bar.project && bar.project.mark)
+          || ((t.logoKey && LOGOS[t.logoKey]) ? LOGOS[t.logoKey] : ''),
+        /* window-chrome v32: the watermark draws with the ART's line style +
+           glow — the room's art, or the page's own project mark (a hashed
+           preset stand-in has no style: today's solid fill) [rooms/character] */
+        logoStyle: tabLogoStyle(t),
+        active: t.id === activeId,
+        /* v21 brand plate on the 28px glyph (brandMarkPath below resolves the
+           key; an unknown key falls back to `generic` inside the bundle) */
+        brand: bar ? bar.brand : 'generic',
+        brandColor: bar ? bar.brandColor : undefined,
+        exit: t.exit || undefined,
+        /* v34: a room's own Dark/Light override; a CLI tab has none and follows the shell */
+        mode: isWorkroom(t) ? (t.roomMode || undefined) : undefined,
+        /* the page's handed-over field count, as the tab's items notice */
+        items: t.items || undefined,
+      };
+    }),
+    hubMark: HUB_MARK,
+    /* INVENTORY, not alerts: the live count the hub page pushes. Never derived
+       from the tab count (v2 §5 — in production it is installation-wide). */
+    liveCount: (typeof badge === 'number' && isFinite(badge)) ? badge : 0,
+    brandMarkPath: brandMarkPath,
+    /* NO onClose / onEndSession / onRefresh callbacks, deliberately: the bundle
+       fires those AND dispatches hwb:close-view / hwb:end-session / hwb:refresh,
+       and the shell answers the EVENTS (bundleHandlers below). Wiring both
+       would close / end / reload twice. The ✕ no longer closes directly — it
+       opens the bundle's 1d popover (3s, End session). */
+    onSelect: activate,
+    /* NO `onNew`. The `+` is reserved for SUMMON and GROUPS (Owner, 2026-09-21)
+       and is explicitly not the way to the CLI Manager any more — the hub chip
+       is, and it is always present. Until that feature exists the button has no
+       job, so it is hidden below rather than left wired to the old behaviour: a
+       control that still does the retired thing teaches the habit you are about
+       to break. */
+  });
+
+  /* --- hub chip post-processing (the component always draws a hub and never
+     wires it, because upstream the Manager is not one of the host's tabs; here
+     it IS a real tab, so it must be selectable — and must disappear entirely
+     when this window does not hold the Manager). Post-processing keeps
+     hwb-chrome.js vendored verbatim. */
+  /* (The shell's own strip ⟳ that sat here is gone: v21 gives EVERY tab its own
+     refresh — hwb:refresh, handled by bundleHandlers.refresh. One mechanism.) */
+
+  /* THE HUB CHIP IS ALWAYS PRESENT AT TOP LEVEL (Owner, 2026-09-21) — it is how
+     you reach the CLI Manager from any window, and it grounds a window that
+     holds nothing else.
+     It used to be REMOVED from a window with no Manager tab, which deleted the
+     affordance in exactly the window that needed it: tear a session off into
+     its own window and there was no visible way back. The capability existed
+     (summonManager, ruled 2026-08-18 — "every window carries its own Manager
+     tab") and only the `+` carried it, which is a button you have to already
+     know about.
+     Click resolves LOCALLY, never across windows: focus this window's Manager
+     if it has one, otherwise open one here. The old singleton walked every
+     window and yanked you to another one, which is the behaviour bdd4b3f
+     retired.
+     (When workroom windows land, the chip belongs to the TOP LEVEL only — a
+     window showing a folder's members has its own back control and must not
+     also offer this.) */
+  /* Hidden, not removed: the bundle rebuilds the strip on every render, and
+     `.hwb-newtab` is granted app-region:no-drag BY NAME in hwb-host.css, so the
+     class has to survive for the day it comes back as summon/groups. */
+  const plusEl = stripEl.querySelector('.hwb-newtab');
+  if (plusEl) {
+    plusEl.hidden = true;
+  }
+
+  const hubEl = stripEl.querySelector('.hwb-tab.is-hub');
+  if (hubEl) {
+    if (hub) {
+      hubEl.dataset.hub = hub.id;
+      if (activeId === hub.id) {
+        hubEl.classList.add('is-active');
+        /* the rail must not borrow a session's accent while the hub leads */
+        root.style.setProperty('--rail-base', NEUTRAL_BASE);
+      }
+    } else {
+      hubEl.classList.add('is-absent');
+      hubEl.title = 'Workbench — open it in this window';
+    }
+    hubEl.addEventListener('click', summonManager);
+  }
+
+  /* --- AUX TABS CLOSE IMMEDIATELY; THEY HAVE NO SESSION TO END.
+     The bundle wires the 1d close-or-end popover to EVERY tab's ✕ — it has no
+     per-tab notion of session vs aux — so closing Icons or Account offered
+     "End session" and sat through a 3s countdown for a page that owns no pty.
+     Owner, 2026-09-20: "it should only do it on pty brokered pages."
+
+     The engine half was already safe (bundleHandlers.endSession ignores a tab
+     with no paneid), so nothing could have been killed; this is the affordance,
+     which is the part that matters — a button offering to end a session you
+     cannot end is worse than a slow close.
+
+     Post-processed rather than fixed in the bundle, like the hub chip above:
+     hwb-chrome.js stays vendored verbatim (Contract A). A capture-phase
+     listener runs BEFORE the bundle's own and stops it, so the popover is never
+     built. Asked the design system for a per-tab flag as the durable fix. */
+  stripEl.querySelectorAll('.hwb-tab:not(.is-hub) .tclose').forEach(function (btn) {
+    const id = btn.dataset.close;
+    const t = tabs.find(function (x) { return x.id === id; });
+    if (!t || paneidFromTabUrl(t.url)) {
+      return; // a real session tab keeps the popover
+    }
+    btn.title = 'Close tab';
+    btn.setAttribute('aria-label', 'Close tab');
+    btn.addEventListener('click', function (e) {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      /* A ROOM with live agents [ticket]: the same 3 s countdown as a session
+         tab, and its one act is "Disconnect agents" (every seat's pane ends;
+         the room, seats and line stay; opening it again reconnects). Built by
+         the bundle's own hwbClosePopover and relabelled, like the hub chip.
+         A detached root: the bundle's hwb:end-session / hwb:close-view events
+         must not ALSO reach bundleHandlers (a room has no pane to end). The
+         tab stays open on Disconnect: the page shows the per-seat results,
+         including a claude the engine could not stop. */
+      if (isWorkroom(t) && Array.isArray(t.roomActions) && t.roomActions.indexOf('disconnect') >= 0
+          && typeof hwbChromeNS.hwbClosePopover === 'function') {
+        const pop = hwbChromeNS.hwbClosePopover(document.createElement('div'), btn, id, {
+          onClose: function () { log('room tab ✕ ' + id + ' — closing, agents keep running'); finishClose(id); },
+          onEndSession: function () {
+            log('room tab ✕ ' + id + ' — Disconnect agents');
+            activate(id);
+            try { t.iframe.contentWindow.postMessage({ hwbRoomDisconnect: true }, '*'); } catch (err) { /* frame gone */ }
+          },
+        });
+        if (pop) {
+          const end = pop.querySelector('.cp-end');
+          if (end) { end.textContent = 'Disconnect agents'; end.title = 'end every agent\'s session in this room; the room, its seats and its line stay, and opening it again reconnects them'; }
+          const msg = pop.querySelector('.cp-msg > span');
+          if (msg) { msg.innerHTML = '<b>Closing tab</b> — agents keep running'; }
+          pop.setAttribute('aria-label', 'Close room tab');
+        }
+        return;
+      }
+      /* finishClose, not closeTab: closeTab asks the PAGE to park its session
+         and waits out a 1.5s ack guard when the page does not speak the
+         protocol — which every aux page is, by definition. There is nothing to
+         park, so the wait buys a slower close and no safety. */
+      log('aux tab ✕ ' + id + ' — closing directly, no session to end');
+      finishClose(id);
+    }, true);
+  });
+
+  /* the aggregate is the component's; we only READ its verdict for the
+     self-elected lead amplitude and the ended verdict seam */
+  const agg = root.dataset.state;
+  hwbSetLead(root, agg === 'waiting');
+  renderSessionBar(active);
+  hwbSetExit(root, (agg === 'ended' && active && active.exit) ? active.exit : '');
+  titleEl.textContent = active ? active.title : INIT_TITLE;
+  document.title = 'Workbench';
+  bridge.refresh();
+}
+
+/* ==== v21 SESSION BAR =====================================================
+   The bundle draws it (hwbRenderSessionBar); we pick WHOSE bar it is — the
+   selected tab's — and hand over the data that tab's page reported. The bar's
+   wash is centred on the selected tab by the bundle itself (hwbPositionBarWash,
+   run from hwbRenderTabs on render, scroll and resize), so the shell measures
+   nothing. Hidden for the CLI Manager (not a session) and for a page that has
+   not reported a bar (a mock, a page still loading). */
+const mcpView = createMcpView(function () { return sbarEl; }, hwbChromeNS.hwbMcpIndicator);
+let mcpTab = null; // the tab whose calls the bar's indicator is showing
+
+function renderSessionBar(t) {
+  const bar = t && !isHub(t) ? t.bar : null;
+  if (!bar) {
+    sbarEl.hidden = true;
+    if (mcpTab !== null) { mcpTab = null; mcpView.reset([]); }
+    return;
+  }
+  hwbRenderSessionBar(sbarEl, {
+    project: bar.project || {},
+    title: bar.title || '',
+    brand: bar.brand,
+    brandColor: bar.brandColor,
+    brandMarkPath: brandMarkPath(bar.brand || 'generic'),
+    messages: bar.messages || 0,
+    handoff: bar.handoff || 0,
+    links: bar.links || 0,
+    /* v34: the SELECTED tab's mode, so the bar joins it seamlessly (S10) */
+    mode: (isWorkroom(t) && t.roomMode) || undefined,
+  });
+  /* The voice mic (ticket) is ours, not the bundle's: drawn from the tab's
+     MODEL (`bar.voice`, beside messages/handoff/links) and re-attached after
+     EVERY render, left of messages. null = voice off = no mic. */
+  attachMic(sbarEl, micEl, bar.voice || null);
+  attachViewTabs(sbarEl, viewTabsEl, bar.view || null); // the page owns the view; we only draw and forward
+  sbarEl.hidden = false;
+  /* a different tab's bar: clean slate + that tab's calls still in flight */
+  if (mcpTab !== t.id) {
+    mcpTab = t.id;
+    mcpView.reset(t.mcp ? [...t.mcp.values()] : []);
+  }
+}
+
+/* The bar's icons act on data the tab's PAGE owns (fabric inbox, handoff
+   fields, links), so each is forwarded to the selected tab's iframe, which
+   opens its own modal — the same one its standalone bar opens. */
+[...BAR_EVENTS, MIC_EVENT, VIEW_EVENT].forEach(function (type) {
+  sbarEl.addEventListener(type, function (ev) {
+    const action = type === MIC_EVENT ? 'voice' : type === VIEW_EVENT ? 'view:' + ev.detail.view : barActionFor(type);
+    const t = tabs.find(function (x) { return x.id === activeId; });
+    if (!action || !t || !t.iframe || !t.iframe.contentWindow) { return; }
+    try {
+      t.iframe.contentWindow.postMessage({ hwbBarAction: action }, '*');
+      log('bar: ' + type + ' -> ' + t.id);
+    } catch (e) { /* frame gone */ }
+  });
+});
+
+/* Host mirror of the tab set — the host uses it to adopt TAB SETS on
+   dock-merge (not the shell's own URL), to expose tabs over the control API,
+   and later for [ref] persistence. base + logoKey are v2 additions; the logo
+   SVG STRING never crosses, only the preset key. */
+function postTabsState() {
+  bridge.sendTabsState(badge, tabs);
+  persistTabs();
+}
+
+/* ==== tab-set persistence (the F5 fix) ===================================
+   Written on EVERY mutation, because the reload that needs it is not a gesture
+   we get to see coming — it is a keystroke the browser may handle before any
+   of our code runs. There is no unload hook here on purpose: `beforeunload` is
+   not guaranteed (a crashed or killed window never fires it), and a write that
+   only happens at the end is a write that is missing exactly when it is needed.
+   The cost is a few hundred bytes of JSON per tab change, which is nothing. */
+function persistTabs() {
+  /* location.href rides along so the next load can tell a RELOAD of this window
+     from the host NAVIGATING it somewhere — see planInitialTabs. */
+  writeTabSet(window.sessionStorage, tabs, activeId, location.href);
+}
+
+/* ==== refresh: F5 MEANS THIS TAB, NOT THIS WINDOW ========================
+   Owner, 2026-09-17: "i hit f5 to refresh the cli manager … it cleared all the
+   tabs." What he wanted was the page in front of him; what the browser does is
+   reload the top-level document, which is the shell. Two halves:
+
+     1. persistence (above) — the SAFETY NET. Even if an intercept never runs
+        (a host accelerator, a menu reload, a crash-restore) the window comes
+        back with its tabs.
+     2. this intercept — the INTENT. Reload the active iframe and leave the
+        shell standing, so the other tabs are never disturbed in the first
+        place.
+
+   Reloading a session page is SAFE: the page-load attach path sends no
+   `intent`, so the engine treats it as `reclaim` and never as a spawn
+   (2026-09-04) — a reload cannot start a session or seize the keyboard.
+
+   THE LISTENER HAS TO BE IN BOTH DOCUMENTS. Keyboard events do not cross a
+   document boundary, so a handler on the shell's window never sees a keystroke
+   typed into an iframe — which is where the user always is. Every page we load
+   is same-origin (the engine serves all of them), so we can add the same
+   handler to each frame's document as it loads; the shell-level one covers the
+   chrome, and a cross-origin frame we cannot reach falls back to the safety
+   net above. */
+function refreshActiveTab(why) {
+  return refreshTab(activeId, why);
+}
+
+function refreshTab(id, why) {
+  const t = tabs.find(function (x) { return x.id === id; });
+  if (!t || !t.iframe) { return false; }
+  try {
+    t.iframe.contentWindow.location.reload();
+  } catch (e) {
+    /* Cross-origin, or a frame in a state that refuses reload(): re-setting
+       src is the blunt equivalent. It loses in-frame navigation, which is why
+       it is the fallback and not the method. */
+    t.iframe.src = t.iframe.src;
+  }
+  log('refresh (' + why + '): reloaded tab ' + t.id + ' — the shell stands');
+  return true;
+}
+
+function onReloadKey(e) {
+  if (!isReloadKey(e)) { return; }
+  e.preventDefault();
+  e.stopPropagation();
+  refreshActiveTab('key');
+}
+window.addEventListener('keydown', onReloadKey, true);
+
+/* Same-origin frames get the handler as they load — on EVERY load, not once:
+   a frame that navigates (or is reloaded by us) gets a fresh document, and the
+   old document's listener goes with the old document. */
+/* ==== WHICH FRAME IS ON SCREEN [perf/poll-traffic] ========================
+   A tab frame is display:none while another tab is up, and a document in a
+   hidden iframe still reads visibilityState 'visible', so its polls never
+   paused (the Manager's /api/table every 2.5 s, from every window). The shell
+   says it instead: {hwbVisibility: 'visible'|'hidden'} to each frame when that
+   changes, and again on every load (a message sent before the page loaded
+   went to the old document). The pages' half is web/page-visibility.mjs. */
+function allFrames() {
+  const out = [];
+  tabs.forEach(function (t) {
+    out.push(t.iframe);
+    if (t.memberFrames) { t.memberFrames.forEach(function (f) { out.push(f); }); }
+  });
+  return out;
+}
+function tellFrame(f, force) {
+  const v = f.style.display === 'none' ? 'hidden' : 'visible';
+  if (!force && f._hwbVis === v) { return; }
+  f._hwbVis = v;
+  try { f.contentWindow.postMessage({ hwbVisibility: v }, '*'); } catch (e) { /* gone */ }
+}
+function tellFrameVisibility() {
+  allFrames().forEach(function (f) { tellFrame(f, false); });
+}
+function armFrameVisibility(f) {
+  f.addEventListener('load', function () { tellFrame(f, true); });
+}
+
+function armFrameReloadKey(f) {
+  f.addEventListener('load', function () {
+    try {
+      f.contentDocument.addEventListener('keydown', onReloadKey, true);
+    } catch (err) {
+      /* cross-origin — the shell-level handler is the fallback */
+    }
+  });
+}
+
+/* ==== the `+` — SUMMON, never create (v2 §5) =============================
+   There is exactly ONE CLI Manager in the app. `+` brings it to the front so
+   the user can pick what to start; it never starts a session and never spawns
+   a second Manager. If the Manager is a tab in THIS window, fronting it is a
+   local activate; otherwise the host has to find it. */
+/* PER-WINDOW MANAGER (Owner, 2026-08-18 — supersedes the single-hub rule).
+   Every window carries its OWN Manager tab, so `+` resolves locally: focus the
+   hub if it is here, otherwise open one HERE. It never walks the installation and
+   never yanks you into another window — the old hub:summon behaviour meant the
+   `+` in your window took you somewhere else and then opened sessions over
+   there. One-window-per-pty is untouched: that rule lives in the engine
+   (focusIfShowing), not in how many Managers exist. */
+/* The session tabs of THIS window (paneids from their solo urls) and the
+   active one, for Assemble room. The hub and room tabs are not sessions. */
+function windowTabsState() {
+  const paneids = [];
+  let active = null;
+  tabs.forEach(function (t) {
+    const p = paneidFromTabUrl(t.url);
+    if (!p) { return; }
+    paneids.push(p);
+    if (t.id === activeId) { active = p; }
+  });
+  return { paneids: paneids, active: active };
+}
+
+/* Status menu › "Assemble room from this window's tabs…": make sure the hub
+   exists (as the hub chip does), then ask IT to open the modal — the modal is
+   the Manager's, never drawn by the shell. A hub added just now is asked once
+   its page has loaded. */
+function assembleFromWindow() {
+  const state = windowTabsState();
+  let hub = hubTab();
+  const ask = function () {
+    try { hub.iframe.contentWindow.postMessage({ hwbAssemble: state }, '*'); } catch (err) { /* gone */ }
+  };
+  if (hub) {
+    activate(hub.id);
+    ask();
+    return;
+  }
+  hub = addTab('/manager.html', 'Workbench', true);
+  hub.iframe.addEventListener('load', function () { setTimeout(ask, 300); }, { once: true });
+  log('assemble: no Manager in this window -> opened one, will ask it on load');
+}
+
+function openSettingsTab(section) {
+  /* section [ticket]: a group to land on ('apps' = Settings -> Apps); the
+     page scrolls to its #hash, also on a tab that is already open */
+  const hash = (typeof section === 'string' && /^[a-z][a-z0-9-]{0,31}$/.test(section)) ? '#' + section : '';
+  const open = tabs.find(function (x) {
+    try { return /(^|\/)settings\.html$/.test(new URL(x.url, location.href).pathname); } catch (e) { return false; }
+  });
+  if (open) {
+    activate(open.id);
+    if (hash) {
+      try { open.iframe.contentWindow.location.hash = hash; } catch (e) { /* not loaded yet */ }
+    }
+    log('act-menu: Settings is a tab here -> activated ' + open.id + (hash ? ' at ' + hash : ''));
+  } else {
+    addTab('/settings.html' + hash, 'Settings', true);
+    log('act-menu: opened Settings as a tab' + (hash ? ' at ' + hash : ''));
+  }
+}
+
+/* Status menu › "Account": your login, remembered devices, passkeys, API
+   tokens — moved here from the CLI Manager header (Owner, 2026-09-28: it
+   belongs in the hamburger, not the tab). Resolved with the SAME precedence
+   the manager's header link uses (web/manager.js, cfg.accountUrl then
+   cfg.publicUrl + '/account.html' then a plain relative URL) and opened
+   through the ONE external-link door (open-external.mjs): the account page
+   must run in the system browser, never a WebView2 tab, because Windows
+   Hello refuses the passkey ceremony embedded (Owner, 2026-09-15).
+   web/ui-config.json is per-machine and gitignored, so it is fetched once and
+   cached here — a config that never answers (or doesn't exist) still falls
+   back to the relative page rather than leaving the menu item inert. */
+let uiConfigPromise = null;
+function accountUrl() {
+  if (!uiConfigPromise) {
+    uiConfigPromise = fetch('/ui-config.json', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; });
+  }
+  return uiConfigPromise.then(function (cfg) {
+    if (cfg && typeof cfg.accountUrl === 'string' && cfg.accountUrl) {
+      return cfg.accountUrl;
+    }
+    if (cfg && typeof cfg.publicUrl === 'string' && cfg.publicUrl) {
+      return cfg.publicUrl.replace(/\/$/, '') + '/account.html';
+    }
+    return new URL('/account.html', location.href).href;
+  });
+}
+function openAccount() {
+  accountUrl().then(function (url) {
+    if (!openExternal(url)) { log('act-menu: Account — refused a non-http(s) url: ' + url); }
+  });
+}
+
+function summonManager() {
+  const hub = hubTab();
+  if (hub) {
+    activate(hub.id);
+    log('+ : CLI Manager is a tab here -> activated ' + hub.id);
+  } else {
+    addTab('/manager.html', 'Workbench', true);
+    log('+ : no Manager in this window -> opened one here');
+  }
+}
+
+/* ==== dock: materialise the tab row on an installation-wide drag ================
+   v2 §8 Q1, settled as "hidden at one tab, materialises on drag". On revert we
+   deliberately do NOT send a zeroed tabstrip:rect — the host falls back to a
+   provisional tier-1 band when a window has never reported one, and a zero
+   rect would suppress that fallback rather than clear it. */
+function onDockDragging(active) {
+  if (active) {
+    if (dockMaterialised || tabs.length > 1) { return; }
+    dockMaterialised = true;
+    log('dock:dragging — materialising the tab row as a drop target');
+    renderTabs();
+  } else if (dockMaterialised) {
+    dockMaterialised = false;
+    log('dock:dragging ended — ' + (tabs.length > 1
+      ? 'a tab landed; keeping the row' : 'reverting to the classic title'));
+    renderTabs();
+  }
+}
+
+/* ==== status-icon menu (Owner, 2026-08-09 via briefing-table relay) ========
+   The .hwb-act cell (the status pip's home) is clickable in EVERY mode and
+   opens a small context menu — deliberately a menu, not a single-purpose
+   button, so it has room to grow. Today: one item, "CLI Manager". This is the
+   solo window's only route to the Manager (no tab row = no `+`), and a second
+   route when tabbed. Semantics identical to the `+`: local hub tab → focus it;
+   else host-wide summon; else hub:absent → open as THIS window's first tab.
+   INTERIM visual treatment (host-styled, tokens only) — the design system owns the final
+   affordance design; flagged in the relay. */
+/* Set once by the update watcher (shell-update.mjs) when the engine starts
+   serving chrome newer than this window loaded. It only ever goes true: a
+   window cannot become current again without reloading, which is the point. */
+let updateReady = false;
+let actMenu = null;
+function closeActMenu() {
+  if (actMenu) { actMenu.remove(); actMenu = null; }
+}
+/* Delegate on ROOT, which is stable: hwbRenderTabs rebuilds the bar (and the
+   .hwb-act cell that carries the pip), so a listener bound to the cell at init
+   is lost on the first render. The no-drag + cursor live in hwb-host.css on the
+   class itself for the same reason — a JS-added class would not survive either.
+   Found by Owner: the click hit the OS caption (system menu) because the cell
+   was drag-region again after the first re-render. */
+root.addEventListener('click', function (e) {
+  const act = e.target.closest('.hwb-act');
+  if (!act) { return; }
+  e.stopPropagation();
+  if (actMenu) { closeActMenu(); return; }
+  actMenu = document.createElement('div');
+  actMenu.className = 'hwb-actmenu';
+  /* WHOLE-APPLICATION ACTIONS LIVE HERE (Owner, 2026-09-17), and only here. The
+     division is the point: F5, the strip ⟳ and the per-tab gestures act on ONE
+     TAB; this menu is the window. Putting "reload everything" on the same
+     control as "reload this" is how a refresh eats a window's tabs, which is
+     the defect that started this.
+
+     `Reload` is a plain shell reload — it is only safe to offer BECAUSE the tab
+     set is persisted now; before that it was the bug. `Reset` is the way out of
+     a set that has gone wrong (a tab whose page will not load, a set restored
+     from a window whose sessions are gone): drop the stored set, reload, and
+     the shell rebuilds from its URL alone — i.e. exactly the behaviour that
+     shipped before this change. Nothing is killed either way; sessions live in
+     the broker and a closed tab is not a closed session. */
+  const items = [];
+  /* A NEWER CHROME IS BEING SERVED THAN THIS WINDOW IS RUNNING. First item,
+     because it explains anything odd the window is currently doing — a glyph
+     that stopped painting, a control that moved — and because a marker nobody
+     can find is not a marker. It is an OFFER: the reload re-attaches every
+     pane, which rebuilds from the engine's replay buffer and costs window
+     scrollback (2026-09-10), so it is a click rather than something we do to
+     a window somebody is reading. */
+  if (updateReady) {
+    items.push({ label: '⟳ Update available — reload (keeps your tabs)', run: function () {
+      persistTabs();
+      log('act-menu: applying a newer chrome build; the tab set comes back from sessionStorage');
+      location.reload();
+    } });
+    items.push({ sep: true });
+  }
+  items.push(
+    { label: 'Workbench', run: function () {
+      const hub = hubTab();
+      if (hub) { activate(hub.id); log('act-menu: focusing local hub tab'); }
+      else { summonManager(); }
+    } },
+    /* GLOBAL SETTINGS (Owner 2026-09-28): the person's settings across every
+       room. Opens as a tab here, through the same addTab every page uses; an
+       open Settings tab is focused, never framed twice. */
+    { label: 'Settings', run: openSettingsTab },
+    { label: 'Account', run: openAccount },
+    /* [concierge] the shell tab chrome is the design system pinned bundle: a status-menu item, never the chrome */
+    ...(cgShown ? [{ label: 'Concierge', run: function () {
+      import('/concierge.mjs').then(function (m) {
+        m.openConcierge({ onLink: function (l) { addTab(l.url, l.label || null, true, null, l.room ? 'room:' + l.room : null); } });
+      }).catch(function (e) { log('concierge failed: ' + (e && e.message)); });
+    } }] : []),
+    /* a whole-WINDOW action, so it lives here (the design notes §3.1) */
+    { label: 'Assemble room from this window\'s tabs…', run: assembleFromWindow },
+    { sep: true },
+    { label: 'Reload Workbench (all tabs)', run: function () {
+      persistTabs();                 /* write before we go — belt to the braces */
+      log('act-menu: reloading the shell; the tab set comes back from sessionStorage');
+      location.reload();
+    } },
+    { label: 'Reset Workbench', run: function () {
+      clearTabSet(window.sessionStorage);
+      log('act-menu: RESET — stored tab set cleared; reloading from this window\'s URL');
+      location.reload();
+    } },
+  );
+  for (const spec of items) {
+    if (spec.sep) {
+      const hr = document.createElement('div');
+      hr.className = 'hwb-actmenu-sep';
+      actMenu.appendChild(hr);
+      continue;
+    }
+    const item = document.createElement('button');
+    item.className = 'hwb-actmenu-item';
+    item.type = 'button';
+    item.textContent = spec.label;
+    item.dataset.act = spec.label.split(' ')[0].toLowerCase();
+    item.addEventListener('click', function () {
+      closeActMenu();
+      spec.run();
+    });
+    actMenu.appendChild(item);
+  }
+  const r = act.getBoundingClientRect();
+  actMenu.style.left = r.left + 'px';
+  actMenu.style.top = (r.bottom + 4) + 'px';
+  document.body.appendChild(actMenu);
+});
+document.addEventListener('click', closeActMenu);
+window.addEventListener('blur', closeActMenu);
+
+/* ==== strip interactions ================================================= */
+
+/* middle-click close (cheap, standard). The × and the chip click are wired by
+   hwbRenderTabs itself (onClose / onSelect). */
+stripEl.addEventListener('auxclick', function (e) {
+  if (e.button !== 1) { return; }
+  const chip = e.target.closest('.hwb-tab[data-tab]');
+  if (chip) { closeTab(chip.dataset.tab); }
+});
+
+/* DEBUG affordance: right-click a chip cycles its mock state through the six
+   states — the test hook until the engine sends real hwbState messages. */
+stripEl.addEventListener('contextmenu', function (e) {
+  const chip = e.target.closest('.hwb-tab[data-tab]');
+  if (!chip) { return; }
+  e.preventDefault();
+  const t = tabs.find(function (x) { return x.id === chip.dataset.tab; });
+  if (!t) { return; }
+  t.state = STATES[(STATES.indexOf(t.state) + 1) % STATES.length];
+  log('debug state cycle: ' + t.id + ' -> ' + t.state);
+  renderTabs();
+  postTabsState();
+});
+
+/* drag machine (press-to-activate, in-strip reorder, >8px outside = tear-off)
+   lives in the bridge: tear-off is a HOST capability, and the bridge enforces
+   the contract order remove-locally → tab:tearoff → close-if-last. */
+bridge.attachTabDrag({
+  /* The drag machine OWNS the press (the chrome's own click never lands), so
+     inside a room the press routes to the room's level: its chips are 'chat'
+     and 'm:<seat>', never window tabs. Reorder / tear-off find no such tab and
+     do nothing, which is right: members are not this window's tabs. */
+  onPress: function (id) {
+    if (roomView && (id === 'chat' || (typeof id === 'string' && id.indexOf('m:') === 0))) {
+      selectInRoom(id);
+      return;
+    }
+    activate(id);
+  },
+  onReorder: reorderTo,
+  onTearOff: function (id) {
+    /* TEAR-OFF NEEDS A HOST WINDOW TO TEAR INTO. In a plain browser there is none: the tab was removed here and the host
+       message went nowhere, so a drag that slipped below the strip made the tab vanish (Owner [ref]). No host = the tab stays. */
+    if (!(window.chrome && window.chrome.webview)) { return null; }
+    const t = removeTab(id);
+    if (!t) { return null; }
+    return { url: t.url, title: t.title, last: tabs.length === 0 };
+  },
+});
+
+/* target index = count of OTHER chips whose horizontal midpoint the pointer
+   has passed. The hub is pinned first and is not part of the reorderable
+   sequence, so we reorder the SESSION subsequence and re-pin the hub. */
+function reorderTo(id, px) {
+  const hub = hubTab();
+  const order = tabs.filter(function (t) { return t !== hub; });
+  const cur = order.findIndex(function (t) { return t.id === id; });
+  if (cur < 0) { return; }
+  let k = 0;
+  stripEl.querySelectorAll('.hwb-tab[data-tab]').forEach(function (c) {
+    if (c.dataset.tab === id) { return; }
+    const cr = c.getBoundingClientRect();
+    if (px > cr.left + cr.width / 2) { k++; }
+  });
+  if (k === cur) { return; }
+  const moved = order.splice(cur, 1)[0];
+  order.splice(k, 0, moved);
+  tabs.length = 0;
+  if (hub) { tabs.push(hub); }
+  order.forEach(function (t) { tabs.push(t); });
+  renderTabs();
+  postTabsState();
+}
+
+/* ==== LINKS OUT OF A TAB (open-external.mjs, the cli-manager host contract):
+   a tab's page posts {hwbOpenExternal: url}; the host's WebView2 listens on
+   THIS top-level document only, so the shell passes it on (the system
+   browser in the host, a new window in a plain browser). Relayed only from a
+   frame the shell made itself — a tab's iframe, or a room's member frame at
+   level 2 — never from a frame nested deeper (a panel app inside a tab). */
+relayExternal(function (src) {
+  return tabs.some(function (t) {
+    if (t.iframe && t.iframe.contentWindow === src) { return true; }
+    return !!t.memberFrames && Array.from(t.memberFrames.values()).some(function (f) { return f.contentWindow === src; });
+  });
+});
+
+/* ==== engine-facing hook ([ref] delivery surface into the window layer):
+   a child iframe posts {hwbState:'waiting'|..., title?} to window.parent —
+   match e.source to the tab's iframe, update chip + aggregate. */
+/* [concierge] whether the status menu offers it: off, no recipe, or Basic = no item */
+let cgShown = false;
+import('/concierge.mjs').then(function (m) {
+  return m.refresh().then(function (st) { cgShown = m.shown(st); });
+}).catch(function () { cgShown = false; });
+
+window.addEventListener('message', function (e) {
+  const d = e.data;
+  if (!d || typeof d !== 'object') { return; }
+  const t = tabs.find(function (x) { return x.iframe && x.iframe.contentWindow === e.source; });
+  if (!t) { return; }
+
+  /* --- close handshake (engine contract §4, settled 2026-08-07) --- */
+  if (d.hwbCloseAck === true) {
+    ackClose(t);
+    return;
+  }
+  if (typeof d.hwbCloseResult === 'string') {
+    ackClose(t);                       // a result implies the ack
+    resolveClose(t, d.hwbCloseResult);
+    return;
+  }
+
+  /* --- a WORKROOM page says which room cycle it offers [ticket]: its ✕
+     offers "Disconnect agents" only while `disconnect` is in the list. */
+  if (Array.isArray(d.hwbRoomActions)) {
+    if (isWorkroom(t)) {
+      t.roomActions = d.hwbRoomActions.filter(function (a) { return a === 'disconnect' || a === 'reconnect'; });
+    }
+    return;
+  }
+
+  /* --- a WORKROOM page hands over its seats for level 2 (item 3): order is
+     the room's (lead first), states are per MEMBER (A4: never an aggregate). */
+  if (d.hwbRoomModel !== undefined) {
+    if (isWorkroom(t)) {
+      const mm = d.hwbRoomModel && Array.isArray(d.hwbRoomModel.members) ? d.hwbRoomModel.members : [];
+      t.roomModel = {
+        members: mm.filter(function (m) { return m && typeof m.seatId === 'string' && typeof m.handle === 'string'; })
+          .map(function (m) {
+            return {
+              seatId: m.seatId, handle: m.handle,
+              url: typeof m.url === 'string' && m.url.indexOf('/solo.html?') === 0 ? m.url : null,
+              state: typeof m.state === 'string' ? m.state : 'ended',
+              exit: m.exit === 'ok' || m.exit === 'fail' ? m.exit : null,
+              brand: typeof m.brand === 'string' ? m.brand : 'generic',
+              brandColor: typeof m.brandColor === 'string' ? m.brandColor : null,
+              base: typeof m.base === 'string' ? m.base : null,
+              logoKey: typeof m.logoKey === 'string' ? m.logoKey : null,
+              mark: typeof m.mark === 'string' ? m.mark : null,
+              markStyle: markStyleOf(m.markStyle), // v32 [rooms/character]
+              primary: !!m.primary,
+            };
+          }),
+      };
+      if (roomView && roomView.tabId === t.id) { renderTabs(); }
+    }
+    return;
+  }
+
+  /* --- a WORKROOM page hands over its own Dark/Light override [window-chrome v34]
+     (Owner approved 2026-10-05). null/absent = follow the shell. In memory only,
+     like the identity: the room page re-sends it on load. --- */
+  if (d.hwbRoomMode !== undefined) {
+    if (isWorkroom(t)) {
+      t.roomMode = d.hwbRoomMode === 'light' || d.hwbRoomMode === 'dark' ? d.hwbRoomMode : null;
+      renderTabs();
+    }
+    return;
+  }
+
+  /* --- a WORKROOM page hands over its lead's identity (item 3). null = no
+     lead = a neutral tab. In memory only: the room page re-sends it on load,
+     so a restored tab heals on its own. Other tabs ignore it. --- */
+  if (d.hwbRoomIdentity !== undefined) {
+    if (isWorkroom(t)) {
+      const r = d.hwbRoomIdentity;
+      t.roomIdentity = (r && typeof r === 'object') ? {
+        base: typeof r.base === 'string' && r.base ? r.base : null,
+        logoKey: typeof r.logoKey === 'string' && r.logoKey ? r.logoKey : null,
+        mark: typeof r.mark === 'string' && r.mark ? r.mark : null,
+        markStyle: markStyleOf(r.markStyle), // v32 [rooms/character]
+      } : null;
+      log('room identity: ' + t.id + ' ' + (!t.roomIdentity ? 'none (no lead)'
+        : t.roomIdentity.logoKey || (t.roomIdentity.mark ? 'custom mark' : 'colour only')));
+      renderTabs();
+    }
+    return;
+  }
+
+  /* --- ASSEMBLE ROOM (the design notes §3.1): the Manager asks which
+     SESSION tabs this window holds, to pre-check them in its modal. Answered
+     to the asking frame only. */
+  if (d.hwbTabsRequest === true) {
+    try { e.source.postMessage({ hwbTabs: windowTabsState() }, '*'); } catch (err) { /* frame gone */ }
+    return;
+  }
+
+  /* --- any page may ask for Settings (a room's "Needs approval ›", a
+     panel's {panel:'open-settings'}) [ticket]: the one Settings tab --- */
+  if (d.hwbOpenSettings !== undefined) {
+    openSettingsTab(d.hwbOpenSettings && typeof d.hwbOpenSettings === 'object' ? d.hwbOpenSettings.section : null);
+    return;
+  }
+
+  /* --- hub verbs an embedded page may use (CLI Manager duties) --- */
+  if (d.hwbSessionId !== undefined) {
+    t.sessionId = (typeof d.hwbSessionId === 'string' && d.hwbSessionId) ? d.hwbSessionId : null;
+    log('session id: ' + t.id + ' = ' + t.sessionId);
+    /* a page that names itself the manager becomes the hub chip, gets pinned
+       first and drops whatever identity it was provisionally handed */
+    if (isHub(t)) {
+      t.base = NEUTRAL_BASE;
+      if (tabs[0] !== t) {
+        tabs.splice(tabs.indexOf(t), 1);
+        tabs.unshift(t);
+      }
+    }
+    renderTabs();
+    postTabsState();
+    return;
+  }
+  if (d.hwbBadge !== undefined) {
+    badge = (typeof d.hwbBadge === 'number' && isFinite(d.hwbBadge)) ? d.hwbBadge : null;
+    log('badge: ' + badge + ' (from ' + t.id + ') — hub live-session INVENTORY, '
+      + 'not the coral blocked count');
+    renderTabs();
+    postTabsState();
+    return;
+  }
+  /* hub asks for a session to open AS A TAB here (vs a new OS window, which
+     the engine gets from the control API) */
+  if (d.hwbOpenTab && typeof d.hwbOpenTab.url === 'string') {
+    const o = d.hwbOpenTab;
+    /* the same SESSION already open here is focused, never framed twice (a
+       second frame is a viewer stuck behind the control prompt) — matched by
+       the announced sessionId OR by the pane its solo url names */
+    const wantPane = paneidFromTabUrl(o.url);
+    const existing = (o.sessionId && tabs.find(function (x) { return x.sessionId === o.sessionId; }))
+      || (wantPane && tabs.find(function (x) { return paneidFromTabUrl(x.url) === wantPane; }));
+    if (existing) {
+      activate(existing.id);
+      log('open tab: session already here -> focused ' + existing.id);
+    } else {
+      const nt = addTab(o.url, o.title || null, true, o.state || null, o.sessionId || null,
+        o.base || null, o.logoKey || null);
+      log('open tab: ' + nt.id + ' ' + o.url);
+    }
+    return;
+  }
+
+  /* v2 identity, optional: a page may name its own base colour and project
+     mark. Everything derives from the base in CSS — we persist the hex/var and
+     the preset KEY, never a computed ramp and never the SVG. */
+  let identityChanged = false;
+  /* v21 session-bar data (project, title, brand, counts) — see the tab model
+     note: in memory only, never mirrored or persisted. */
+  /* --- MCP-call indicator: the bar is OURS, one per window, showing the
+     ACTIVE tab's calls. Each tab keeps its in-flight starts so a switch back
+     re-shows a long call (web/mcp-bar.mjs). --- */
+  if (d.hwbMcp && typeof d.hwbMcp === 'object') {
+    t.mcp = t.mcp || new Map();
+    trackInFlight(t.mcp, d.hwbMcp);
+    if (t.id === activeId && mcpTab === t.id) { mcpView.event(d.hwbMcp); }
+    return;
+  }
+  if (Array.isArray(d.hwbMcpReset)) {
+    t.mcp = new Map();
+    d.hwbMcpReset.forEach(function (e) { trackInFlight(t.mcp, e); });
+    if (t.id === activeId && mcpTab === t.id) { mcpView.reset([...t.mcp.values()]); }
+    return;
+  }
+  if (d.hwbBar && typeof d.hwbBar === 'object') {
+    t.bar = d.hwbBar;
+    identityChanged = true;
+  }
+  if (d.items && typeof d.items === 'object') {
+    const n = Number(d.items.count);
+    t.items = (Number.isFinite(n) && n > 0) ? { count: n } : null;
+    identityChanged = true;
+  }
+  if (typeof d.hwbBase === 'string' && d.hwbBase) {
+    t.base = d.hwbBase;
+    identityChanged = true;
+  }
+  if (d.hwbLogo !== undefined) {
+    /* Keep UNKNOWN keys — the preset set is OPEN-ENDED (Owner loads new ones
+       into the engine's vendor module) and the renderer resolves from the
+       merged map, engine's superset included. Validating against the bundle's
+       5-key subset here is what silently ate engine logos (found by Owner:
+       every tab wore the fallback palette while the page watermark was right). */
+    t.logoKey = (typeof d.hwbLogo === 'string' && d.hwbLogo) ? d.hwbLogo : null;
+    identityChanged = true;
+  }
+
+  if (typeof d.hwbState !== 'string') {
+    if (identityChanged) {
+      log('identity: ' + t.id + ' base=' + t.base + ' logo=' + t.logoKey);
+      renderTabs();
+      postTabsState();
+    }
+    return;
+  }
+  const mapped = ENGINE_TO_CHROME[d.hwbState] || d.hwbState;
+  if (STATES.indexOf(mapped) >= 0 || (isWorkroom(t) && tabStateOk(mapped))) {
+    t.state = mapped;
+  } else {
+    log('engine: UNKNOWN state "' + d.hwbState + '" from ' + t.id + ' — kept ' + t.state);
+  }
+  /* ended verdict: engine sends {hwbState:'ended', exit:'ok'|'fail'} — the seam
+     wears the verdict. Window-level setExit reflects the ACTIVE tab. */
+  if (d.hwbState === 'ended' && (d.exit === 'ok' || d.exit === 'fail')) {
+    t.exit = d.exit;
+  }
+  if (typeof d.title === 'string' && d.title) {
+    t.title = d.title;
+    t.iframe.title = d.title;
+  }
+  log('engine: ' + t.id + ' hwbState=' + d.hwbState + (d.exit ? ' exit=' + d.exit : '')
+    + (d.title ? ' title="' + d.title + '"' : ''));
+  renderTabs();
+  postTabsState();
+});
+
+/* ==== v21 bundle events -> existing paths =================================
+   The v21 chrome dispatches these as CustomEvents from inside the window
+   element. We listen on DOCUMENT: a bubbling event from anywhere in #win
+   reaches it, and so does one the bundle chooses to fire on document itself,
+   so neither choice upstream breaks us. Routing rules live in
+   routeBundleEvent (shell-tabs.mjs, unit-tested).
+
+   close-view = closeTab: the SAME close the caption ✕ and middle-click use —
+     the page is asked, answers `park` at once (no dialog any more, 2026-09-12)
+     and the tab goes. Going through the page matters: `park` pins the session
+     against the detach reaper, so "close the view, keep the session" holds for
+     longer than the reaper window. A page that does not speak the protocol
+     (the Manager) is closed locally after the 1.5s ack guard. Closing a view
+     never kills (sessions live in the broker).
+   end-session = the CLI Manager's "End": POST /api/sessions/<paneid>/end, no
+     second confirm (the bundle showed one). The tab then goes too - a tab of
+     a session you just ended has nothing left to show.
+   refresh = the per-tab reload (same as F5 / the strip button). */
+const bundleHandlers = {
+  closeView: function (id, reason) {
+    if (roomView && typeof id === 'string' && id.indexOf('m:') === 0) { closeMember(id); return; }
+    if (roomView && id === 'chat') { leaveRoom(); return; }
+    if (!tabs.some(function (t) { return t.id === id; })) { return; }
+    log('hwb:close-view ' + id + (reason ? ' (' + reason + ')' : '') + ' — closing the tab, session kept');
+    closeTab(id);
+  },
+  endSession: function (id) {
+    if (roomView && typeof id === 'string' && id.indexOf('m:') === 0) {
+      const m = memberOf(roomTab(), id.slice(2));
+      const pane = m && m.url ? paneidFromTabUrl(m.url) : null;
+      if (!pane) { return; }
+      fetch('/api/sessions/' + encodeURIComponent(pane) + '/end', { method: 'POST' })
+        .then(function (r) { log('hwb:end-session ' + id + ' -> ' + pane + ' HTTP ' + r.status); if (r.ok) { closeMember(id); } })
+        .catch(function (err) { log('hwb:end-session ' + id + ' failed: ' + err); });
+      return;
+    }
+    const t = tabs.find(function (x) { return x.id === id; });
+    const paneid = t ? paneidFromTabUrl(t.url) : null;
+    if (!paneid) {
+      log('hwb:end-session ' + id + ' — not a session tab, ignored');
+      return;
+    }
+    fetch('/api/sessions/' + encodeURIComponent(paneid) + '/end', { method: 'POST' })
+      .then(function (r) {
+        log('hwb:end-session ' + id + ' -> ' + paneid + ' HTTP ' + r.status);
+        if (r.ok) { finishClose(id); }
+      })
+      .catch(function (err) { log('hwb:end-session ' + id + ' failed: ' + err); });
+  },
+  refresh: function (id) { refreshTab(id, 'hwb:refresh'); },
+};
+BUNDLE_EVENTS.forEach(function (type) {
+  document.addEventListener(type, function (e) {
+    routeBundleEvent(type, e.detail, bundleHandlers);
+  });
+});
+
+/* ==== initial tabs ======================================================= */
+const rawTabs = rawParam('tabs');
+const initUrls = rawTabs
+  ? rawTabs.split(',').filter(Boolean).map(function (s) {
+      try { return decodeURIComponent(s); } catch (e) { return s; }
+    })
+  : null;
+/* THE URL IS A MEMBER OF THE SET, NOT THE WHOLE OF IT.
+ *
+ * A shell URL carries exactly one tab (desktop-actions.shellUrl builds
+ * `?tabs=<one page>`), so rebuilding from it after a reload is what emptied
+ * Owner's window. If this browsing context has a set written down, THAT is the
+ * window — and any `?tabs=` member it does not already contain is appended, so
+ * a host that navigates an existing shell to a new page still gets it.
+ *
+ * Tabs are added ABSOLUTE-MATCHED: addTab normalises with absUrl(), and the
+ * stored urls were already absolute when they were written, so the set
+ * comparison here is on the same strings both ways.
+ *
+ * URLs are stored VERBATIM, spent `ticket=` and all. A ticket is single-use and
+ * was redeemed for a cookie on the first load; the cookie is what authenticates
+ * the reload (this is already how F5 works today). Stripping it would be tidier
+ * and would change the string identity a set match depends on, for no gain. */
+const stored = readTabSet(window.sessionStorage);
+const plan = planInitialTabs(stored, (initUrls || []).map(absUrl), location.href);
+if (plan.tabs.length > 0) {
+  plan.tabs.forEach(function (t, i) {
+    addTab(t.url, t.title, i === plan.activeIndex, t.state, t.sessionId, t.base, t.logoKey);
+  });
+  log('tabs: ' + plan.tabs.length + ' from ' + plan.source
+    + ' (active #' + plan.activeIndex + ')'
+    + (plan.source === 'session' ? ' — RESTORED across a reload' : ''));
+} else {
+  addTab('/manager.html', 'Manager', true);
+}
+
+/* IS THIS WINDOW'S CHROME STILL THE ONE BEING SERVED? A shell fetches its
+   chrome once and never again, so a window open across a deploy paints last
+   week's glyphs with no error anywhere — the exact shape of the 2026-09-20
+   "status icon shows nothing" hunt, where every layer was correct and the
+   window was simply old. Detect it locally, mark it, and let the person choose
+   the moment (the reload costs scrollback; see shell-update.mjs). */
+watchForUpdate({
+  onStale: function (served, mine) {
+    updateReady = true;
+    log('chrome update available: serving ' + served + ', this window loaded ' + mine);
+    const act = root.querySelector('.hwb-act');
+    if (act) {
+      act.classList.add('has-update');
+      act.title = 'A newer Workbench build is available — open this menu to reload';
+    }
+  },
+});
+
+window.addEventListener('load', function () {
+  const errs = hwbAssertInvariants(root);
+  log(errs.length ? '✗ invariants: ' + errs.join(' | ')
+    : '✓ invariants hold (maxRect.x === W-92, drag reserve >= 154)');
+});
+</script>
+</body>
+</html>

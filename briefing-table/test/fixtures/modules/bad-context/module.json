@@ -1,0 +1,1 @@
+{ "id": "bad-context", "name": "Bad context", "version": "0.1.0", "class": "tool", "provides": ["ctx.tool"], "contexts": ["dashboard", "sidebar"], "actions": "actions.json" }

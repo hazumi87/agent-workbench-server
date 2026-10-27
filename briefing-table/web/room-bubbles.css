@@ -1,0 +1,117 @@
+/* ==== BUBBLES [rooms/bubbles] (Owner 2026-09-28; fixed 2026-09-28
+   [rooms/bubble-defaults]) ======================================================
+   Loaded after room-character.css (it restates that sheet's own-bubble accent
+   breath as a base colour, so it must come later).
+
+   A bubble's BACKGROUND is two layers, nothing else changes:
+     1. THE WASH (top): a radial breath of the AUTHOR's colour, from the
+        corner the author's glyph sits beside (agents left, you right), fading
+        out both ways by 70%. A seat's LIFTED project ink (--pc-ink, L .82),
+        never the raw colour; your bubble uses the room accent (teal when the
+        room colour is unset). A seat with no project colour has no ink, so
+        no wash. The room's facts have no bubble and get none. Desktop and
+        phone alike, 12% at its peak.
+     2. THE BASE: today's bubble colour, made --bb-clear transparent. FIXED
+        at 25% (--bubble-alpha), i.e. base alpha 0.75, on a desktop-width
+        page; 50% (--phone-bubble-alpha) on a phone while <html> carries
+        `phone-glass` (below).
+   Text, the border, the quote header, attachments: untouched, fully opaque.
+   BLUR: backdrop-filter on the bubble box itself (it blurs what is BEHIND the
+   box, never the box's own text). FIXED at 5px (--bubble-blur), desktop
+   only: a phone has none.
+
+   Owner tuned the old per-person sliders (the settings column's Display
+   group, web/room-display.mjs) and picked 25% / 5px as THE look; both are
+   now removed. --bubble-alpha / --bubble-blur stay as custom properties
+   carrying these defaults, unread and unset by any script, so a future
+   GLOBAL setting (off the CLI Manager, not per-room) can override them here
+   without touching this sheet.
+   ========================================================================== */
+
+.entry-bubble { --bb-clear: 0%; --bb-wash: 12%; }
+.entry.by-agent .entry-bubble {
+  --bb-base: var(--pc-wash, var(--surface));
+  --bb-tone: var(--pc-ink, transparent);
+  --bb-at: left;
+}
+.entry.by-user .entry-bubble {
+  --bb-base: var(--surface3, var(--surface2));
+  --bb-tone: var(--room-accent, var(--teal));
+  --bb-at: right;
+}
+/* room-character.css's 7% accent breath on your bubble, kept as the base */
+body[data-room-color="set"] .entry.by-user .entry-bubble {
+  --bb-base: color-mix(in srgb, var(--room-accent) 7%, var(--surface3, var(--surface2)));
+}
+.entry.by-agent .entry-bubble,
+.entry.by-user .entry-bubble,
+body[data-room-color="set"] .entry.by-user .entry-bubble {
+  background:
+    radial-gradient(ellipse at var(--bb-at) top, color-mix(in srgb, var(--bb-tone) var(--bb-wash), transparent) 0%, transparent 70%),
+    color-mix(in srgb, var(--bb-base) calc(100% - var(--bb-clear)), transparent);
+}
+
+/* ---- desktop only: transparency + blur, fixed at 25% / 5px ---- */
+@media (width > 600px) {
+  .entry-bubble { --bb-clear: var(--bubble-alpha, 25%); }
+  /* MEMORY/GPU [shell memory]: only bubbles near the viewport (room.js adds .glass) and the newest 40 blur; every blurred
+     bubble is its own composited layer, so a day of lines was thousands of them. The rest keep the tint and border but are
+     almost solid (8% clear), since the blur is what kept text readable on a busy tile (the design system [ref]). */
+  .entry:not(.glass):not(:nth-last-child(-n+40)) > .entry-bubble { --bb-clear: 8%; }
+  .entry.by-agent.glass > .entry-bubble,
+  .entry.by-user.glass > .entry-bubble,
+  .entry.by-agent:nth-last-child(-n+40) > .entry-bubble,
+  .entry.by-user:nth-last-child(-n+40) > .entry-bubble {
+    -webkit-backdrop-filter: blur(var(--bubble-blur, 5px));
+    backdrop-filter: blur(var(--bubble-blur, 5px));
+  }
+}
+/* ---- PHONE GLASS [web/room-phone-7], retuned [web/room-phone-7b] (Owner,
+   IMG_7674: at 25% / 5px the phone's glass was barely noticeable). On a
+   phone the bubble base is 50% clear (--phone-bubble-alpha) with NO
+   backdrop blur, and because 50% is past the 40% see-through line the
+   meta line and the @name take the see-through lift below (the same values
+   as desktop's body[data-bubble-see-through]). Desktop stays 25% / 5px.
+   THE SWITCH: web/room.html's <html class="phone-glass"> — delete the class
+   there to turn the phone look off (opaque bubbles, no lift; the room art
+   behind the line is unaffected, it was already on the phone). The line
+   halo (room-line-halo.css) still covers the text sitting on the art. ---- */
+@media (max-width: 600px) {
+  html.phone-glass .entry-bubble { --bb-clear: var(--phone-bubble-alpha, 50%); }
+  html.phone-glass .entry:is(.by-agent, .by-user) .entry-head,
+  html.phone-glass .entry:is(.by-agent, .by-user) .entry-ts {
+    color: color-mix(in srgb, var(--dim) 50%, var(--text));
+  }
+  /* ...and a seat's @handle on the strip and in the readout over the
+     composer follows its bubble's @name (room.css .ph-chip[data-seat] .h) */
+  html.phone-glass .entry.by-agent .entry-author,
+  html.phone-glass .ph-chip[data-seat] .h {
+    --pc-ink-hi: oklch(from var(--pc) .92 clamp(.02, calc(c * .4), .09) h);
+    color: var(--pc-ink-hi, var(--text));
+  }
+}
+/* ---- SEE-THROUGH (>= 40%, body[data-bubble-see-through], desktop only)
+   [rooms/bubbles-meta]: NOT REACHED at the fixed 25% — nothing sets the flag
+   today. Left in place for a future global setting that can raise
+   --bubble-alpha past 40% again. The art behind a see-through bubble can be
+   lighter than the bubble was, so its secondary text is lifted to keep
+   reading:
+     - the meta line (time, "-> @x", the kind): from --dim2 / --dim to halfway
+       between --dim and --text (>= 3:1 over the probe's loud stripes; --dim
+       alone gives 2.3 / 2.0:1 against the pixels measured there);
+     - the @name: the author's ink at L .92 instead of .82 (>= 4.5:1), still
+       its project hue, never the raw colour.
+   The read line under a bubble sits on the line itself, not on the bubble,
+   so this setting does not change what is behind it. ---- */
+@media (width > 600px) {
+  body[data-bubble-see-through] .entry:is(.by-agent, .by-user) .entry-head,
+  body[data-bubble-see-through] .entry:is(.by-agent, .by-user) .entry-ts {
+    color: color-mix(in srgb, var(--dim) 50%, var(--text));
+  }
+  body[data-bubble-see-through] .entry.by-agent .entry-author {
+    --pc-ink-hi: oklch(from var(--pc) .92 clamp(.02, calc(c * .4), .09) h);
+    color: var(--pc-ink-hi, var(--text));
+  }
+}
+/* ==== /BUBBLES ==== */
+

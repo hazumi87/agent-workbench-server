@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <!-- No `maximum-scale` / `user-scalable=no`: with iOS Display Zoom on they stop
+       Safari fitting the layout to the zoomed display, and the page lays out wider
+       than the glass with no way to pinch back to it. See web/solo.html. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Workbench — Harbor engine</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/vendor/aurora-tokens.css" />
+  <link rel="stylesheet" href="/vendor/xterm/xterm.css" />
+  <link rel="stylesheet" href="/workbench.css" />
+</head>
+<body>
+  <!-- Host page: stands in for the showcase/start-page the Workbench overlays.
+       The Workbench is a guest the host frames (blueprint §3.6). -->
+  <header class="host-top">
+    <span class="host-brand">Harbor <span class="dim">· Workbench engine</span></span>
+    <span>
+      <a class="btn" href="/manager.html" title="Workbench — launch and track solo CLI windows" style="text-decoration:none">⌘ Workbench</a>
+      <button id="entryModal" class="btn" title="Open the Workbench as a modal">▣ Workbench</button>
+    </span>
+  </header>
+
+  <main class="host-body">
+    <div class="host-card">
+      <h1>Workbench engine</h1>
+      <p class="dim">Milestone&nbsp;0 — the empty Workbench boots.</p>
+      <p>Core started and is serving this shell with <strong>zero components</strong>.
+         Open the Workbench as a <em>modal</em> (top-right) or as a <em>dock</em>
+         (right-edge tab) to see the bare frame. Components — starting with a
+         local CLI — arrive at the next milestone.</p>
+    </div>
+  </main>
+
+  <!-- Right-edge entry: opens the Workbench as a docked rail (page stays usable). -->
+  <button id="entryDock" class="wb-sidetab" title="Dock the Workbench to the right">Workbench</button>
+
+  <!-- The Workbench overlay. data-mode drives the framing: off | modal | dock | full. -->
+  <div id="wbStage" class="wb-stage" data-mode="off">
+    <div class="wb-scrim" data-close></div>
+    <section class="wb-frame" role="dialog" aria-label="Workbench">
+      <div class="wb-topbar">
+        <span class="wb-title">▣ Workbench</span>
+        <div class="wb-actions">
+          <!-- v5 bar affordances. Inert at M0 (nothing to place yet); present so
+               the frame is honest to the settled interaction model. -->
+          <button class="bar-btn" disabled title="New pane — components arrive at M1">＋</button>
+          <button class="bar-btn" disabled title="Hidden-pane bin — empty at M0">…</button>
+          <button class="bar-btn" disabled title="Arrange — needs panes">▦</button>
+          <button id="wbMax" class="bar-btn" title="Maximize to full screen">⛶</button>
+          <button id="wbClose" class="bar-btn" title="Close the Workbench" data-close>✕</button>
+        </div>
+      </div>
+      <div id="wbCanvas" class="wb-canvas">
+        <!-- Filled by the renderer: the zero-component empty state, or a pane
+             per discovered component (M1 = the first CLI component). -->
+      </div>
+    </section>
+  </div>
+
+  <!-- Debug readout (CLAUDE.md principle 8: core state is observable). -->
+  <div id="wbDebug" class="wb-debug">booting…</div>
+
+  <script type="module" src="/workbench.js"></script>
+</body>
+</html>

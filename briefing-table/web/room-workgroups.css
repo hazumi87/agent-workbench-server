@@ -1,0 +1,127 @@
+/* ==== WORKGROUPS (Owner 2026-10-04, KB design-notes-id; the design system hub v2 mock) ====
+   Loaded after room.css and room-bubbles.css. Rail rows for the family, the
+   header crumb, the transient notice, and the two looks of a cross-post. */
+
+/* ---- rail: workgroups nested under the room row; a workgroup shows its main room above ---- */
+.seat.is-sub.has-more { grid-template-columns: 20px minmax(0, 1fr) auto; } /* [rail align] a workgroup row keeps its 20px glyph column with the ⋯ ... */
+.seat.is-sub.has-more:has(> .seat-side) { grid-template-columns: 20px minmax(0, 1fr) auto auto; } /* ... and with an unread count (room.css's .seat.has-more:has(> .seat-side) outranked .seat.is-sub and gave it 28px, 8px to the right of its siblings) */
+.seat.is-sub { grid-template-columns: 20px minmax(0, 1fr) auto; padding: 6px 12px 6px 33px; background: color-mix(in srgb, var(--surface2) 45%, var(--surface)); }
+.seat { --tx: 25px; } /* the room glyph's centre, inside the row's padding box (the rail AND the phone sheet) */
+.seat.is-sub::before { content: ""; position: absolute; left: var(--tx); top: 0; bottom: 0; border-left: 1.5px solid var(--dim2); }
+.seat.is-sub.is-last-sub::before { bottom: 50%; }
+.seat.is-sub::after { content: ""; position: absolute; left: var(--tx); top: 50%; width: calc(33px - var(--tx)); border-top: 1.5px solid var(--dim2); }
+/* ONE continuous line from under the room glyph down through the last workgroup (Owner 2026-10-04; hub v2) */
+.seat.has-subs::after { content: ""; position: absolute; left: var(--tx); top: calc(50% + 13px); bottom: -1px; border-left: 1.5px solid var(--dim2); }
+.seat.is-sub .seat-glyph { width: 20px; height: 20px; }
+.seat.is-sub, .seat.is-head { --sc: var(--room-accent, var(--teal)); --sa: oklch(from var(--sc) .80 clamp(.05, calc(c * .75), .14) h); }
+.sub-plate {
+  position: relative; display: block; width: 20px; height: 20px; border-radius: 5px;
+  background: color-mix(in srgb, var(--sc) 45%, var(--surface3)); border: 1.5px solid color-mix(in srgb, var(--sc) 70%, var(--surface3));
+}
+.sub-plate::after { content: ""; position: absolute; inset: 4px 3px 3px; border-radius: 2px; background: color-mix(in srgb, var(--ink) 55%, transparent); }
+.seat.is-sub .seat-handle { font: 600 13px/1.25 var(--display); color: var(--text); }
+.seat.is-sub .seat-meta { font-size: 11.5px; }
+.seat.is-sub .sub-alias { font: 500 11.5px var(--mono); color: var(--dim); }
+.seat.is-sub .seat-count { background: var(--sa); color: var(--ink); }
+
+/* the plate, small: the same mark inline before a name (toast, Waiting strip) */
+.sub-plate.sm { display: inline-block; width: 14px; height: 14px; border-radius: 4px; border-width: 1.5px; vertical-align: -2px; margin: 0 5px 0 1px; box-sizing: border-box; }
+.sub-plate.sm::after { inset: 3px 2px 2px; border-radius: 1px; }
+.wg-n { font-weight: 600; white-space: nowrap; }
+
+/* ---- the header crumb: Main > Workgroup @alias ---- */
+.rm-name .up { color: var(--dim); font-weight: 500; text-decoration: none; }
+.rm-name .up:hover { text-decoration: underline; }
+.rm-name .sep { color: var(--dim2); margin: 0 6px; }
+.rm-name .al { font: 500 12px var(--mono); color: var(--dim); margin-left: 8px; }
+
+/* ---- THE NOTICE (Owner 2026-10-04), split by device ----
+   PC: the room's one TOAST (web/room-toast.mjs), under the title bar, 8 s with its Open,
+   a pointer over it holds it.
+   PHONE: .wg-notice, a persistent "Waiting messages in <name> . View" strip above
+   the message box; View opens the workgroup (or the rooms sheet), the close
+   button hides it until the next new message. One class each, so either can move. ---- */
+.rm-line { position: relative; }
+.wg-notice {
+  position: relative; z-index: 2; box-sizing: border-box; display: flex; align-items: center; gap: 8px; min-height: 36px;
+  margin: 0 16px 8px; padding: 4px 4px 4px 10px; max-width: 100%;
+  border: 1px solid color-mix(in srgb, var(--sky) 45%, transparent); border-radius: 8px;
+  background: color-mix(in srgb, var(--sky) 9%, var(--surface)); color: var(--text); font-size: 12.5px;
+  animation: wg-up .22s var(--metro-ease, ease);
+}
+@keyframes wg-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.wg-notice .tx { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wg-notice .tx b { font-weight: 600; }
+.wg-notice .vw {
+  flex: none; min-height: 28px; padding: 0 10px; border: 0; border-left: 1px solid color-mix(in srgb, var(--sky) 45%, transparent);
+  background: none; color: var(--sky); font: 600 12.5px var(--font); cursor: pointer;
+}
+.wg-notice .x { flex: none; width: 28px; height: 28px; border: 0; border-radius: 6px; background: none; color: var(--dim); cursor: pointer; }
+.wg-notice .vw:hover, .wg-notice .x:hover { background: var(--cap-hover); }
+.wg-notice .vw:focus-visible, .wg-notice .x:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+/* the keys are up: the composer needs the height (Owner's 320x522), so the strip waits */
+html.kb-up .wg-notice { display: none; }
+@media (max-width: 600px) {
+  .wg-notice { min-height: 44px; margin: 0 8px 8px; }
+  /* the text takes the room; View is sized to its content (no 40% block), the X is a 32px target with a 44px hit area [the design system 2026-10-06] */
+  .wg-notice .tx { flex: 1 1 auto; }
+  .wg-notice .vw { min-height: 44px; min-width: 0; padding: 0 12px; }
+  .wg-notice .x { position: relative; width: 32px; height: 32px; min-width: 0; min-height: 0; }
+  .wg-notice .x::after { content: ''; position: absolute; inset: -6px; }
+}
+
+/* ---- CROSS-POSTS: a room shows every line written in it plus every line delivered to a seat in it ---- */
+/* OUTGOING, in the room it was written in (nobody here was addressed): readable, with a backing, but its own
+   colour: the info/routing hue, dashed, so it is neither your own bubble nor a member's wash */
+.entry.xpost .entry-bubble {
+  border: 1.5px dashed color-mix(in srgb, var(--sky) 60%, transparent) !important;
+}
+body .entry.by-user.xpost .entry-bubble, body[data-room-color="set"] .entry.by-user.xpost .entry-bubble {
+  --bb-base: color-mix(in srgb, var(--sky) 22%, var(--surface2)); --bb-tone: var(--sky); --bb-wash: 18%;
+}
+.entry.xpost .entry-body { color: var(--text); }
+.xp-to { font: 500 12px var(--mono); color: var(--sky); }
+.xp-tag { font: 600 10.5px var(--font); color: var(--dim); border: 1px solid var(--border2); border-radius: 9px; padding: 0 6px; white-space: nowrap; }
+/* INCOMING: a normal bubble that says where it came from */
+.xp-from { font: 500 11.5px var(--font); color: var(--dim); }
+.xp-from b { color: var(--text); font-weight: 600; }
+/* ==== /WORKGROUPS ==== */
+
+/* ---- MOVE TO WORKGROUP... (the seat menu's card; Owner 2026-10-04, item 4) ---- */
+.rsm-wgpick { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+.rsm-wgopt {
+  display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 12px; border: 1px solid var(--border2); border-radius: 8px;
+  background: none; color: var(--text); font: 500 13.5px var(--font); text-align: left; cursor: pointer;
+}
+.rsm-wgopt .n { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rsm-wgopt .k { flex: none; font: 500 11.5px var(--mono); color: var(--dim); }
+.rsm-wgopt:hover { background: var(--cap-hover); }
+.rsm-wgopt.on { border-color: var(--room-accent, var(--teal)); background: color-mix(in srgb, var(--room-accent, var(--teal)) 12%, var(--surface)); }
+.rsm-wgopt:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+@media (max-width: 600px) { .rsm-wgopt { min-height: 44px; } }
+
+/* [rail split] the plate in the Seats bar and the phone sheet's Seats heading: the room's accent unless its own color is set inline */
+.cell-h .sub-plate.sm, .ph-sheet h3 .sub-plate.sm { --sc: var(--room-accent, var(--teal)); }
+
+/* [rail split] the main room's row in a workgroup: the same look as the room row, its plate at the glyph size; the badge centered on the right edge */
+.seat.is-head .sub-plate { width: 28px; height: 28px; border-radius: 7px; }
+.seat.is-head .sub-plate::after { inset: 6px 4px 4px; }
+.seat.is-head .seat-handle { font: 600 13.5px/1.25 var(--display); }
+.seat.is-head .seat-side, .seat.is-sub .seat-side { grid-row: 1 / 3; grid-column: 3; align-self: center; justify-content: center; }
+
+/* THE NOTICE MENU [notice menu]: View with several rooms waiting opens the seat menu's own surface, one row per room: its plate,
+   its name, and the badge (the unread count) at the right */
+.rsm-menu .rsm-mi .sub-plate.sm { flex: none; margin: 0 2px 0 0; width: 16px; height: 16px; }
+.rsm-menu .rsm-mi .rsm-sub.nm-badge {
+  min-width: 20px; padding: 0 6px; border-radius: 999px; background: var(--room-accent, var(--teal)); color: var(--ink);
+  font: 700 11px/18px var(--mono); text-align: center;
+}
+/* [xpost fold] an incoming agent-to-agent copy: just its header line here, full text on tap */
+.entry.xp-folded .entry-bubble { opacity: .8; }
+.xp-show { margin-left: 6px; padding: 0 6px; font: 500 11.5px var(--font); color: var(--dim); background: none; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
+.xp-show:hover { color: var(--text); }
+
+/* THE ROOM BAR [layers]: "Main room" / the workgroup's name in ink, then where you are, dimmer */
+.rm-name .rn-a { font-weight: 600; }
+.rm-name .rn-b { font: 500 12.5px var(--font); color: var(--dim); }
+.rm-name .sub-plate { display: inline-block; vertical-align: -3px; margin-right: 8px; }

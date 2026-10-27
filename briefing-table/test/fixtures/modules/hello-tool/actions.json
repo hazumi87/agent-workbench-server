@@ -1,0 +1,12 @@
+{
+  "actions": [
+    {
+      "name": "render",
+      "title": "Make a card",
+      "provides": "hello.card",
+      "input": { "text": { "type": "string", "title": "Text", "maxLength": 200 } },
+      "output": { "kind": "image/svg+xml" },
+      "contexts": ["dashboard", "agent"]
+    }
+  ]
+}

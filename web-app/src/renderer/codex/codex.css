@@ -1,0 +1,25 @@
+#codexStage { position: absolute; inset: 0; z-index: 3; overflow: auto; background: var(--wb-stage-dim, #dcdce3); }
+#codexStage[hidden], .cx-conversation[hidden] { display: none; }
+#win.on-codex #stage > #grid, #win.on-codex #stage > #empty { visibility: hidden; }
+.cx-page { max-width: 1000px; margin: 16px auto; padding: 20px; color: var(--md-sys-color-on-surface); background: var(--md-sys-color-surface-container-low); border-radius: var(--shape-l, 16px); font: 400 14px/20px var(--font); }
+.cx-page h2 { margin: 0; font: 400 24px/32px var(--font); }
+.cx-page h3, .cx-page h4 { margin: 0; font-weight: 500; }
+.cx-muted { color: var(--md-sys-color-on-surface-variant); }
+.cx-notice:empty, .cx-muted:empty { display: none; }
+.cx-choice, .cx-header, .cx-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.cx-choice, .cx-header { justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+.cx-button { min-height: 36px; padding: 6px 14px; border: 1px solid var(--md-sys-color-outline); border-radius: 18px; background: transparent; color: var(--md-sys-color-primary); font: 500 14px/20px var(--font); cursor: pointer; }
+.cx-button:disabled { opacity: .45; cursor: default; }
+.cx-button:focus-visible, .cx-page textarea:focus-visible, .cx-page summary:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 3px; }
+.cx-output { max-height: 52vh; overflow: auto; overflow-wrap: anywhere; }
+.cx-message, .cx-request { padding: 14px; margin: 12px 0; border-radius: 12px; background: var(--md-sys-color-surface-container); }
+.cx-human { background: var(--md-sys-color-secondary-container); }
+.cx-message small { margin-left: 10px; }
+.cx-page pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 400 13px/20px var(--mono, monospace); }
+.cx-request { border: 1px solid var(--md-sys-color-outline); }
+.cx-request .cx-actions { margin-top: 12px; }
+.cx-composer { margin-top: 16px; }
+.cx-composer label { display: block; }
+.cx-composer textarea { box-sizing: border-box; width: 100%; min-height: 80px; max-height: 40vh; resize: vertical; margin: 8px 0; padding: 12px; border-radius: 8px; border: 1px solid var(--md-sys-color-outline); background: var(--md-sys-color-surface); color: inherit; font: inherit; }
+.cx-page details { margin: 8px 0; }
+@media (max-width: 650px) { .cx-page { margin: 8px; padding: 12px; } .cx-actions { gap: 8px; } }

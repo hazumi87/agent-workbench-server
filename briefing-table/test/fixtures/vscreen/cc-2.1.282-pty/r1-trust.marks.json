@@ -1,0 +1,25 @@
+{
+  "source": "chan-probe r1 (claude-code 2.1.282, server pty via python pty + pyte, 140x50, synthetic probe text only)",
+  "cols": 140,
+  "rows": 50,
+  "marks": [
+    {
+      "t": 1790340140,
+      "expect": {
+        "composer": "unknown",
+        "surface": "dialog",
+        "evidence": "cc.veto.pointer"
+      },
+      "note": "folder trust, pointer on option 1"
+    },
+    {
+      "t": 1790340149.1,
+      "expect": {
+        "composer": "unknown",
+        "surface": "dialog",
+        "evidence": "cc.veto.pointer"
+      },
+      "note": "folder trust after a down-arrow (pointer on option 2)"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+/* LIGHT MODE SWEEP (hub V2, Owner 2026-10-05; handoff §1 D). Only when the global
+ * palette is in Light (web/palette.mjs sets html[data-mode=light]).
+ *
+ * WHY: the room derives its identity tones from a room / project / tool colour
+ * with the lightness pinned for a DARK ground (inks .82, washes .25-.30). On a
+ * light ground those are unreadable, so each one is re-derived here with the
+ * light lightness. Same oklch recipes as dark, only L moves (the design system
+ * chat-page.html L83-87, hub-frame.js L58-68, v2.js `hub-light`).
+ *
+ * HELD (Owner 2026-10-05, "leave the existing watermark in place"): NO `.wm-pane`
+ * rule here. --wm-term / --wm-wash / --wm-glow / --wm-ink are not touched by a
+ * palette; the only thing that may set them is the Spot | Edge feature. */
+html[data-mode=light] body {
+  --rc-ink: oklch(from var(--room-c) .42 clamp(.02, calc(c * .8), .16) h);
+  --rc-wash: oklch(from var(--room-c) .93 clamp(0, calc(c * .25), .04) h);
+  --rc-tint: oklch(from var(--room-c) .91 clamp(0, calc(c * .3), .05) h);
+  --rc-edge: oklch(from var(--room-c) .76 clamp(0, calc(c * .5), .08) h);
+}
+html[data-mode=light] body[data-room-color="set"] {
+  --room-accent: oklch(from var(--room-c) .50 clamp(.05, calc(c * .75), .16) h);
+}
+/* a tool's cell (rail) */
+html[data-mode=light] .cell {
+  --cell-ink: oklch(from var(--cell-c) .42 clamp(.02, calc(c * .8), .16) h);
+  --cell-wash: oklch(from var(--cell-c) .92 clamp(0, calc(c * .3), .05) h);
+}
+/* an agent's project tones: line bubbles, seats, chips, @names, the CLI
+   Manager's room kids, the seat menu and profile card */
+html[data-mode=light] .entry, html[data-mode=light] .seat, html[data-mode=light] .ph-chip,
+html[data-mode=light] .mention, html[data-mode=light] .rr-kid, html[data-mode=light] .rsm-menu,
+html[data-mode=light] .rsm-card, html[data-mode=light] .apc-card, html[data-mode=light] .ras-row,
+html[data-mode=light] .sess.c4 {
+  --pc-ink: oklch(from var(--pc) .42 clamp(.02, calc(c * .8), .16) h);
+  --pc-wash: oklch(from var(--pc) .96 clamp(0, calc(c * .2), .03) h);
+  --pc-edge: oklch(from var(--pc) .84 clamp(0, calc(c * .3), .05) h);
+}
+html[data-mode=light] .mention[data-tone="seat"] { --pc: initial; }
+/* The title bar wash and the shell's TABS are window-chrome's own since v34
+   (light decided per tab; Owner approved 2026-10-05) - the interim .hwb-sbar /
+   .hwb-barwash / .hwb-tab overrides that stood here are gone. */
+/* the Settings title-bar samples (.tb-bar, settings.css) pin dark lightness too */
+html[data-mode=light] .tb-bar {
+  background: linear-gradient(90deg, oklch(from var(--c) .90 clamp(0, calc(c * .3), .05) h), var(--surface) 78%);
+  color: oklch(from var(--c) .42 clamp(.02, calc(c * .8), .16) h);
+}
+
+/* CLI Manager launcher cards (Owner 2026-10-05, screenshot #2): the card wash was pinned at the
+   dark L .245 while the name and meta took the light palette's dark --text, which made them unreadable.
+   In light mode the wash rises to a pale tint of the project color and the inks deepen to match.
+   This is the card's own ground, not the room watermark (that stays on hold). */
+html[data-mode=light] .sess.c4 {
+  --c4-wash: oklch(from var(--brand-src, var(--dim)) .90 clamp(0, calc(c * .35), .050) h);
+  --b-ink: oklch(from var(--brand-src, var(--dim)) .45 clamp(0, calc(c * .80), .130) h);
+  --pc-ink: oklch(from var(--sess-accent, var(--dim)) .42 clamp(0, calc(c * .6), .11) h);
+}
+
+/* The see-through lift (room-bubbles.css: Bubble glass >= 40% PC, and the phone glass) brightens
+   @names to L .92 for dark art; in light mode that made them pale. Light deepens them instead.
+   Declared on the same elements the lift sets it on (the design system handoff sec 1.J, 4aa58eb). */
+html[data-mode=light] body[data-bubble-see-through] .entry.by-agent .entry-author,
+html[data-mode=light].phone-glass .entry.by-agent .entry-author,
+html[data-mode=light].phone-glass .ph-chip[data-seat] .h { --pc-ink-hi: oklch(from var(--pc) .32 clamp(.02, calc(c * .8), .16) h); }
+
+/* THE ROOM TOAST (web/room-toast.css, Owner 2026-10-25 [ref]): its wash and edge are pinned at the dark L .30 / .46 while
+   its text takes the palette's --text, so in Light it was dark text on a dark box ("New in <room>" unreadable, contrast 1.1).
+   Same oklch recipes with the lightness moved for a light ground (wash like --rc-wash, edge like --rc-edge), the
+   neutral (sky) and error (coral) variants likewise, a softer shadow, and a deeper coral for the error's action. */
+html[data-mode=light] .rm-toast {
+  --t-wash: oklch(from var(--room-c) .94 clamp(0, calc(c * .3), .05) calc(h + 180));
+  --t-edge: oklch(from var(--room-c) .74 clamp(.03, calc(c * .5), .08) calc(h + 180));
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .16);
+}
+html[data-mode=light] .rm-toast.neutral { --t-wash: oklch(from var(--sky) .94 .03 h); --t-edge: oklch(from var(--sky) .72 .06 h); }
+html[data-mode=light] .rm-toast.err { --t-wash: oklch(from var(--coral) .94 .035 h); --t-edge: color-mix(in srgb, var(--coral) 55%, transparent); }
+html[data-mode=light] .rm-toast.err .act { color: oklch(from var(--coral) .48 .16 h); }

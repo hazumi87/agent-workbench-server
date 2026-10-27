@@ -1,0 +1,20 @@
+/* AGENT COMMS (web/settings-agent-comms.mjs). The Settings page's pv-* classes
+   carry labels, notes, selects, inputs and the Save button; this covers the rule
+   rows and the switch rows only. Tokens only. 16px inputs on a phone. */
+.acs { display: grid; gap: 4px; font: 400 13px var(--font); color: var(--text); min-width: 0; }
+.acs-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 12px; }
+.acs-lbl { flex: 1 1 180px; min-width: 0; }
+.acs-sel { flex: none; width: auto; margin-top: 0; }
+.acs-num { width: 84px; box-sizing: border-box; font-family: var(--mono); }
+.acs-text { width: 200px; max-width: 100%; box-sizing: border-box; }
+.acs-hint { margin: 0; }
+.acs-check { display: flex; align-items: flex-start; gap: 7px; margin-top: 12px; color: var(--text); }
+.acs-check input { margin-top: 3px; flex: none; }
+.acs-words { display: grid; gap: 2px; }
+.acs-words .pv-note { margin: 0; }
+.acs-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 12px; }
+.acs-acts .pv-msg { margin: 0; }
+@media (max-width: 600px) {
+  .acs-sel, .acs-num { font-size: 16px; }
+  .acs-text { font-size: 16px; }
+}

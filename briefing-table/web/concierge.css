@@ -1,0 +1,72 @@
+/* THE CONCIERGE ICON AND FLY-OUT (web/concierge.mjs). Tokens only. A side sheet on a
+   desktop, a bottom sheet on a phone; 44px targets on a phone; no sideways scroll. */
+.cg-btn { position: relative; flex: none; width: 36px; height: 36px; border: 0; border-radius: var(--corner, 8px); background: none; color: var(--dim); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.cg-btn[hidden] { display: none; }
+.cg-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.cg-btn:hover { background: var(--cap-hover, var(--surface2)); color: var(--text); }
+.cg-btn.cg-off { opacity: .6; }
+.cg-badge { position: absolute; top: 2px; right: 2px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: var(--coral, #ff7a6b); color: #fff; font: 600 10px/15px var(--font, sans-serif); text-align: center; box-sizing: border-box; }
+.cg-badge[hidden] { display: none; }
+.cg-scrim { position: fixed; inset: 0; z-index: 900; background: rgba(0, 0, 0, .35); display: flex; justify-content: flex-start; }
+.cg-sheet { display: flex; flex-direction: column; width: min(440px, 100%); height: 100%; background: var(--surface, var(--bg)); color: var(--text); border-right: 1px solid var(--border); box-sizing: border-box; min-width: 0; }
+.cg-sheet.is-phone { align-self: flex-end; width: 100%; height: 88svh; border-right: 0; border-top: 1px solid var(--border); border-radius: 14px 14px 0 0; }
+.cg-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px 8px 14px; border-bottom: 1px solid var(--border); min-width: 0; }
+.cg-title { font: 600 15px var(--display, inherit); flex: none; }
+.cg-who { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dim); font-size: 12px; }
+.cg-swap, .cg-start { font: inherit; font-size: 12px; padding: 4px 10px; min-height: 32px; border: 1px solid var(--border2, var(--border)); border-radius: 999px; background: none; color: var(--text); cursor: pointer; flex: none; }
+.cg-x { flex: none; width: 36px; height: 36px; border: 0; background: none; color: var(--dim); font-size: 16px; cursor: pointer; border-radius: var(--corner, 8px); }
+.cg-note { margin: 0; padding: 8px 14px; font-size: 12px; color: var(--coral, #c0392b); border-bottom: 1px solid var(--border); }
+.cg-body { position: relative; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.cg-body > .ac { flex: 1 1 auto; min-height: 0; }
+.cg-empty { padding: 16px 14px; color: var(--dim); display: grid; gap: 8px; justify-items: start; }
+.cg-empty p { margin: 0; }
+.cg-msg { font-size: 12px; }
+.cg-glyph svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; }
+/* her voice (Owner [ref]): mic, speaking indicator and gear in the header; the note card and settings over the chat */
+.cg-mic, .cg-gear { flex: none; width: 36px; height: 36px; border: 0; border-radius: 999px; background: none; color: var(--dim); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.cg-btn svg.cg-ico, .cg-glyph svg.cg-ico { fill: currentColor; stroke: none; } /* the filled Concierge icon [the design system [ref]] */
+.cg-mic svg, .cg-gear svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.cg-mic:hover, .cg-gear:hover { background: var(--cap-hover, var(--surface2)); color: var(--text); }
+.cg-mic.is-on { background: var(--teal, #2bb3a3); color: var(--bg, #0c1014); }
+.cg-gear[aria-expanded="true"] { color: var(--text); background: var(--surface2, transparent); }
+.cg-ind { flex: none; display: inline-flex; align-items: center; gap: 6px; min-width: 0; font-size: 12px; color: var(--dim); }
+.cg-ind[data-state="off"] { display: none; }
+.cg-ind-dot { --lvl: 0; width: 10px; height: 10px; border-radius: 999px; background: var(--dim); transform: scale(calc(.7 + var(--lvl) * .6)); transition: transform .08s linear; }
+.cg-ind[data-state="hearing"] .cg-ind-dot { background: var(--teal, #2bb3a3); }
+.cg-ind[data-state="thinking"] .cg-ind-dot { background: var(--amber, #d9a441); animation: cg-pulse 1s ease-in-out infinite; }
+.cg-ind[data-state="speaking"] .cg-ind-dot { background: var(--accent, #7aa7ff); animation: cg-pulse .6s ease-in-out infinite; }
+@keyframes cg-pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .cg-ind-dot { animation: none !important; transition: none; } }
+.cg-notecard { position: absolute; z-index: 2; inset: 10px 10px auto 10px; max-height: calc(100% - 92px); overflow: auto; display: grid; gap: 8px; padding: 12px 14px; background: var(--surface, var(--bg)); border: 1px solid var(--teal, #2bb3a3); border-radius: 12px; box-shadow: 0 8px 28px rgba(0, 0, 0, .35); box-sizing: border-box; }
+.cg-notecard[hidden], .cg-set[hidden] { display: none; }
+.cg-notecard[data-mode="asking"] { border-color: var(--amber, #d9a441); }
+.cg-nc-head, .cg-set-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.cg-nc-title { font: 600 14px var(--display, inherit); }
+.cg-nc-mode { flex: 1 1 auto; min-width: 0; font: 600 11px var(--mono, monospace); text-transform: uppercase; letter-spacing: .05em; color: var(--teal, #2bb3a3); }
+.cg-notecard[data-mode="asking"] .cg-nc-mode { color: var(--amber, #d9a441); }
+.cg-nc-x { flex: none; width: 32px; height: 32px; border: 0; background: none; color: var(--dim); font-size: 14px; cursor: pointer; border-radius: var(--corner, 8px); margin-left: auto; }
+.cg-nc-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.45; }
+.cg-nc-text[data-empty="1"] { color: var(--dim); font-style: italic; }
+.cg-nc-said { margin: 0; padding: 6px 10px; border-radius: 10px; background: var(--surface2, rgba(127, 127, 127, .12)); font-size: 13px; overflow-wrap: anywhere; justify-self: start; max-width: 90%; }
+.cg-nc-said[data-who="you"] { justify-self: end; }
+.cg-nc-said[data-who="her"]::before { content: "Her: "; color: var(--dim); }
+.cg-nc-hint { margin: 0; font-size: 12px; color: var(--dim); }
+.cg-set { position: absolute; z-index: 3; top: 6px; right: 6px; width: min(300px, calc(100% - 12px)); display: grid; gap: 10px; padding: 12px 14px; background: var(--surface, var(--bg)); border: 1px solid var(--border2, var(--border)); border-radius: 12px; box-shadow: 0 8px 28px rgba(0, 0, 0, .35); box-sizing: border-box; }
+.cg-set-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; align-items: center; font-size: 13px; }
+.cg-set-row > .cg-set-lbl { grid-column: 1; }
+.cg-set-row > input[type="range"], .cg-set-row > select { grid-column: 1; min-width: 0; width: 100%; font: inherit; }
+.cg-set-row > input[type="checkbox"] { grid-column: 2; grid-row: 1; justify-self: end; width: 18px; height: 18px; }
+.cg-set-out { grid-column: 2; font: 400 11.5px var(--mono, monospace); color: var(--dim); }
+.cg-set-note { margin: 0; font-size: 12px; color: var(--dim); }
+.cg-set-lab { font-size: 12px; color: var(--accent, inherit); }
+@media (max-width: 600px) {
+  .cg-btn, .cg-x { width: 44px; height: 44px; }
+  .cg-mic, .cg-gear, .cg-nc-x { width: 44px; height: 44px; }
+  .cg-ind-word { display: none; }
+  .cg-swap, .cg-start { min-height: 44px; }
+}
+[data-edition="basic"] .cg-btn { display: none; }
+/* the room header: the icon sits beside the settings button, wherever the gear's gap is */
+.rm-cg:not([hidden]) { margin-left: auto; }
+.rm-cg:not([hidden]) + .rm-gear { margin-left: 0; }
+.rm-push:not([hidden]) ~ .rm-cg { margin-left: 0; }

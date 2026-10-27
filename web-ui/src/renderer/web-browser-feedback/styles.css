@@ -1,0 +1,10 @@
+.wb-browser-copy { box-sizing:border-box; width:min(560px,calc(100vw - 32px)); max-height:calc(100vh - 32px); overflow:auto; border:1px solid var(--md-sys-color-outline-variant); border-radius:24px; padding:24px; background:var(--md-sys-color-surface-container-high); color:var(--md-sys-color-on-surface); font:14px/1.5 var(--font); }
+.wb-browser-copy::backdrop { background:rgb(0 0 0 / .4); }
+.wb-browser-copy h2 { margin:0 0 16px; font:500 22px/28px var(--font); }
+.wb-browser-copy textarea { box-sizing:border-box; width:100%; resize:vertical; min-height:100px; background:var(--md-sys-color-surface-container-lowest); color:var(--md-sys-color-on-surface); border:1px solid var(--md-sys-color-outline); border-radius:8px; padding:12px; font:13px/1.5 var(--mono,monospace); }
+.wb-browser-copy button,.wb-browser-notice button { min-height:44px; min-width:64px; border:0; border-radius:22px; padding:8px 16px; color:var(--md-sys-color-on-secondary-container); background:var(--md-sys-color-secondary-container); font:500 14px/20px var(--font); cursor:pointer; }
+.wb-browser-copy :focus-visible,.wb-browser-notice :focus-visible { outline:2px solid var(--md-sys-color-primary); outline-offset:3px; }
+.wb-browser-notice { position:fixed; z-index:2147483646; bottom:16px; left:16px; right:16px; width:fit-content; max-width:calc(100vw - 32px); box-sizing:border-box; display:flex; gap:16px; align-items:center; padding:12px 16px; border-radius:12px; background:var(--md-sys-color-inverse-surface); color:var(--md-sys-color-inverse-on-surface); font:14px/1.5 var(--font); box-shadow:0 4px 16px rgb(0 0 0 / .2); }
+.wb-browser-notice p { margin:0; overflow-wrap:anywhere; }
+
+.wb-browser-notice button { background:transparent; color:var(--md-sys-color-inverse-primary); }

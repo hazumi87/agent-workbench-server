@@ -1,0 +1,6 @@
+.wb-notification-banner{display:flex;align-items:flex-start;gap:12px;margin:12px 16px;padding:12px 14px;border-radius:16px;background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container);font:14px/1.5 var(--font)}
+.wb-notification-banner-text{flex:1;min-width:0;overflow-wrap:anywhere}.wb-notification-banner-text p{margin:2px 0 0;font-size:13px}
+.wb-notification-banner-actions{display:flex;gap:8px;flex-wrap:wrap}.wb-notification-banner button{min-height:44px;min-width:44px;border:0;border-radius:24px;padding:8px 16px;font:500 14px/20px var(--font);cursor:pointer;background:transparent;color:var(--md-sys-color-on-secondary-container)}
+.wb-notification-banner [data-wb-test="notification-enable"]{background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary)}
+.wb-notification-banner button:focus-visible{outline:2px solid var(--md-sys-color-on-secondary-container);outline-offset:3px}.wb-notification-banner button:disabled{opacity:.38;cursor:default}
+@media(max-width:600px){.wb-notification-banner{flex-wrap:wrap}.wb-notification-banner-text{flex-basis:calc(100% - 40px)}.wb-notification-banner-actions{margin-left:36px}}

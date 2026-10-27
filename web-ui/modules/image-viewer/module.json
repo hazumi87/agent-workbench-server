@@ -1,0 +1,27 @@
+{
+  "id": "image-viewer",
+  "name": "Pictures",
+  "version": "0.1.0",
+  "description": "Opens a message's pictures in the side column: zoom, pins and boxes with letters, and marks are saved next to the picture. View-only once the message is sent.",
+  "class": "tool",
+  "icon": "draw",
+  "provides": [
+    "image.view"
+  ],
+  "role": "viewer",
+  "contexts": [
+    "message-attachment"
+  ],
+  "claims": [
+    {
+      "kind": "type",
+      "accepts": [
+        "image/*"
+      ]
+    }
+  ],
+  "actions": "actions.json",
+  "permissions": [
+    "ui.side"
+  ]
+}

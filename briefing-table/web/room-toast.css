@@ -1,0 +1,35 @@
+/* ==== THE ROOM TOAST (the design system room-toast-v1, hub v2 2026-10-05; web/room-toast.mjs) ====
+   Under the title bar (top is set by the module from the header's real bottom), from the right, on the
+   complementary wash of the room color. Replaces .rsm-toast, .wg-toast, .tl-toast and .nt-toast. */
+.rm-toast {
+  --t-wash: oklch(from var(--room-c) .30 clamp(.045, calc(c * .5), .07) calc(h + 180));
+  --t-edge: oklch(from var(--room-c) .46 clamp(.05, calc(c * .55), .09) calc(h + 180));
+  position: fixed; z-index: 95; top: 56px; right: 12px; max-width: min(440px, calc(100% - 24px)); box-sizing: border-box;
+  display: flex; align-items: center; gap: 4px; min-height: 40px; padding: 4px 4px 4px 14px;
+  background: var(--t-wash); border: 1px solid var(--t-edge); border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .35); font-size: 12.5px; line-height: 1.35; color: var(--text);
+  transform: translateX(calc(100% + 24px)); transition: transform .22s var(--metro-ease, ease), opacity .22s; touch-action: pan-y;
+}
+.rm-toast.in { transform: none; }
+.rm-toast.out { transform: translateX(calc(100% + 24px)); transition-duration: .18s; }
+.rm-toast .tx { flex: 1; min-width: 0; padding: 6px 6px 6px 0; overflow-wrap: anywhere; }
+.rm-toast .act { flex: none; min-height: 32px; padding: 0 10px; border: 0; border-left: 1px solid var(--t-edge); border-radius: 0; background: none; color: var(--room-accent, var(--teal)); font: 600 12.5px var(--font); cursor: pointer; }
+.rm-toast .act:hover, .rm-toast .x:hover { background: color-mix(in srgb, var(--text) 8%, transparent); }
+.rm-toast .x { flex: none; width: 32px; height: 32px; border: 0; border-radius: 6px; background: none; color: var(--dim); font-size: 14px; cursor: pointer; }
+.rm-toast .x:hover { color: var(--text); }
+.rm-toast .act:focus-visible, .rm-toast .x:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+.rm-toast .bang { flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--coral); color: var(--ink); font: 700 12px/18px var(--font); text-align: center; margin-right: 4px; }
+/* a neutral room (chroma < .03) has no hue to complement: the wash takes the info hue */
+.rm-toast.neutral { --t-wash: oklch(from var(--sky) .30 .05 h); --t-edge: oklch(from var(--sky) .46 .07 h); }
+/* an error is coral whatever the room, and never the complementary wash */
+.rm-toast.err { --t-wash: oklch(from var(--coral) .29 .07 h); --t-edge: color-mix(in srgb, var(--coral) 60%, transparent); }
+.rm-toast.err .act { color: var(--coral); }
+@media (max-width: 600px) {
+  .rm-toast { left: 8px; right: 8px; max-width: none; min-height: 48px; font-size: 14px; }
+  .rm-toast .act, .rm-toast .x { min-height: 44px; min-width: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rm-toast, .rm-toast.out { transform: none; opacity: 0; transition: opacity .15s; }
+  .rm-toast.in { opacity: 1; }
+}
+/* ==== /THE ROOM TOAST ==== */

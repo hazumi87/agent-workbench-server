@@ -1,0 +1,196 @@
+{
+  "about": "The person's 'To me' rule (User [ref], toolkit [ref]). The contract is docs/ROOMS-API 'To me'. Each case is a stored room line (the fields the engine returns from GET /api/rooms/:id/line; meta shown parsed) and whether it shows under 'To me' and under 'Between agents'. Seats: s-lead (the lead), s-bee, s-ant. The Workbench reuses these cases for its own copy of the rule.",
+  "cases": [
+    {
+      "name": "my own line",
+      "line": {
+        "kind": "chat",
+        "author": "user",
+        "author_seat": null,
+        "target": "lead",
+        "target_seat": "s-lead",
+        "meta": {}
+      },
+      "me": true,
+      "agents": false
+    },
+    {
+      "name": "an agent names me (@user / @owner): meta.to_user",
+      "line": {
+        "kind": "chat",
+        "author": "bee",
+        "author_seat": "s-bee",
+        "target": "owner",
+        "target_seat": null,
+        "meta": {
+          "to_user": true
+        }
+      },
+      "me": true,
+      "agents": false
+    },
+    {
+      "name": "an agent names me AND a seat",
+      "line": {
+        "kind": "chat",
+        "author": "bee",
+        "author_seat": "s-bee",
+        "target": "ant",
+        "target_seat": "s-ant",
+        "meta": {
+          "to_user": true
+        }
+      },
+      "me": true,
+      "agents": false
+    },
+    {
+      "name": "THE BUG: an agent replies to MY line but addresses another seat (the quote names me)",
+      "line": {
+        "kind": "chat",
+        "author": "bee",
+        "author_seat": "s-bee",
+        "target": "lead",
+        "target_seat": "s-lead",
+        "meta": {
+          "reply": {
+            "id": 10,
+            "user": true,
+            "excerpt": "@bee can you check"
+          }
+        }
+      },
+      "me": false,
+      "agents": true
+    },
+    {
+      "name": "an agent replies to my line naming nobody (engine reply inheritance sets to_user)",
+      "line": {
+        "kind": "chat",
+        "author": "bee",
+        "author_seat": "s-bee",
+        "target": "owner",
+        "target_seat": null,
+        "meta": {
+          "reply": {
+            "id": 10,
+            "user": true
+          },
+          "to_user": true,
+          "reply_inherited": true
+        }
+      },
+      "me": true,
+      "agents": false
+    },
+    {
+      "name": "plain seat-to-seat",
+      "line": {
+        "kind": "chat",
+        "author": "bee",
+        "author_seat": "s-bee",
+        "target": "ant",
+        "target_seat": "s-ant",
+        "meta": {}
+      },
+      "me": false,
+      "agents": true
+    },
+    {
+      "name": "a seat to @room",
+      "line": {
+        "kind": "chat",
+        "author": "bee",
+        "author_seat": "s-bee",
+        "target": "room",
+        "target_seat": null,
+        "meta": {}
+      },
+      "me": true,
+      "agents": false
+    },
+    {
+      "name": "the lead's line with no address (stored as to itself)",
+      "line": {
+        "kind": "chat",
+        "author": "lead",
+        "author_seat": "s-lead",
+        "target": null,
+        "target_seat": "s-lead",
+        "meta": {}
+      },
+      "me": true,
+      "agents": false
+    },
+    {
+      "name": "an older line addressed to the person by shape (target a handle, no seat, no meta)",
+      "line": {
+        "kind": "chat",
+        "author": "bee",
+        "author_seat": "s-bee",
+        "target": "user",
+        "target_seat": null,
+        "meta": {}
+      },
+      "me": true,
+      "agents": false
+    },
+    {
+      "name": "a room fact (floor, seat added): not to the person",
+      "line": {
+        "kind": "fact",
+        "author": "room",
+        "author_seat": null,
+        "target": null,
+        "target_seat": null,
+        "meta": {}
+      },
+      "me": false,
+      "agents": false
+    },
+    {
+      "name": "a room fact whose own text names the person",
+      "line": {
+        "kind": "fact",
+        "author": "room",
+        "author_seat": null,
+        "target": null,
+        "target_seat": null,
+        "body": "seat restarted, asked by @user",
+        "meta": {}
+      },
+      "me": true,
+      "agents": false
+    },
+    {
+      "name": "a room fact that names the person only inside a code span",
+      "line": {
+        "kind": "fact",
+        "author": "room",
+        "author_seat": null,
+        "target": null,
+        "target_seat": null,
+        "body": "ran `@user`",
+        "meta": {}
+      },
+      "me": false,
+      "agents": false
+    },
+    {
+      "name": "a tool line I initiated",
+      "line": {
+        "kind": "chat",
+        "author": "tasks",
+        "author_seat": null,
+        "target": null,
+        "target_seat": null,
+        "meta": {
+          "tool": "room-tasks",
+          "for": "user"
+        }
+      },
+      "me": true,
+      "agents": false
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+/* ===========================================================================
+   hwb-drag.css — DRAG-TIME AFFORDANCES
+   Part of the window-chrome bundle. Requires tokens.css + hwb-chrome.css.
+
+   Two things that only exist while a drag is in flight:
+     .hwb.is-droptarget + .hwb-dropcaret   where a tab will LAND
+     .hwb-ghost                            what is being CARRIED
+
+   They ship together on purpose. Specifying one without the other leaves a
+   host guessing at the transition between them, and the transition is most of
+   the interaction: the ghost is the question, the caret is the answer.
+
+   ---------------------------------------------------------------------------
+   WHY --teal, AND WHY THIS IS NOT AN EXCEPTION TO COLOR=FUNCTION
+
+   A drop preview is an ANSWER TO AN ACTION IN FLIGHT — "release here and this
+   is what happens". That is a function, so it takes a function color. It is
+   NOT a session state, so it must be a function color that no session state
+   uses: sky, coral, magenta and amber are all spoken for by the ring, leaving
+   --teal, which is why the drop preview cannot be misread as a session having
+   become urgent mid-drag.
+
+   The inverse mistake is the one this bundle already made once: an --id-cobalt
+   drop preview, an IDENTITY token doing a function's job. Same rule, both
+   directions.
+   =========================================================================== */
+
+/* ---- DROP TARGET -----------------------------------------------------------
+   The band lights, not the whole window. A full-window overlay would obscure
+   the very content the user is deciding about, and the decision is "which
+   window", which the bar identifies on its own. */
+.hwb.is-droptarget .hwb-bar{
+  background:color-mix(in srgb,var(--teal) 12%,var(--d-barwash));
+  transition:background .12s var(--metro-ease);
+}
+.hwb.is-droptarget .hwb-bar::after{background:var(--teal);}      /* the rail */
+.hwb.is-droptarget .hwb-seam{background:var(--teal);}            /* untabbed windows */
+
+/* A window with NO tabs is about to BECOME tabbed — there is no insert index to
+   point at, so the wash alone is the whole message: "this window, as a new
+   tab". The caret is suppressed rather than parked at 0, because a caret at the
+   left edge of an empty strip reads as "before the title", which is not a place. */
+.hwb.is-droptarget:not(.is-tabbed) .hwb-dropcaret{display:none;}
+
+/* ---- INSERT CARET ----------------------------------------------------------
+   A 2px bar at the insertion point, NOT a gap that opens between tabs. Opening
+   a gap re-lays-out the strip on every pointer move — which changes the very
+   rects the host is hit-testing mid-drag, and costs a reflow per frame. The
+   caret is absolutely positioned and moves by a single custom property. */
+.hwb-dropcaret{
+  position:absolute;top:4px;bottom:2px;width:2px;z-index:4;pointer-events:none;
+  left:var(--caret-x,0);background:var(--teal);border-radius:1px;
+  box-shadow:0 0 6px color-mix(in srgb,var(--teal) 60%,transparent);
+  transition:left .1s var(--metro-ease);
+  display:none;
+}
+.hwb.is-droptarget .hwb-dropcaret{display:block;}
+@media (prefers-reduced-motion:reduce){ .hwb-dropcaret{transition:none;} }
+
+/* ---- TEAR-OFF GHOST --------------------------------------------------------
+   A miniature of the window being carried: its own bar in its own identity,
+   its mark, its title, over a body block in its own terminal ground. It is a
+   WINDOW being carried, not a tab — because that is what dropping it produces.
+
+   Flat, never rotated. Aurora has no 3D tumble anywhere and a tilted ghost
+   would be the only thing in the tools that leans.
+
+   The host positions it (transform: translate at the cursor). Everything about
+   its APPEARANCE is here so two hosts cannot draw two different ghosts. */
+.hwb-ghost{
+  /* top/left:0 is LOAD-BEARING, not a reset. hwbMoveGhost positions with
+     transform, and without an anchor the translate is measured from the
+     element's STATIC position — which, for a node appended to <body>, is below
+     all page content. The ghost then renders correctly and off-screen, which is
+     the worst of both: no error, no ghost. */
+  position:fixed;top:0;left:0;z-index:9999;pointer-events:none;
+  width:var(--ghost-w,208px);
+  border-radius:var(--hwb-tab-r);
+  overflow:hidden;
+  opacity:.92;
+  box-shadow:0 12px 28px color-mix(in srgb,#000 55%,transparent),
+             0 0 0 1px color-mix(in srgb,var(--text) 14%,transparent);
+  /* the ghost derives from the TORN TAB's base, not the source window's —
+     the thing being carried is the session, not the frame it came out of */
+  --d-barwash: oklch(from var(--base) .28 clamp(0,calc(c * .35),.060) h);
+  --d-title:   oklch(from var(--base) .86 clamp(0,calc(c * .55),.090) h);
+  --d-termbg:  oklch(from var(--base) .16 clamp(0,calc(c * .15),.028) h);
+  --d-ghostmk: oklch(from var(--base) .26 clamp(0,calc(c * .40),.050) h);
+}
+.hwb-ghost .gbar{
+  height:26px;display:flex;align-items:center;gap:6px;padding:0 9px;
+  background:var(--d-barwash);
+  border-bottom:2px solid oklch(from var(--base) .52 clamp(0,calc(c * .70),.130) h);
+}
+.hwb-ghost .glogo{width:15px;height:15px;flex:0 0 auto;color:var(--d-title);}
+.hwb-ghost .glogo svg{width:100%;height:100%;display:block;fill:currentColor;}
+.hwb-ghost .gname{
+  font:500 .70rem/1 var(--font);color:var(--d-title);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto;
+}
+.hwb-ghost .gbody{
+  height:var(--ghost-body-h,72px);background:var(--d-termbg);
+  position:relative;overflow:hidden;
+}
+/* the watermark rides along at ghost scale — it is the same asset at a third
+   size, which is what makes the ghost read as THAT session and not a generic
+   rectangle */
+.hwb-ghost .gmark{
+  position:absolute;right:-6px;bottom:-14px;width:64px;height:64px;
+  color:var(--d-ghostmk);
+}
+.hwb-ghost .gmark svg{width:100%;height:100%;display:block;fill:currentColor;}
+
+/* MOTION IS FROZEN ON THE GHOST — deliberately, and this is a design call.
+   The live window is still on screen behind the drag, still animating its own
+   state. A ghost that also animates doubles the motion for the same session
+   while adding no information, and the user's attention during a drag belongs
+   to WHERE IT WILL LAND, not to what it is doing. The ghost is a
+   representation; the original is the live thing. */
+.hwb-ghost *{animation:none !important;}
+
+/* The source strip closes up immediately on tear (Edge behavior) — a held-open
+   gap implies the tab will spring back, which is the opposite of what a tear-off
+   means. Nothing to style: the tab leaves the DOM and flex reflows. */

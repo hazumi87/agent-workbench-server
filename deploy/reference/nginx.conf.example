@@ -1,0 +1,48 @@
+# Reference TLS proxy for the Workbench engine. The deployer owns TLS and sign-in policy; this is a starting point, not a product.
+# One public door: nginx terminates TLS and forwards to the engine on loopback. The engine sets its own CSP and security headers;
+# do not add or override them here.
+#
+#   test it:   nginx -t
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
+# Brute-force brake on sign-in; the engine also rate-limits, this protects it from floods.
+limit_req_zone $binary_remote_addr zone=wb_login:10m rate=10r/m;
+
+server {
+    listen 80;
+    server_name workbench.example.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name workbench.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/workbench.example.com/fullchain.pem;   # CHANGE-ME
+    ssl_certificate_key /etc/letsencrypt/live/workbench.example.com/privkey.pem;     # CHANGE-ME
+    ssl_protocols TLSv1.2 TLSv1.3;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    # Plugin zips are capped at 20 MB packed by the engine; allow a little headroom for the multipart envelope.
+    client_max_body_size 24m;
+
+    # OPTIONAL SSO in front of the engine (the deployer's choice): an oauth2-proxy / auth_request block goes here, and the
+    # engine's own accounts stay as the second factor. Example shape, left off:
+    #   auth_request /oauth2/auth;
+    #   error_page 401 = /oauth2/sign_in;
+
+    location = /login {
+        limit_req zone=wb_login burst=5 nodelay;
+        proxy_pass http://127.0.0.1:8300;
+        include /etc/nginx/workbench-proxy.inc;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:8300;
+        include /etc/nginx/workbench-proxy.inc;
+    }
+}

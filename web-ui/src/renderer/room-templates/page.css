@@ -1,0 +1,29 @@
+/* Lane E component only; no global room, rail or dialog selectors. */
+.rt-page { box-sizing: border-box; max-width: 760px; padding: 24px; color: var(--md-sys-color-on-surface); background: var(--md-sys-color-surface); overflow-wrap: anywhere; }
+.rt-page h3 { margin: 0 0 20px; font: 500 22px/28px var(--font, sans-serif); }
+.rt-page h4 { margin: 0 0 8px; font: 500 16px/24px var(--font, sans-serif); }
+.rt-page p { font: 400 14px/20px var(--font, sans-serif); }
+.rt-field { display: grid; gap: 8px; margin: 16px 0; }
+.rt-field input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 48px; padding: 10px 12px; border: 1px solid var(--md-sys-color-outline); border-radius: 4px; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); font: inherit; }
+.rt-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+.rt-button { box-sizing: border-box; min-height: 44px; min-width: 44px; padding: 10px 20px; border: 1px solid var(--md-sys-color-outline); border-radius: 24px; color: var(--md-sys-color-primary); background: var(--md-sys-color-surface); font: 500 14px/20px var(--font, sans-serif); cursor: pointer; }
+.rt-button:disabled { opacity: .38; cursor: default; }
+.rt-page input:focus-visible, .rt-button:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset: 3px; }
+.rt-choices, .rt-teams { border: 0; padding: 0; margin: 16px 0; min-width: 0; }
+.rt-option { box-sizing: border-box; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 12px; border-radius: 12px; }
+.rt-option:has(input:checked) { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.rt-option input { flex: 0 0 20px; width: 20px; height: 20px; accent-color: var(--md-sys-color-primary); }
+.rt-option span { min-width: 0; }
+.rt-page .rt-help { display: block; color: var(--md-sys-color-on-surface-variant); font: 400 12px/18px var(--font, sans-serif); }
+.rt-option:has(input:checked) .rt-help { color: var(--md-sys-color-on-secondary-container); }
+.rt-kept, .rt-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; margin: 20px 0; }
+.rt-kept ul { padding-left: 20px; font: 400 14px/24px var(--font, sans-serif); }
+.rt-card { padding: 20px; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 16px; background: var(--md-sys-color-surface-container-low); }
+.rt-card details { margin-top: 12px; }
+.rt-card summary { width: fit-content; }
+.rt-page .rt-error { color: var(--md-sys-color-error); }
+.rt-notice { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 16px; border-radius: 8px; color: var(--md-sys-color-inverse-on-surface); background: var(--md-sys-color-inverse-surface); }
+.rt-notice .rt-button { color: var(--md-sys-color-inverse-primary); background: transparent; }
+@media(max-width:600px) { .rt-page { padding: 20px 16px; } .rt-grid, .rt-kept { grid-template-columns: minmax(0,1fr); } .rt-actions > .rt-button { flex: 1 1 auto; } }
+.rt-created { padding: 16px; margin-bottom: 16px; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 12px; background: var(--md-sys-color-surface-container-low); }
+.rt-created p { margin: 12px 0; }

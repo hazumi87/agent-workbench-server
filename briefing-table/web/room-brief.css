@@ -1,0 +1,47 @@
+/* THE ROOM BRIEF FLYOUT [room brief] Owner 2026-10-05 (web/room-brief.mjs). The markdown inherits
+   the room's document styles (.dv-md, room-doc-view.css); the popover and sheet reuse the seat
+   menu's surface, border and shadow (.rsm-menu / .rsm-menu.is-sheet). Tokens only. */
+.rbf-i {
+  flex: none; align-self: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 10px; background: none;
+  color: var(--dim); font: 400 15px/1 var(--font); cursor: pointer; display: inline-grid; place-items: center;
+}
+.rbf-i:hover { background: var(--cap-hover); color: var(--text); }
+.rbf-i:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.rm-name .rbf-i { margin-left: 8px; vertical-align: middle; }
+.rbf-scrim { position: fixed; inset: 0; z-index: 79; }
+.rbf-scrim.is-sheet { background: color-mix(in srgb, var(--ink) 60%, transparent); }
+.rbf {
+  position: fixed; z-index: 80; display: flex; flex-direction: column; min-height: 0; background: var(--surface3);
+  border: 1px solid var(--border2); border-radius: 8px; box-shadow: 0 14px 30px -8px rgba(0, 0, 0, .7); color: var(--text); outline: none;
+}
+.rbf.is-sheet {
+  left: 0; right: 0; bottom: 0; top: auto; width: auto; max-height: 82vh; max-height: 82svh; border-radius: 14px 14px 0 0; border-bottom: 0;
+  padding-bottom: max(12px, env(safe-area-inset-bottom)); box-shadow: 0 -10px 24px -8px rgba(0, 0, 0, .6);
+}
+.rbf-hd { display: flex; align-items: center; gap: 8px; flex: none; padding: 8px 8px 8px 14px; border-bottom: 1px solid var(--border); }
+.rbf-t { flex: 1; min-width: 0; font: 600 13px var(--font); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rbf-x { flex: none; width: 28px; height: 28px; border: 0; border-radius: 6px; background: none; color: var(--dim); font-size: 20px; line-height: 1; cursor: pointer; }
+.rbf-x:hover { background: var(--cap-hover); color: var(--text); }
+.rbf-body { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 12px 14px; font-size: 13.5px; }
+.rbf-md.plain { white-space: pre-wrap; }
+.rbf-by { margin-top: 10px; font: 400 11.5px var(--font); color: var(--dim); }
+.rbf-none, .rbf-load { color: var(--dim); font-size: 13px; line-height: 1.5; }
+.rbf-err { color: var(--coral); font-size: 12.5px; margin-top: 8px; }
+.rbf-ft { display: flex; align-items: center; gap: 12px; flex: none; padding: 6px 14px 10px; }
+.rbf-ft:empty { display: none; }
+.rbf-edit { margin-left: auto; }
+.rbf-link { border: 0; background: none; padding: 4px 0; font: 500 12.5px var(--font); color: var(--sky); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.rbf-link:focus-visible, .rbf-btn:focus-visible, .rbf-x:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.rbf-ta { width: 100%; box-sizing: border-box; min-height: 160px; resize: vertical; padding: 8px 10px; font: 400 16px/1.45 var(--mono); color: var(--text); background: var(--surface); border: 1px solid var(--border2); border-radius: 6px; }
+.rbf-btn { min-height: 32px; padding: 0 14px; border-radius: 6px; border: 1px solid var(--border2); background: none; color: var(--text); font: 500 13px var(--font); cursor: pointer; }
+.rbf-btn.go { margin-left: auto; border-color: var(--room-accent, var(--teal)); color: var(--room-accent, var(--teal)); }
+.rbf-btn[disabled] { opacity: .5; cursor: default; }
+@media (max-width: 600px) {
+  .rbf-i { width: 28px; height: 28px; font-size: 18px; }
+  .rbf-x { width: 40px; height: 40px; }
+  .rbf-link, .rbf-btn { min-height: 40px; }
+  .rbf-body { font-size: 15px; }
+}
+/* a workgroup row's name and alias SHARE what the (i) leaves (both ellipsize), so the name is never squeezed to nothing */
+.seat.is-sub .seat-top .seat-handle { flex: 0 1 auto; min-width: 0; }
+.seat.is-sub .seat-top .sub-alias { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }

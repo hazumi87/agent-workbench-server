@@ -1,0 +1,34 @@
+# Workbench engine + web UI [reference setup]. A SYSTEM unit that runs as `wbengine`, NOT as the agents' account.
+# It listens on loopback only; the TLS proxy in front (nginx.conf.example) is the one public door.
+# @NODE@ is replaced by setup-reference.sh with the absolute path of the node on this host (`command -v node`).
+[Unit]
+Description=Workbench engine and web UI (runs as wbengine)
+Wants=workbench-broker.service
+After=workbench-broker.service network.target
+
+[Service]
+Type=simple
+User=wbengine
+Group=wbengine
+# The agents' group, so the engine can read the person's project folders (group r-x) and the broker token. It gets NO write
+# access to the agents' home. The engine's own data and secrets stay wbengine-only (see README, "File modes").
+SupplementaryGroups=wbagent
+EnvironmentFile=/etc/workbench/workbench.env
+WorkingDirectory=/opt/workbench/briefing-table
+ExecStart=@NODE@ /opt/workbench/briefing-table/node_modules/tsx/dist/cli.mjs src/server/index.ts
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/workbench /var/lib/workbench-files
+ProtectHome=read-only
+PrivateTmp=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+LockPersonality=yes
+
+[Install]
+WantedBy=multi-user.target

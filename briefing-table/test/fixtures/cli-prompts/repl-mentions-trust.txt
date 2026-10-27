@@ -1,0 +1,8 @@
+● I read the docs. The first-run flow shows "Choose the text style" and later a
+  "Quick safety check: Is this a project you created or one you trust?" dialog,
+  and "Select login method" before that.
+
+──────────────────────────────────────────────────
+❯ 
+──────────────────────────────────────────────────
+  ? for shortcuts

@@ -1,0 +1,240 @@
+/* ROOM COMPOSER ATTACHMENTS [ticket] (the design system room-attach-v1). Loaded AFTER
+   room.css; everything the attachment tray, the drop target and the sent
+   line's thumbnails need, in one sheet (web/room-attach.mjs draws them).
+   Colour is function: teal = Send and the drop target, sky = in progress,
+   coral = failed. The + is a ghost square LEFT of the input; → stays the one
+   teal action. Tokens only; no accent bars. */
+
+/* the composer: the note and the tray take full rows above the input row */
+.rm-compose { flex-wrap: wrap; column-gap: 12px; row-gap: 0; --att-indent: 52px; }
+.rm-attnote, .rm-tray { flex: 0 0 100%; min-width: 0; }
+/* FLEX WRAPS BEFORE IT SHRINKS: with the form wrapping, the input's basis must
+   be 0 or its intrinsic width could push → onto a row of its own on a narrow
+   phone (the 2026-09-04 rule: audit every flexible child's basis) */
+.rm-compose > .rm-inputwrap { flex: 1 1 0; }
+/* Send disabled (sending, an upload pending or failed): the design system dim ghost */
+.rm-send:disabled { opacity: 1; border-color: var(--border2); color: var(--dim2, var(--dim)); cursor: default; }
+
+.rm-attach {
+  flex: 0 0 40px; width: 40px; height: 40px; padding: 0; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--border2); background: none; color: var(--dim);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.rm-attach:hover { background: var(--cap-hover); color: var(--text); }
+.rm-attach svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.rm-attach:focus-visible, .att-x:focus-visible, .att-tile:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 2px; }
+
+/* the tray: ONE row above the input, lined up with the input (not the +);
+   never wraps, scrolls sideways */
+.rm-tray {
+  display: flex; gap: 8px; overflow-x: auto; overflow-y: hidden; padding: 2px 0 10px var(--att-indent);
+  padding-top: 7px; margin-top: -5px; /* room for the 5px lift of a tile held for reordering, layout unchanged */
+  scrollbar-width: thin; scrollbar-color: var(--border2) transparent;
+}
+.rm-attnote { margin: 0; padding: 0 0 8px var(--att-indent); font-size: 12px; color: var(--dim); }
+.rm-attnote.err { color: var(--coral); }
+.att-tile {
+  position: relative; flex: none; height: 64px; border: 1px solid var(--border2); border-radius: 6px;
+  background: var(--surface2); overflow: hidden; cursor: default;
+}
+.att-tile.img { width: 64px; }
+.att-tile.img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.att-tile.file { display: flex; align-items: center; gap: 10px; width: 208px; padding: 0 30px 0 8px; }
+.att-type {
+  flex: none; width: 40px; height: 46px; border-radius: 4px; background: var(--surface3, var(--surface2)); border: 1px solid var(--border2);
+  display: grid; place-items: end center; padding-bottom: 5px; font: 600 9.5px var(--mono); color: var(--dim); position: relative;
+}
+.att-type::before { content: ""; position: absolute; top: 7px; left: 9px; right: 9px; height: 14px; background: repeating-linear-gradient(0deg, var(--dim3, var(--border2)) 0 2px, transparent 2px 5px); }
+.att-fn { min-width: 0; display: flex; flex-direction: column; gap: 3px; text-align: left; }
+.att-fn .n { font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+.att-fn .s { font: 400 11px var(--mono); color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.att-x {
+  position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; padding: 0; border-radius: 50%; cursor: pointer;
+  display: grid; place-items: center; background: color-mix(in srgb, var(--ink) 78%, transparent); border: 1px solid var(--border2); color: var(--text);
+}
+.att-x svg { width: 10px; height: 10px; stroke: currentColor; stroke-width: 2.4; fill: none; stroke-linecap: round; }
+.att-x::after { content: ""; position: absolute; inset: -9px; } /* a 40px hit area */
+.att-x:hover { background: var(--surface3, var(--surface2)); }
+/* uploading: the content dims, a determinate sky meter in the tile's foot */
+.att-tile.up img, .att-tile.up .att-type, .att-tile.up .att-fn { opacity: .45; }
+.att-m { position: absolute; left: 6px; right: 6px; bottom: 5px; height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--sky) 22%, transparent); overflow: hidden; }
+.att-m i { display: block; height: 100%; background: var(--sky); width: 4%; transition: width .15s linear; }
+.att-tile.file .att-m { left: 58px; right: 30px; }
+/* failed: a full coral hairline, a retry glyph, the reason in words */
+.att-tile.fail { border-color: var(--coral); cursor: pointer; }
+.att-tile.fail img { opacity: .35; }
+.att-retry { position: absolute; inset: 0; display: grid; place-items: center; color: var(--coral); }
+.att-retry svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* THE NUMBER (ticket, Owner 2026-10-02): a pill in the LOWER-LEFT of every tile (tray and sent), only
+   when the message has 2+ attachments; the x keeps the upper right. pointer-events none: it never takes a tap. */
+.att-n {
+  position: absolute; left: 4px; bottom: 4px; z-index: 2; min-width: 16px; height: 16px; padding: 0 4px; box-sizing: border-box;
+  border-radius: 999px; background: rgba(0, 0, 0, .62); color: #fff; pointer-events: none;
+  display: grid; place-items: center; font: 600 10.5px/1 var(--mono); font-variant-numeric: tabular-nums;
+}
+.att-file { position: relative; }
+.att-tile.file .att-retry { position: static; width: 40px; height: 46px; flex: none; }
+.att-tile.file.fail .att-fn .s { color: var(--coral); }
+
+/* drag-over: the whole line column is the target */
+.rm-line { position: relative; }
+.rm-drop {
+  position: absolute; inset: 8px; z-index: 6; display: none; place-items: center; text-align: center; pointer-events: none;
+  border: 1.5px dashed var(--room-accent, var(--teal)); border-radius: 8px;
+  background: color-mix(in srgb, var(--room-accent, var(--teal)) 7%, color-mix(in srgb, var(--ink) 80%, transparent));
+}
+.rm-line.is-drag > .rm-drop { display: grid; }
+.rm-drop svg { width: 28px; height: 28px; fill: none; stroke: var(--room-accent, var(--teal)); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; margin-bottom: 6px; }
+.rm-drop .t { font: 600 16px var(--font); color: var(--room-accent, var(--teal)); }
+.rm-drop .s { font-size: 12.5px; color: var(--dim); margin-top: 4px; }
+
+/* the SENT line: thumbnails under the text (the same objects as in Assets) */
+.entry-att { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.entry.k-attachment .entry-body:empty { display: none; }
+.att-img {
+  position: relative; width: 120px; height: 120px; padding: 0; border-radius: 6px; border: 1px solid var(--border2);
+  overflow: hidden; background: var(--surface2); cursor: pointer;
+}
+.att-img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* a SINGLE image: larger and uncropped, but never a speck (the design system review A1):
+   at least the 120px square, at most 260x170, the picture contained and
+   centred on --surface. The img box itself takes the minimum so contain
+   scales a tiny image UP into it. */
+.att-img.one {
+  width: auto; height: auto; min-width: 120px; min-height: 120px; max-width: min(260px, 100%); max-height: 170px;
+  display: inline-grid; place-items: center; background: var(--surface);
+}
+.att-img.one img { width: auto; height: auto; min-width: 118px; min-height: 118px; max-width: min(258px, 100%); max-height: 168px; object-fit: contain; }
+/* file chips after images: their own full row (the design system review A2) */
+.att-chips { flex: 0 0 100%; display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.att-img .more {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--ink) 62%, transparent); font: 600 18px var(--font); color: var(--text);
+}
+.att-file {
+  display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 12px 0 8px; cursor: pointer;
+  border: 1px solid var(--border2); border-radius: 6px; background: var(--surface); min-width: 0; width: 220px; max-width: 100%;
+}
+.att-file .att-type { width: 34px; height: 40px; }
+.att-img:hover, .att-file:hover { border-color: var(--dim2, var(--dim)); }
+.att-img:focus-visible, .att-file:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 2px; }
+
+/* THE SCRATCHPAD TILE (.is-note) [ticket], verbatim from the design system
+   room-note-tile-v1 option A: one graphic at every size, drawn from ONE unit
+   --u = tile height / 20. No name, size, state or words; neutral tokens only.
+   Sent (PC) 90x120; the tray (square) and phone sizes override --u below. */
+.is-note{
+  --u:6px;                                   /* sent, PC: 90 x 120 */
+  --pen:var(--dim2);
+  --stroke:max(1.5px, calc(var(--u) * .34));
+  position:relative; flex:none; display:block; padding:0; cursor:pointer; color:inherit; font:inherit;
+  width:calc(var(--u) * 15); height:calc(var(--u) * 20);
+  border:1px solid var(--border2); border-radius:6px; overflow:hidden;
+  background:
+    /* six pen strokes, uneven like handwriting; the last line stops short */
+    linear-gradient(var(--pen),var(--pen)) calc(var(--u)*2) calc(var(--u)*5.2)  / 68% var(--stroke) no-repeat,
+    linear-gradient(var(--pen),var(--pen)) calc(var(--u)*2) calc(var(--u)*7.7)  / 74% var(--stroke) no-repeat,
+    linear-gradient(var(--pen),var(--pen)) calc(var(--u)*2) calc(var(--u)*10.2) / 52% var(--stroke) no-repeat,
+    linear-gradient(var(--pen),var(--pen)) calc(var(--u)*2) calc(var(--u)*12.7) / 72% var(--stroke) no-repeat,
+    linear-gradient(var(--pen),var(--pen)) calc(var(--u)*2) calc(var(--u)*15.2) / 63% var(--stroke) no-repeat,
+    linear-gradient(var(--pen),var(--pen)) calc(var(--u)*2) calc(var(--u)*17.7) / 30% var(--stroke) no-repeat,
+    /* the ruled lines the strokes sit on */
+    repeating-linear-gradient(180deg, transparent 0 calc(var(--u)*2.5 - 1px), var(--border) calc(var(--u)*2.5 - 1px) calc(var(--u)*2.5)) 0 calc(var(--u)*3.5) / 100% 100% no-repeat,
+    var(--surface2);
+}
+/* the binding strip: a darker band with a row of punched holes */
+.is-note::before{
+  content:""; position:absolute; left:0; right:0; top:0; height:calc(var(--u) * 2.4);
+  border-bottom:1px solid var(--border2);
+  background:
+    radial-gradient(circle, var(--ink) 0 calc(var(--u) * .42), transparent calc(var(--u) * .42 + .6px)) calc(var(--u) * .5) 50% / calc(var(--u) * 2) 100% repeat-x,
+    var(--surface3);
+}
+.is-note:hover{ border-color:var(--dim2); --pen:var(--dim); }
+.is-note:focus-visible{ outline:2px solid var(--room-accent, var(--teal)); outline-offset:2px; }
+/* TRAY (the tile is a .att-tile div): the pad takes an image tile's SQUARE footprint
+   (64 / 56 / 40) so the remove control (upper right) and a later number (upper
+   left) sit where they do on every tile; only the sent tile is portrait. The
+   3-class selector beats the phone and keyboard-up .att-tile size rules. */
+.rm-tray .att-tile.is-note { --u:3.2px; width:calc(var(--u) * 20); height:calc(var(--u) * 20); cursor:pointer; }
+/* the remove control is the SAME as on every other tile (Owner): top right, over the binding's right end.
+   the design system RULE: the x owns the tile's UPPER-RIGHT QUADRANT and nothing more. Its invisible hit
+   area reaches OUTWARD to the tile's top and right edges and INWARD only to the tile's midlines,
+   never across them: a tap at the pad's middle opens the note, it never removes it.
+   64px tile (1px border, so the x sits 5px in from the border box): x 22px spans 37-59 x 5-27,
+   the quadrant is 32-64 x 0-32, so inset -5px on every side (the design system -4 -4 -6 -6 measured from the
+   padding box). Phone 56px and keyboard-up 40px: the x already reaches the midline, so out to the
+   tile's edges only. */
+.att-tile.is-note .att-x::after { inset:-5px; }
+/* a note still uploading: the pad from the start (so the tray does not jump when it finishes),
+   dimmed to 45% like an uploading image; the sky meter in its foot is the shared .att-m */
+.att-tile.is-note.up { background:none; border-color:transparent; }
+.att-tile.is-note.up::before { display:none; }
+.att-tile.is-note.up > .att-pad { --u:inherit; position:absolute; inset:-1px; width:auto; height:auto; opacity:.45; pointer-events:none; }
+/* the first words, for screen readers only */
+.att-sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+.att-tile.is-note:focus-visible { outline:2px solid var(--room-accent, var(--teal)); outline-offset:2px; }
+/* the receipt: "N files · in Assets", on the bubble's side */
+.entry > .entry-files { grid-column: 2; font-size: 11.5px; color: var(--dim); margin-top: 3px; }
+.entry.by-user > .entry-files { grid-column: 1; text-align: right; }
+.entry-files button { background: none; border: 0; padding: 0; color: var(--sky); font: inherit; cursor: pointer; }
+.entry-files button:hover { text-decoration: underline; }
+.att-set .entry-att { margin-top: 0; }
+/* the Assets panel arriving with the first attachment: one soft teal wash */
+.cell.cell-arrive { animation: cell-arrive 1.6s ease-out 1; }
+@keyframes cell-arrive { 0% { background: color-mix(in srgb, var(--room-accent, var(--teal)) 14%, var(--ink)); } 100% { background: transparent; } }
+
+/* PHONE (the design system room-attach-v1 §3): + and → 44px, 56px tiles, 180px chips,
+   a 24px ✕ with a 44px hit area; no drag */
+@media (max-width: 600px) {
+  .rm-compose { --att-indent: 56px; }
+  .rm-attach, .rm-send { flex-basis: 44px; width: 44px; height: 44px; min-height: 44px; }
+  .att-tile { height: 56px; }
+  .att-tile.img { width: 56px; }
+  .att-tile.file { width: 180px; }
+  .att-x { width: 24px; height: 24px; }
+  .att-x::after { inset: -10px; }
+  .att-img { width: 100px; height: 100px; }
+  .att-img.one { min-width: 100px; min-height: 100px; }
+  .is-note { --u:5px; }                              /* sent, phone: 75x100 */
+  .rm-tray .att-tile.is-note { --u:2.8px; }          /* tray, phone: 56x56 */
+  .att-tile.is-note .att-x::after { inset:-5px -5px 0 0; } /* x 24px reaches the midline (28): out to the edges only */
+  .att-img.one img { min-width: 98px; min-height: 98px; max-width: min(238px, 100%); max-height: 158px; }
+}
+
+/* KEYBOARD UP at ANY width [ipad kb]: html.kb-up is set by the soft-keyboard tracker on any touch device (an iPad too),
+   so the compact 40px tray follows the keyboard, not the phone breakpoint. */
+html.kb-up .rm-tray .att-tile.is-note { --u:2px; } /* keyboard up: 40x40 */
+/* KEYBOARD UP [web/room-phone-7]: the tray is one compact row of small
+   tiles, so the text box keeps the glass (room.js capComposer) */
+html.kb-up .rm-tray { padding-bottom: 6px; gap: 6px; }
+html.kb-up .att-tile { height: 40px; }
+html.kb-up .att-tile.img { width: 40px; }
+html.kb-up .att-tile.file { width: 150px; gap: 6px; padding: 0 26px 0 6px; }
+html.kb-up .att-tile.file .att-type { width: 26px; height: 30px; padding-bottom: 3px; font-size: 8px; }
+html.kb-up .att-tile.file .att-type::before { top: 5px; left: 6px; right: 6px; height: 9px; }
+html.kb-up .att-fn .s { display: none; }
+/* the x is 16px (8px glyph) on EVERY tile type, 2px in from the padding box: with the 1px border it
+   spans 21-37 x 3-19 on a 40px tile, so it no longer covers the center (20,20) */
+html.kb-up .att-x { top: 2px; right: 2px; width: 16px; height: 16px; }
+html.kb-up .att-x svg { width: 8px; height: 8px; }
+html.kb-up .att-tile .att-n { min-width: 14px; height: 14px; font-size: 10px; } /* the 40px tray tile */
+html.kb-up .att-x::after { inset: -8px; }
+/* the 40px note tile: the hit area is the upper-right quadrant, x 20-40 y 0-20. From the x (21-37 x 3-19):
+   top 3-0 = -3, right 40-37 = -3, left 21-20 = -1, bottom 20-19 = -1 */
+html.kb-up .att-tile.is-note .att-x::after { inset:-3px -3px -1px -1px; }
+html.kb-up .att-tile.file .att-m { left: 38px; right: 26px; }
+html.kb-up .att-tile.file .att-retry { width: 26px; height: 30px; }
+
+/* DRAG TO REORDER (Owner 2026-10-04, room): hold a tile ~300ms, it lifts 5px with a 2px outline INSIDE the
+   thumb; the others slide aside to open the gap. Numbers and x are hidden for the drag (nothing to refresh,
+   nothing to remove by mistake). The iOS callout and text selection are off on the tiles. */
+.att-tile { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: pan-x; }
+.rm-tray.is-sorting .att-n, .rm-tray.is-sorting .att-x { visibility: hidden; }
+.rm-tray.is-sorting .att-tile, .rm-tray.is-settling .att-tile { transition: transform .15s ease; }
+.rm-tray.is-sorting { cursor: grabbing; }
+.att-tile.is-lifted { transition: none !important; z-index: 5; overflow: visible; box-shadow: 0 6px 14px rgba(0, 0, 0, .35); touch-action: none; }
+.att-tile.is-lifted::after { content: ""; position: absolute; inset: 0; z-index: 4; border-radius: inherit; box-shadow: inset 0 0 0 2px var(--room-accent, var(--teal)); pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  .rm-tray.is-sorting .att-tile, .rm-tray.is-settling .att-tile { transition: none; }
+}

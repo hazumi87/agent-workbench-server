@@ -1,0 +1,11 @@
+/* LINKS IN ROOM LINES (web/room-links.mjs, Owner 2026-09-28): the room accent,
+   an underline on hover / focus, and a focus ring you can see from the keyboard. */
+.rl-link {
+  color: var(--room-accent, var(--teal));
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.rl-link:hover, .rl-link:focus, .rl-link:focus-visible { text-decoration: underline; }
+.rl-link:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }

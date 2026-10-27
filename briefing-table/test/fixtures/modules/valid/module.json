@@ -1,0 +1,1 @@
+{ "id": "fixture-tool", "name": "Fixture Tool", "version": "0.1.0", "class": "tool", "provides": ["fixture.card"], "role": "viewer", "accepts": ["text", "image/*"], "contexts": ["dashboard", "agent"], "actions": "actions.json", "style": "tool.css", "exposes": ["toolbar"] }

@@ -1,0 +1,12 @@
+/* What a BASIC instance does not have [basic] (Owner 2026-10-08): workgroups, Assemble, voice rooms. <html data-edition> is written by
+   web/edition.mjs; until /health answers it is absent, which reads as full. The Room cell is gone too: Basic keeps the old seats layout,
+   the room's row together with its seats (room.js renderRoster). */
+html[data-edition="basic"] .cell[data-cell="room"],
+html[data-edition="basic"] #phVoice,
+html[data-edition="basic"] #assembleBtn,
+html[data-edition="basic"] .rc-wgs { display: none !important; }
+/* the New site form: a label over the field, a dim line under it */
+html[data-edition="basic"] .room-new { flex-wrap: wrap; align-items: center; }
+html[data-edition="basic"] .room-new .rn-lbl { flex: 1 1 100%; font-size: 12px; font-weight: 600; color: var(--dim); }
+html[data-edition="basic"] .room-new input { flex: 1 1 0; min-width: 0; }
+html[data-edition="basic"] .room-new .rn-hint { flex: 1 1 100%; margin: 2px 0 0; font-size: 12px; color: var(--dim); }

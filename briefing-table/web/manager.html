@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- global color palette, first paint (hub V2): see web/palette-boot.js -->
+  <script src="/palette-boot.js"></script>
+  <meta charset="utf-8" />
+  <!-- No `maximum-scale` / `user-scalable=no`: with iOS Display Zoom on they stop
+       Safari fitting the layout to the zoomed display, and the page lays out wider
+       than the glass with no way to pinch back to it. See web/solo.html. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0b1016" />
+  <title>Workbench</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/aurora/window-chrome/tokens.css" />
+  <link rel="stylesheet" href="/aurora/window-chrome/hwb-ring.css" />
+  <!-- The v21 watermark rendering, for the logo modal's preview: it paints the
+       real pane treatment (wash, line style, backlit) rather than the flat
+       ghost that made Line look like a dead control. -->
+  <link rel="stylesheet" href="/aurora/window-chrome/hwb-watermark.css" />
+  <link rel="stylesheet" href="/manager.css" />
+  <link rel="stylesheet" href="/edition.css" />
+  <link rel="stylesheet" href="/places-sheet.css" />
+  <link rel="stylesheet" href="/agent-profile-card.css" />
+  <link rel="stylesheet" href="/light-mode.css" />
+</head>
+<body>
+  <header class="mgr-top">
+    <!-- Phone menu (Owner 2026-10-03, room line [ref] thread): the four-squares
+         button, phone + standalone only; manager-menu.mjs wires it. -->
+    <button type="button" class="mgr-menu" id="mgrMenuBtn" title="Menu" aria-label="Menu" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>
+    </button>
+    <span class="mgr-brand">Workbench</span>
+    <span class="mgr-closehint" title="The engine (briefing-table) runs as a background service, independent of this window. Closing the manager does not stop it or your sessions; reopen it any time from the CLI-Manager shortcut.">✓ Safe to close — sessions &amp; engine keep running in the background</span>
+    <!-- THE USAGE METER (ticket): Claude / Codex plan usage from the agent-usage probes, in the
+         empty middle of the titlebar. usage-meter.mjs fills it; hidden until the engine answers. -->
+    <span class="mgr-usage" id="usageMeter" aria-label="Plan usage" hidden></span>
+    <!-- Art opens as its own page rather than a modal: it is a management
+         surface over every project's art, not an edit of the session in front
+         of you. (A settings SHELL with one item in it would be scaffolding — when a
+         second settings topic exists, this nests under it.) -->
+    <!-- AUXILIARY PAGES OPEN IN A NEW TAB, NEVER IN PLACE (Owner, 2026-09-15):
+         the manager is hard to back-button to, so Icons, Account and later
+         Showcase open beside it — a new browser tab on the web, a new shell tab
+         inside the native window (data-aux + manager.js openAux). -->
+    <!-- "Art", not "Icons" (Owner, 2026-09-21): the page owns a project's whole
+         visual identity — its color, the watermark behind its terminals and the
+         mark on its tabs. Served at /art.html, with the old /icons.* URLs kept
+         as engine aliases (PATH_ALIASES) so a bookmark, a restored shell tab
+         or an already-running manager page still resolves. -->
+    <!-- Account: your login, remembered devices, passkeys (Windows Hello / Face ID),
+         API tokens. The page itself says so when identity is switched off. -->
+    <!-- Showcase: the visual interface (Owner, 2026-09-16 — "an entry point to
+         the showcase from the cli manager window"). installation URL for now; the
+         registry's audience facet supplies it once the devlab toolkit lands. -->
+    <!-- THE ONE ⋯ MENU (the design system 1.K, Owner 2026-10-06): Art, Account, Showcase and Global settings are no longer loose
+         header buttons. The anchors keep their ids and data-aux (new tab beside the manager, ui-config rewrite,
+         "hidden when embedded" all still work); only where they live changed. -->
+    <!-- the find box and, right of it, the Concierge icon (manager.js mounts it into #mgrFindRow) -->
+    <div class="mgr-findrow" id="mgrFindRow">
+      <input type="search" id="mgrFind" class="mgr-find" placeholder="Find a room or session" aria-label="Find a room or session" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" />
+    </div>
+    <button type="button" id="mgrMore" class="mgr-more-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Workbench menu" title="Workbench menu"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></button>
+    <div id="mgrMoreMenu" class="mgr-more-menu" role="menu" hidden>
+      <div class="grab" aria-hidden="true"></div>
+      <div class="mgr-mg" aria-hidden="true">Screens</div>
+      <button type="button" id="mgrScreenRecipes" class="mgr-mi" role="menuitem" data-screen="recipes">Recipes<span class="mgr-n" id="mgrScreenRecipesN"></span></button>
+      <button type="button" id="mgrScreenHistory" class="mgr-mi" role="menuitem" data-screen="history">History<span class="mgr-n" id="mgrScreenHistoryN"></span></button>
+      <div class="mgr-msep" aria-hidden="true"></div>
+      <a id="artBtn" class="mgr-mi" role="menuitem" href="/art.html" data-aux="Art" target="_blank" rel="noopener" title="Project art — the color, the watermark behind a terminal and the mark on its tab">Art</a>
+      <a id="accountBtn" class="mgr-mi" role="menuitem" href="/account.html" data-aux="Account" data-external target="_blank" rel="noopener" title="Your account — password, remembered devices, passkeys, API tokens">Account</a>
+      <a id="showcaseBtn" class="mgr-mi" role="menuitem" href="http://homeserver/showcase/" data-aux="Showcase" target="_blank" rel="noopener" title="Showcase — the homelab's visual landscape (opens beside the manager)">Showcase</a>
+      <div class="mgr-msep" aria-hidden="true"></div>
+      <a id="settingsBtn" class="mgr-mi" role="menuitem" href="/settings.html" data-aux="Settings" target="_blank" rel="noopener" title="Global settings">Global settings</a>
+    </div>
+  </header>
+
+  <main class="mgr-body">
+    <!-- Edge-style interrupted-session offer: shown when the engine's last run
+         died with sessions still open (✕-ended panes are never counted). -->
+    <!-- PTY-broker down = sessions can't be made restart-proof; the engine
+         REFUSES spawns rather than silently degrading (vk [ref]). -->
+    <div id="brokerWarn" class="mgr-restore mgr-broker" hidden>
+      <span>⚠ PTY-broker unavailable — new sessions are blocked (they couldn't survive restarts). Check the <code>harbor-pty-broker</code> task / broker.log.</span>
+    </div>
+
+    <div id="restoreBanner" class="mgr-restore" hidden>
+      <span id="restoreMsg">Your last session was interrupted.</span>
+      <button id="restoreAllBtn" class="btn btn-accent">Restore sessions</button>
+      <button id="restoreDismissBtn" class="btn btn-ghost">Dismiss</button>
+    </div>
+
+    <!-- LAYOUT v3 (Owner, [ref]): LEFT = what is live or recently live
+         (things you return to); RIGHT = the launcher (things you can start).
+         Agents moved right because a template is a launch surface, not a
+         status surface — status now lives on the instances in the left. -->
+    <!-- every screen but the home carries "‹ Workbench" (the design system 1.K): a 44px target on the left, the screen's name beside it -->
+    <div id="wbBar" class="wb-bar" hidden>
+      <button type="button" class="wb-back" id="wbBackBtn" data-screen="home" aria-label="Back to Workbench">‹ Workbench</button>
+      <h1 class="wb-bar-title" id="wbBarTitle"></h1>
+    </div>
+    <p id="mgrFindNone" class="mgr-find-none" role="status" hidden></p>
+    <div class="mgr-cols">
+      <section class="mgr-col">
+        <!-- ROOMS (workrooms, 2026-09-25 room front-end order item 1): the
+             rooms you return to, above the sessions that sit in them. Always
+             shown, so "New room" is reachable before the first room exists. -->
+        <div id="roomsWrap" class="mgr-recent mgr-rooms">
+          <div class="rr-head"><span class="mgr-col-head dim">Rooms</span>
+            <!-- only while something is hidden: per device; the hidden set is per person -->
+            <button type="button" id="roomsShowHidden" class="rr-showhid" aria-pressed="false" hidden></button></div>
+          <div id="roomList"></div>
+          <!-- "+ New room" ends the grid (the design system 1.K); the card opens the sheet below. Assemble is its second path. -->
+        </div>
+        <div id="roomNewSheet" class="rn-sheet" hidden>
+          <div class="rn-scrim" id="roomNewScrim"></div>
+          <div class="rn-panel" role="dialog" aria-modal="true" aria-label="New room">
+            <div class="grab" aria-hidden="true"></div>
+            <div class="rn-head"><span>New room</span><button type="button" class="rn-x" id="roomNewX" aria-label="Close">✕</button></div>
+            <!-- TWO PATHS, at the top (the design system, [ref]): an empty room, or one assembled from agents that are already open
+                 (the design notes §3.1: pick open sessions and seat them; nothing restarts) -->
+            <div class="rn-paths" role="group" aria-label="How to start">
+              <button type="button" class="rn-path is-on" id="roomPathNew" aria-pressed="true">New room</button>
+              <button type="button" class="rn-path" id="assembleBtn" aria-pressed="false" title="Pick open sessions and seat them in a room. Nothing restarts.">Assemble from agents…</button>
+            </div>
+          <form id="roomNewForm" class="room-new" autocomplete="off">
+            <input id="roomNewName" type="text" maxlength="200" placeholder="New room name" aria-label="New room name" />
+            <button id="roomNewBtn" type="submit" class="btn btn-accent">＋ New room</button>
+          </form>
+          <p id="roomErr" class="room-err" role="status" hidden></p>
+          </div>
+        </div>
+        <!-- LIVE sessions: everything alive right now — windowed or PARKED in
+             the pty-broker — so nothing running is ever invisible. -->
+        <div id="liveWrap" class="mgr-recent" hidden>
+          <div class="rr-head"><span class="mgr-col-head dim">Live sessions</span>
+            <!-- the counts and "Show all" [live heading] (Owner 2026-10-08, handoff 1.Q): drawn by manager.js renderLive -->
+            <span id="liveCounts" class="live-counts" hidden><span class="live-sep" aria-hidden="true">·</span><span id="liveCountsText" class="live-counts-t"></span><span id="liveSep2" class="live-sep" aria-hidden="true">·</span><button type="button" id="liveShowAll" class="wb-link live-showall"></button></span>
+            <span id="liveRestorable" class="wb-restorable" hidden><span id="liveRestorableN"></span> restorable · <button type="button" class="wb-link" data-screen="history">History</button></span></div>
+          <div id="liveList"></div>
+        </div>
+        <!-- "+ New agent session" (the design system 1.K): the live list ends in a dashed card; it opens this picker, filled from the recipes -->
+        <div id="sessionPicker" class="rn-sheet" hidden>
+          <div class="rn-scrim" id="sessionPickerScrim"></div>
+          <div class="rn-panel sp-panel" role="dialog" aria-modal="true" aria-label="New agent session">
+            <div class="grab" aria-hidden="true"></div>
+            <div class="rn-head"><span>New agent session</span><button type="button" class="rn-x" id="sessionPickerX" aria-label="Close">✕</button></div>
+            <div id="sessionPickerBody" class="sp-body"></div>
+          </div>
+        </div>
+        <!-- "Recently closed": RECORDED session facts, grouped file-explorer
+             style (Today / Yesterday / …) so a batch closed together stays
+             recognizable as a batch. -->
+        <div id="recent" class="mgr-recent" hidden>
+          <span class="mgr-col-head dim">Recently closed</span>
+          <div id="recentList"></div>
+        </div>
+        <div id="leftEmpty" class="mgr-empty" hidden>
+          Nothing live right now.<br />Launch something from the right →
+        </div>
+      </section>
+      <section class="mgr-col">
+        <button id="newBtn" class="btn btn-accent mgr-newtop">＋ New recipe</button>
+        <span class="mgr-col-head dim">Other CLIs</span>
+        <div id="otherList" class="mgr-list"></div>
+        <span class="mgr-col-head dim mgr-head-gap">Agents</span>
+        <div id="agentList" class="mgr-list"></div>
+      </section>
+    </div>
+
+    <!-- Peek: last screenful of a live session's output, read-only, without
+         attaching — identify a windowless/ghost pane before opening/ending it. -->
+    <div id="peekModal" class="mgr-modal" hidden>
+      <div class="mgr-modal-box">
+        <h2 id="peekTitle">Session output</h2>
+        <pre id="peekBody" class="peek-body">loading…</pre>
+        <div class="f-actions"><button id="peekCloseBtn" class="btn btn-ghost">Close</button></div>
+      </div>
+    </div>
+
+    <!-- Resume picker: built by /resume-picker.mjs (shared with the room's
+         + sheet), so there is no markup for it here. -->
+
+    <!-- New/Edit form — a MODAL so it opens in focus (a below-the-columns
+         panel lands below the fold once the agent list grows). -->
+    <div id="formModal" class="mgr-modal" hidden>
+    <aside id="form" class="mgr-form">
+      <h2 id="formTitle">New session</h2>
+
+      <label class="f-row">
+        <span>Name</span>
+        <input id="fName" type="text" placeholder="Example project" />
+      </label>
+
+      <label class="f-row">
+        <span>Where / who</span>
+        <select id="fTarget"></select>
+      </label>
+
+      <label class="f-row">
+        <span>Project folder</span>
+        <input id="fDir" type="text" placeholder="C:\projects\my-project  or  /srv/code/my-project" />
+      </label>
+      <!-- The engine checked whether this folder exists on that machine. Shown
+           HERE, beside the field you would fix, rather than as a toast you read
+           after the form has closed. -->
+      <p class="f-warn" id="fDirWarn" hidden></p>
+
+      <!-- The one identity key (contract §1 / E1). Everything a runtime hands
+           you — a Claude uuid, a paneid, a task id — rotates; this does not, so
+           it is what other agents address this session by. Empty derives the
+           BARE project-folder name on save — no role suffix. The `-cli` form
+           this said until now was superseded on 2026-09-17 (see
+           src/engine/agent-slug.ts: the bare basename IS the registry node id,
+           and the installation's relay slugs already match it), so the field had been
+           promising a slug the engine stopped minting.
+           Since wr §2.9 (T1, 2026-09-25) only BRAND vendors derive it; a
+           Shell-only recipe left empty gets NO slug at all — a bare terminal is
+           not a member of anything. The placeholder follows the Vendor select
+           (manager.js syncFormVisibility); this static value is the brand one. -->
+      <label class="f-row">
+        <span>Agent slug</span>
+        <input id="fAgent" type="text" placeholder="empty = &lt;project folder&gt;" title="Stable identity other agents address this session by — lowercase, hyphens" />
+      </label>
+
+      <!-- VENDOR, not "Start Claude" (2026-09-17, contract §1.1). The checkbox
+           asked a two-brand question and there are five values now; an unknown
+           one is refused by the engine rather than coerced, so this select is
+           the only place the spelling is decided. `shell-only` is the honest
+           default for anything that is just a CLI in a pane. -->
+      <label class="f-row">
+        <span>Vendor</span>
+        <select id="fVendor" title="Which CLI this session runs. Shell-only = a plain terminal with an init command.">
+          <option value="claude-code">Claude Code</option>
+          <option value="gemini-cli">Gemini CLI</option>
+          <option value="codex-cli">Codex CLI</option>
+          <option value="ollama">Ollama</option>
+          <option value="cli-manager">Shell only</option>
+        </select>
+      </label>
+
+      <label class="f-row" id="initCmdRow">
+        <span>Init command</span>
+        <input id="fInitCmd" type="text" placeholder='ssh -t user@host "sudo -v &amp;&amp; bash script.sh"' />
+      </label>
+
+      <div id="claudeOpts">
+        <!-- MODEL + EFFORT side by side, same style and width (the design system
+             2026-09-28); one full row each on a phone. Effort is
+             `claude --effort <level>`; Default = no flag. The Resume checkbox
+             and "Save & Launch" are gone: resume is a per-launch choice now. -->
+        <div class="f-pair">
+          <label class="f-row">
+            <span>Model</span>
+            <!-- A SELECT, not a text box + datalist: a datalist only lists
+                 entries matching what is already typed, so a recipe holding
+                 "opus" offered opus alone (Owner 2026-09-29). A stored value
+                 outside this list is kept as its own option (manager.js). -->
+            <select id="fModel" title="claude --model for this project's sessions">
+              <option value="">Default</option>
+            </select>
+          </label>
+          <label class="f-row">
+            <span>Effort</span>
+            <select id="fEffort" title="claude --effort for this project's sessions">
+              <option value="">Default</option>
+            </select>
+          </label>
+        </div>
+        <!-- Owner 2026-10-05, worktree convention (KB design-notes-id section 12):
+             a SECOND same-project code seat starts in its own git worktree;
+             'Never' is for a seat that does not write code (an operator). -->
+        <label class="f-row" id="fWorktreeRow">
+          <span>Worktree</span>
+          <select id="fWorktree" title="Does a second seat of this project get its own git worktree?">
+            <option value="auto">Auto (second seat of a project)</option>
+            <option value="never">Never (not a code seat)</option>
+          </select>
+        </label>
+        <!-- codex-cli only: extra command-line arguments, ONE PER LINE, appended
+             AFTER the engine's defaults so a later -c key overrides them
+             (sandbox network, writable roots, approval policy). Filled and
+             shown by manager.js; engine/vendor-args.ts validates. -->
+        <!-- codex-cli only: the switches that used to be typed into Extra arguments on every
+             recipe, as checkboxes (Owner 2026-10-09). data-flag ids = engine/vendor-flags.ts
+             CODEX_FLAGS (test/vendor-flags.test.ts pins the two lists together). -->
+        <div class="f-row" id="fVendorFlagsRow" hidden>
+          <span>Codex settings</span>
+          <label class="f-check"><input type="checkbox" data-flag="network"> Network access in the sandbox</label>
+          <label class="f-check"><input type="checkbox" data-flag="auto-review"> Auto-review approvals</label>
+        </div>
+        <label class="f-row" id="fVendorArgsRow" hidden>
+          <span>Extra arguments (one per line)</span>
+          <textarea id="fVendorArgs" rows="3" spellcheck="false" autocomplete="off" placeholder='-c sandbox_workspace_write.network_access=true'></textarea>
+        </label>
+        <!-- A LEGACY named resume, only when the recipe still has one (the
+             checkbox's old slot): Launches by resuming "<name>" . Clear. -->
+        <p class="f-legacy" id="fLegacyResume" hidden></p>
+      </div>
+
+      <div class="f-theme">
+        <span class="f-theme-head dim">Theme</span>
+        <!-- COLOUR: our own control, not a bare <input type="color">.
+             The native input was an INVISIBLE overlay on a 26px swatch, so the
+             form showed neither what the colour WAS nor any sign that it had
+             changed, and setting it depended entirely on the host opening an OS
+             colour dialog — which the native CLI-Manager window does not. From
+             the browser it worked; in the app it read as locked (Owner,
+             2026-09-21: "i've lost the ability to control the color of my
+             windows ... they're locked on color"). The swatch now shows the
+             real colour and opens a palette that needs no host dialog; the
+             native input is kept behind "Custom…" for hosts that do have one. -->
+        <span class="f-color" id="fColorWrap">
+          <button type="button" id="fColorBtn" class="f-swatch" aria-haspopup="true" aria-expanded="false"
+                  title="Session color — the titlebar, the ground and the watermark all derive from this one value"></button>
+          <input id="fColor" type="color" value="#22b8a8" tabindex="-1" aria-hidden="true" />
+        </span>
+        <!-- Shown when the project's ARTWORK states the color: the swatch then
+             reports rather than edits, and this says where to change it. One
+             place beats two that can disagree. -->
+        <a class="f-color-owned" id="fColorOwned" href="/art.html" data-aux="Art" target="_blank" rel="noopener"
+           title="This project's color is set with its artwork" hidden>from artwork ↗</a>
+        <button type="button" id="fLogoBtn" class="f-logobtn" title="Ghosted CLI logo (paste SVG / preset)">◨ Logo</button>
+        <label class="f-font" title="Default text size (px) for a device that has not picked its own">A<input id="fFont" type="number" min="8" max="32" step="1" placeholder="16" /></label>
+        <!-- Moved from the session bar (v21 ruling). PER DEVICE, exactly as it
+             was there (web/term-font.mjs): it changes this device's size for
+             every session window, instantly, and saves on click. -->
+        <span class="f-font f-devfont" title="Text size on THIS device — every open session window here follows it instantly">
+          <button type="button" id="fDevFontDec" class="f-logobtn" aria-label="Smaller text">A−</button>
+          <span id="fDevFontVal">16</span>
+          <button type="button" id="fDevFontInc" class="f-logobtn" aria-label="Larger text">A+</button>
+          <span class="dim" title="Text size saves instantly — there is no save/discard step for it">auto-saves</span>
+        </span>
+      </div>
+
+      <!-- THE PALETTE IS A SIBLING OF THE THEME ROW, NOT A CHILD OF IT.
+           `.f-theme` is a `flex-wrap: nowrap` row, so a child asking for its own
+           line cannot have one: it was squeezed into a 75px sliver at the right
+           and the twelve chips stacked 2-wide into six rows, which is why the
+           picker "did nothing other than make the whole window taller" (Owner,
+           2026-09-21). Inspected with Playwright rather than reasoned about —
+           the computed `flex-wrap` was the whole answer. Out here it is a plain
+           block in the form's vertical flow, full width, and the chips wrap
+           against the form, never past it. -->
+      <div class="f-colorpop" id="fColorPop" hidden>
+        <div class="f-colorgrid" id="fColorGrid"></div>
+        <div class="f-colorrow">
+          <input id="fColorHex" class="f-colorhex" type="text" spellcheck="false" maxlength="7"
+                 aria-label="Color hex value" placeholder="#22b8a8" />
+          <button type="button" id="fColorNative" class="f-logobtn" title="Open this device's color picker">Custom…</button>
+        </div>
+      </div>
+
+      <div class="f-actions">
+        <button id="saveBtn" class="btn btn-accent">Save</button>
+        <button id="cancelBtn" class="btn btn-ghost">Cancel</button>
+      </div>
+    </aside>
+    </div>
+  </main>
+
+  <div id="debug" class="mgr-debug">loading…</div>
+  <div class="ph-scrim" id="phScrim" hidden></div>
+  <div class="ph-sheet" id="phSheet" role="dialog" aria-modal="true" aria-label="Menu" hidden>
+    <div class="grab" aria-hidden="true"></div>
+    <div class="ph-sheet-b" id="phSheetBody"></div>
+  </div>
+
+  <script type="module" src="/manager.js"></script>
+</body>
+</html>

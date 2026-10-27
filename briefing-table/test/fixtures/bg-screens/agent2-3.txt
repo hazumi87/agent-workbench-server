@@ -1,0 +1,25 @@
+# claude 2.1.299 (Claude Code) | model haiku | +30s after prompt
+# ---- rendered screen (140x45, trimmed) ----
+ ▐▛███▛█   Claude Code v2.1.299
+▝▜██████▀  Haiku 5.5 · Claude Max
+ ▝▝   ▝▝   /tmp/bgcap-VNR1P4
+
+
+❯ Use the Agent tool to spawn a general-purpose subagent that runs this exact command with Bash: python3 -c "import time; time.sleep(75)"
+  and then reports done. Reply only "spawned" after launching it.
+
+● Agent(Run 75-second sleep)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+● spawned
+
+✻ Waiting for 1 background agent to finish
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  svc-ops@homeserver:/tmp/bgcap-VNR1P4
+  ⏵⏵ auto mode on (shift+tab to cycle) · ← 2 agents
+
+  ● main
+  ◯ general-purpose  Run 75-second sleep                                                                              26s · ↓ 47.7k tokens

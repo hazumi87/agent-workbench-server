@@ -1,0 +1,10 @@
+# This directory MUST stay empty in core.
+#
+# Components register INTO the engine by appearing here as their own
+# manifest-referenced module; core never reaches OUT to a named component
+# (blueprint design-notes-id, decision 8 / Contract B).
+#
+# The HARD RULE: core must boot, serve a Workbench, and (at M1) run a local CLI
+# with src/components/ EMPTY. If core cannot start without something in here,
+# the structure is wrong. claude-code will be the FIRST component (decision 3),
+# added at a later milestone — as its own module, not a core edit.

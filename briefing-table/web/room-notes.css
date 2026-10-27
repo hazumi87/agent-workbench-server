@@ -1,0 +1,89 @@
+/* ROOM NOTES [ticket] (spec KB design-notes-id; the design system review adopted;
+   web/room-notes.mjs draws it). Loaded AFTER room.css. Tokens only, no new
+   components: the editor is the .modal-card frame over the standard scrim, the
+   menus are the room's .rsm-menu, the attached note is the same .att-tile.file. */
+
+/* ---- the editor, PC: a modal ---- */
+.nt-scrim {
+  position: fixed; inset: 0; z-index: 78; display: grid; place-items: center; padding: 16px;
+  background: var(--scrim); backdrop-filter: blur(var(--scrim-blur)); -webkit-backdrop-filter: blur(var(--scrim-blur));
+  overflow: hidden;
+}
+.nt-card {
+  display: flex; flex-direction: column; min-height: 0; max-width: 100%; overflow: hidden; box-sizing: border-box;
+  background: var(--surface); color: var(--text); border: 1px solid var(--border2); border-radius: var(--corner);
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, .8);
+}
+.nt-scrim > .nt-card { width: min(720px, 92vw); height: min(640px, 72vh); }
+.nt-h { display: flex; align-items: center; gap: 4px; height: 40px; flex: none; padding: 0 8px 0 20px; border-bottom: 1px solid var(--border); min-width: 0; }
+.nt-hl { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 10px; overflow: hidden; white-space: nowrap; }
+.nt-age { font: 400 12px var(--font); color: var(--dim); }
+/* the quiet "Saved": fades in after each autosave; an error stays until the next save */
+.nt-state { min-width: 0; overflow: hidden; text-overflow: ellipsis; font: 400 12px var(--font); color: var(--dim); opacity: 0; transition: opacity .25s ease; }
+.nt-state.on { opacity: 1; }
+.nt-state.err { color: var(--coral); }
+.nt-btn {
+  flex: none; width: 32px; height: 32px; padding: 0; border: 0; border-radius: var(--corner); background: none; color: var(--dim);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.nt-btn[hidden] { display: none; }
+.nt-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.nt-btn:hover:not(:disabled) { background: var(--cap-hover); color: var(--text); }
+.nt-btn:disabled { opacity: .5; cursor: default; }
+.nt-btn:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+/* the body: borderless, fills the card; undo is the textarea's own */
+.nt-ta {
+  flex: 1 1 auto; min-height: 0; width: 100%; box-sizing: border-box; resize: none; border: 0; outline: 0; margin: 0;
+  background: transparent; color: var(--text); font: 400 15px/1.55 var(--font); padding: 20px;
+}
+
+/* ---- the attached note: the same .att-tile.file, the note icon in place of "TXT" ---- */
+.att-type.att-note { display: grid; place-items: center; padding: 0; }
+.att-type.att-note::before { display: none; }
+.att-type.att-note svg { width: 20px; height: 20px; fill: none; stroke: var(--dim); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.att-tile.file:has(.att-note) { cursor: pointer; }
+
+/* ---- the over-limit action, after the coral status line ---- */
+.rm-delivery .rm-note-act {
+  display: inline-flex; align-items: center; vertical-align: middle; min-height: 32px; margin: -8px 0 -8px 4px; padding: 0 4px;
+  background: none; border: 0; border-radius: var(--corner); color: var(--room-accent, var(--teal)); font: 500 13px var(--font); cursor: pointer;
+}
+.rm-delivery .rm-note-act:disabled { opacity: .5; cursor: default; }
+.rm-delivery .rm-note-act:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+/* ---- the long-draft offer "Move to a note?" (composer, not the status line) ----
+   No tiles: its own row in the form, its left edge on the input's (--att-indent
+   is the + and the gap, the same indent the tray uses). Tiles: the last child
+   of the tray row, centred on the tiles, pinned to the right edge if they scroll. */
+.rm-note-offer {
+  display: inline-flex; align-items: center; min-height: 32px; padding: 0; background: none; border: 0; border-radius: var(--corner);
+  color: var(--room-accent, var(--teal)); font: 500 13px var(--font); cursor: pointer;
+}
+.rm-note-offer[hidden] { display: none; }
+.rm-note-offer:disabled { opacity: .5; cursor: default; }
+.rm-note-offer:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.rm-compose > .rm-note-offer { flex: 0 0 calc(100% - var(--att-indent)); margin-left: var(--att-indent); justify-content: flex-start; }
+.rm-tray > .rm-note-offer { flex: none; align-self: center; position: sticky; right: 0; padding: 0 4px; background: var(--ink); }
+/* "Draft moved to a note": the plain line, --dim; shown on a phone too */
+.rm-delivery.rm-delivery-note { display: block; }
+
+/* ---- the editor, phone ---- */
+@media (max-width: 600px) {
+  .nt-card .nt-h { height: 48px; padding: 0 12px 0 16px; gap: 12px; }
+  .nt-card .nt-btn { width: 44px; height: 44px; }
+  .nt-card .nt-ta { font-size: 16px; padding: 16px; }
+  .rm-delivery .rm-note-act { min-height: 44px; margin: -14px 0 -14px 4px; }
+  .rm-note-offer { min-height: 44px; }
+  /* from the CHAT: it takes the message box's place, grown tall (JS sets the
+     height, ~60% of the visual viewport); every other control is hidden, the
+     chat above stays scrollable */
+  .nt-card.nt-chat {
+    flex: none; width: 100%; border-width: 1px 0 0; border-radius: 0; box-shadow: none; padding-bottom: env(safe-area-inset-bottom);
+  }
+  html.nt-chat-open .rm-top, html.nt-chat-open .ph-home, html.nt-chat-open .rm-compose, html.nt-chat-open .rm-delivery,
+  html.nt-chat-open .rm-dchips, html.nt-chat-open .rm-reply, html.nt-chat-open .rm-newer-draft, html.nt-chat-open .rm-help { display: none !important; }
+  /* from ASSETS: 100% of the screen (JS sets top + height from the visual viewport) */
+  .nt-card.nt-full {
+    position: fixed; left: 0; right: 0; top: 0; z-index: 88; width: 100%; border: 0; border-radius: 0; box-shadow: none;
+    background: var(--bg, var(--ink)); padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+}

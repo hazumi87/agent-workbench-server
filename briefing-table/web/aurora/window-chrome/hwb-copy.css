@@ -1,0 +1,120 @@
+/* ===========================================================================
+   hwb-copy.css — COPY FIELDS  (.copyfields)                    v20 ·
+   Part of the window-chrome bundle. Requires tokens.css.
+
+   An agent has handed the user labeled values — a preview URL, a snippet, a
+   credential — and the user has to get them somewhere else. This is the panel
+   the tab's ✉ notice opens. Promoted from the host app's hand-rolled
+   `.handoff-*` so every tool shows the same thing.
+
+   Named `.copyfields` rather than `.hwb-copy` for the same reason `.ring` is
+   not `.hwb-ring`: it ships inside the window-chrome bundle but it is not
+   window chrome, and a public class name should not lie about what it is.
+
+   FOUR CONSTRAINTS, ALL LEARNED THE HARD WAY. Each is a rule below, not a
+   convention, and three of them are asserted in tools/verify-window-chrome.cjs.
+
+     1. THE VALUE WRAPS AND NEVER ELLIPSISES. A truncated credential still
+        LOOKS like a value and is not one — you cannot tell by looking that
+        what you are reading is incomplete, which is the whole failure. Tokens
+        have no spaces to break at, so `overflow-wrap:anywhere` is required;
+        `word-break:break-all` is not, and would break ordinary prose values
+        mid-word for no reason. The LABEL may truncate. The value may not.
+
+     2. A MASKED SECRET MUST COPY WHILE STILL MASKED. The point of the mask is
+        moving a credential without putting it on a screen in a room. So the
+        masking is PRESENTATIONAL ONLY: -webkit-text-security renders discs
+        while the real characters stay in the DOM, which means copy reads
+        textContent and gets the secret, and there is no code path in which
+        the clipboard receives a row of dots. A JS mask that swaps the string
+        would have exactly that path.
+
+     3. THE ACTIONS ARE THE PANEL'S OWN BUTTONS. `.btn.sm` verbatim — not a
+        44px touch target. the owner's call after watching 44px buttons dominate a
+        card whose actual content was the value above them. The actions sit on
+        the LABEL line, not under the value, so the value is the largest thing
+        in the row at every width, which is the correct ranking.
+
+     4. 320px TO DESKTOP WITH NO BREAKPOINT. There is no media query in this
+        file. The row is label-line + value-block at every width: the label
+        truncates, the actions are fixed and small, the value takes the full
+        width and wraps. A layout that does not switch cannot switch wrongly.
+   =========================================================================== */
+
+.copyfields-panel{display:flex;flex-direction:column;min-width:0;
+  background:var(--nav);border:1px solid var(--border);border-radius:var(--corner);}
+.copyfields-head{display:flex;align-items:center;gap:8px;padding:10px 12px;
+  border-bottom:1px solid var(--border);}
+.copyfields-title{font-family:var(--display);font-size:.72rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--text);flex:1 1 auto;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* The panel's count and the tab's ✉ notice are the SAME number and must not be
+   able to disagree — one source, rendered twice. */
+.copyfields-count{flex:0 0 auto;font-family:var(--mono);font-size:.62rem;font-weight:700;
+  color:var(--teal);background:color-mix(in srgb,var(--text) 12%,transparent);
+  border-radius:3px;padding:2px 6px;}
+
+.copyfields{display:flex;flex-direction:column;gap:1px;min-width:0;
+  background:var(--border);}              /* the gap IS the hairline; no per-row border */
+.cf-row{background:var(--surface2);padding:9px 12px;min-width:0;}
+.cf-row:last-child{border-radius:0 0 var(--corner) var(--corner);}
+
+/* --- the label line: label truncates, actions never shrink ---------------- */
+.cf-head{display:flex;align-items:center;gap:8px;min-width:0;}
+.cf-label{flex:1 1 auto;min-width:0;
+  font-family:var(--display);font-size:.62rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--dim);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}   /* CONSTRAINT 1: labels may. */
+.cf-kind{flex:0 0 auto;font-family:var(--mono);font-size:.55rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:.04em;color:var(--dim2);}
+.cf-acts{flex:0 0 auto;display:flex;align-items:center;gap:4px;}
+/* CONSTRAINT 3 — the action button, SELF-CONTAINED.
+
+   .btn / .btn.sm / .btn.ghost live in the styleguide's inline stylesheet and are
+   NOT in this bundle, so a consumer pulling window-chrome cannot get them. The
+   first cut wrote `class="btn sm ghost cf-act"` and shipped a panel whose
+   buttons rendered as bare native <button>s — and the harness check for "not a
+   44px touch target" PASSED, because a 21px default button is not 44px either.
+   That is a green check on a path nobody ran, which is the failure this
+   bundle's harness is named after; it is now asserted against the real metrics.
+
+   So .cf-act stands alone. The values below are .btn.sm's, deliberately: same
+   font size, same padding, same radius, ghost fill. A consumer that DOES have
+   The design system's full button CSS can write `class="btn sm ghost cf-act"` and get the
+   identical result — that is why the metrics are copied rather than invented.
+   If .btn.sm's metrics ever move, this block is the second place to change. */
+.cf-act{display:inline-flex;align-items:center;justify-content:center;
+  font-family:var(--font);font-size:.74rem;font-weight:600;line-height:1;
+  padding:6px 11px;border-radius:7px;white-space:nowrap;cursor:pointer;
+  background:var(--ghost-fill);border:1px solid var(--border2);color:var(--dim);
+  transition:background .14s,color .14s,border-color .14s;}
+.cf-act:hover{background:var(--ghost-fill-hover);color:var(--text);}
+.cf-act:focus-visible{outline:none;box-shadow:0 0 0 2px var(--ink),0 0 0 4px var(--teal);}
+
+/* --- the value: the biggest thing in the row ------------------------------ */
+.cf-value{margin-top:5px;min-width:0;
+  font-family:var(--mono);font-size:.78rem;line-height:1.5;color:var(--text);
+  overflow-wrap:anywhere;                 /* CONSTRAINT 1 — tokens have no spaces to break at */
+  white-space:pre-wrap;
+  user-select:text;-webkit-user-select:text;  /* .hwb sets user-select:none on its subtree;
+                                                 a value you cannot select by hand is not a value */
+}
+/* CONSTRAINT 1, said twice on purpose: no ellipsis may reach this element. */
+.cf-value{text-overflow:clip;}
+
+/* --- CONSTRAINT 2 — masking is presentational; the DOM text stays real ---- */
+.cf-row.is-masked .cf-value{-webkit-text-security:disc;letter-spacing:.06em;}
+@supports not (-webkit-text-security:disc){
+  /* Same guarantee by other means — the characters are still there, still
+     selectable, still what textContent returns. Never display:none the value
+     and render a placeholder; that is the path where copy gets dots. */
+  .cf-row.is-masked .cf-value{color:transparent;text-shadow:0 0 7px color-mix(in srgb,var(--text) 80%,transparent);}
+}
+.cf-row.is-masked .cf-value::selection{background:color-mix(in srgb,var(--teal) 35%,transparent);}
+
+/* --- copy confirmation ---------------------------------------------------- */
+/* A confirmation, not a state change: the button says what happened and goes
+   back. No color promotion — copying is not an event worth a function color. */
+.cf-act.is-done{color:var(--teal);border-color:color-mix(in srgb,var(--teal) 45%,transparent);}
+
+.copyfields-empty{padding:18px 12px;text-align:center;color:var(--dim2);font-size:.76rem;}

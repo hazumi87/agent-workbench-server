@@ -1,0 +1,11 @@
+{
+  "id": "local-cmd",
+  "title": "Command Prompt",
+  "class": "cli",
+  "fn": "cli",
+  "descriptor": {
+    "binary": "cmd.exe",
+    "args": [],
+    "cwd": null
+  }
+}

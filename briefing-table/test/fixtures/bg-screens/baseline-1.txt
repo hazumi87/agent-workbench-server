@@ -1,0 +1,12 @@
+# claude 2.1.299 (Claude Code) | model haiku | idle prompt
+# ---- rendered screen (140x45, trimmed) ----
+ ▐▛███▛█   Claude Code v2.1.299
+▝▜██████▀  Haiku 5.5 · Claude Max
+ ▝▝   ▝▝   /tmp/bgcap-TNHZkX
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ Try "write a test for <filepath>"
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  svc-ops@homeserver:/tmp/bgcap-TNHZkX                                                                             ◐ medium · /effort
+  ⏵⏵ auto mode on (shift+tab to cycle) · ← 2 agents

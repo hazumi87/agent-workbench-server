@@ -1,0 +1,30 @@
+# Workbench pty-broker for the person's AGENT account [reference setup]. A SYSTEM unit that runs as `wbagent`.
+# The broker holds every terminal; each agent is a child of this process, so agents run as wbagent and nothing else.
+# That is the point of the split: the engine (wbengine) and its secrets are a different uid the agents cannot read.
+# Restarting this unit ends every session it holds. Restart the ENGINE freely; restart this only when no session matters.
+# @NODE@ is replaced by setup-reference.sh with the absolute path of the node on this host (`command -v node`).
+[Unit]
+Description=Workbench pty-broker (agent sessions, runs as wbagent)
+After=network.target
+
+[Service]
+Type=simple
+User=wbagent
+Group=wbagent
+# Read by systemd as root before the user switch, so the file can stay root-only.
+EnvironmentFile=/etc/workbench/pty-broker.env
+WorkingDirectory=/opt/workbench/briefing-table
+ExecStart=@NODE@ /opt/workbench/briefing-table/node_modules/tsx/dist/cli.mjs node_modules/pty-broker/src/main.ts
+Restart=on-failure
+RestartSec=5
+# The broker refuses to start without PTY_BROKER_TOKEN (min 16 chars); do not "fix" a crash loop by adding PTY_BROKER_ALLOW_NO_AUTH.
+NoNewPrivileges=yes
+ProtectSystem=full
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+# Agents write in their own home and /tmp only. Their view of the engine's files is whatever the file modes allow (see README).
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

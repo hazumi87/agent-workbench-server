@@ -1,0 +1,1561 @@
+{
+ "version": 1,
+ "outbound": {
+  "about:licenses": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "the updater, restart and licences window do not exist in the web build: a click is a loud PlatformOnly, not a silent hang (security review L1)"
+  },
+  "accounts:begin": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "accounts:cancel": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "accounts:manage": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "accounts:name": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "accounts:reopen": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "accounts:request": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "accounts:request-act": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "accounts:requestable": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "accounts:rescope": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "accounts:select": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "accounts:servers": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "accounts:signout": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "accounts:state": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "accounts:test-server": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "agent-setup:call": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop first-run agent setup: the feature flag is off in the web build (web/features.json argv is empty), so the page never receives its API; the web has its own first-login setup (the router gate), Add an agent and Recipes"
+  },
+  "app:restart": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "the updater, restart and licences window do not exist in the web build: a click is a loud PlatformOnly, not a silent hang (security review L1)"
+  },
+  "arrange:tabs": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "window chrome, multi-window tabs and drag"
+  },
+  "broker:end": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "POST /api/sessions/:paneid/end"
+  },
+  "broker:groups": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "GET /api/sessions (the engine's live panes, hosted profile) as the one group \"This server\"; polled every 15 s, emitted only when it changed. Until the engine owner deploys that route: no group"
+  },
+  "broker:modules": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "the realm and a pinned broker are desktop things; module management has no web meaning"
+  },
+  "clipboard:write": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "browser API with the same contract"
+  },
+  "codex:*": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "the Codex connector runs as an engine seat, not in the page"
+  },
+  "concierge:create": {
+   "class": "forward",
+   "owner": "web",
+   "status": "todo",
+   "note": "Concierge dock (lowest priority)"
+  },
+  "concierge:reload-": {
+   "class": "forward",
+   "owner": "web",
+   "status": "todo",
+   "note": "Concierge dock (lowest priority)"
+  },
+  "concierge:reload-*": {
+   "class": "forward",
+   "owner": "web",
+   "status": "todo",
+   "note": "Concierge dock (lowest priority)"
+  },
+  "console:bounds": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "console:handoff-again": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "console:hide": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "console:info": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "console:open": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "console:reload": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "console:test-authenticator": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "console:test-credentials": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "console:test-eval": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "console:test-focus": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "console:test-navigate": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "console:test-shot": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "console:test-wait-load": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "debug:log": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "main-process bookkeeping with no web meaning: a harmless no-op (modules:theme feeds module windows, which the web build does not have)"
+  },
+  "debug:set": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "main-process bookkeeping with no web meaning: a harmless no-op (modules:theme feeds module windows, which the web build does not have)"
+  },
+  "drag:end": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "window chrome, multi-window tabs and drag"
+  },
+  "drag:move": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "window chrome, multi-window tabs and drag"
+  },
+  "drag:start": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "window chrome, multi-window tabs and drag"
+  },
+  "flyout:focus": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "window chrome, multi-window tabs and drag"
+  },
+  "keys:check-added": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "keys:connect": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "keys:forget": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "keys:make": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "keys:older": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "keys:refresh": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "keys:refresh-cancel": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "keys:remind": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "keys:remove-everywhere": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "keys:retire-again": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "keys:snooze": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "keys:state": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "local-setup:call": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop local-rooms setup: the feature flag is off in the web build (web/features.json argv is empty), so the page never receives its API; the web has its own first-login setup (the router gate), Add an agent and Recipes"
+  },
+  "local-setup:changed": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop local-rooms setup events: the feature flag is off in the web build (web/features.json argv is empty), so the page never receives its API; the web has its own first-login setup (the router gate), Add an agent and Recipes"
+  },
+  "local-setup:notes-answer": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop local-rooms setup notes: the feature flag is off in the web build (web/features.json argv is empty), so the page never receives its API; the web has its own first-login setup (the router gate), Add an agent and Recipes"
+  },
+  "local-setup:notes-check": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop local-rooms setup notes: the feature flag is off in the web build (web/features.json argv is empty), so the page never receives its API; the web has its own first-login setup (the router gate), Add an agent and Recipes"
+  },
+  "machine:info": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "browser API with the same contract"
+  },
+  "modules:card-admit": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "web/handlers/modules.js: src/module-cards.js on the cached catalog (cards carry no data; the engine admits every call)"
+  },
+  "modules:card-release": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "web/handlers/modules.js: src/module-cards.js release"
+  },
+  "modules:frame-expect": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "web/handlers/modules.js: the page guard (same origin, enabled entry under its own prefix, ui/ page, wbl nonce); the engine M1 route enforces"
+  },
+  "modules:rescan": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "web/handlers/modules.js: POST /api/modules/rescan (M2)"
+  },
+  "modules:set": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "web/handlers/modules.js: PUT /api/modules/:id (M2), answers the list; refused -> re-read so the page snaps back"
+  },
+  "modules:storage": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "web/handlers/modules.js: POST /api/modules/:id/storage (M3), keyed per (person, module) in the engine"
+  },
+  "modules:theme": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "main-process bookkeeping with no web meaning: a harmless no-op (modules:theme feeds module windows, which the web build does not have)"
+  },
+  "modules:window-open": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "web/handlers/modules.js: refused in words (501) until pop-outs exist in the web app"
+  },
+  "pane:active": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "main-process bookkeeping with no web meaning: a harmless no-op (modules:theme feeds module windows, which the web build does not have)"
+  },
+  "prefs:get": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "this browser's preferences in localStorage (no secret ever); the Concierge fields keep their defaults until slice 4 moves them to the engine"
+  },
+  "prefs:set": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "this browser's preferences in localStorage; the desktop shell setting is meaningless here and ignored"
+  },
+  "programs:detect": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "detection spawns a probe on the person's machine; the engine host has no such route (dropped for the pilot)"
+  },
+  "programs:list": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "the catalog bundled from vendors/*/vendor.json; enabled flags and default settings in this browser; detection is unknown (detected: null)"
+  },
+  "programs:set": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "enabled flags and default settings in this browser (Shell cannot be turned off)"
+  },
+  "recipes:check-folder": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "GET /api/fs/dirs: the folder is checked on the engine host, inside its file root"
+  },
+  "recipes:delete": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "GET/POST/DELETE /api/recipes: the engine is the recipe store (web/handlers/recipes.js, web/lib/recipe-map.js); a recipe a seat still uses is refused with the engine's reason"
+  },
+  "recipes:duplicate": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "GET/POST/DELETE /api/recipes: the engine is the recipe store (web/handlers/recipes.js, web/lib/recipe-map.js); a copy is a new recipe named \"<name> copy\""
+  },
+  "recipes:folder-form": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "the desktop token contract; the dialog is slice 3's server-side picker (window.wb.web.files.chooseFolder)"
+  },
+  "recipes:import-cancel": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "import and folder choice in the browser"
+  },
+  "recipes:import-commit": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "import and folder choice in the browser"
+  },
+  "recipes:import-folder": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "import and folder choice in the browser"
+  },
+  "recipes:import-open": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "import and folder choice in the browser"
+  },
+  "recipes:list": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "GET/POST/DELETE /api/recipes: the engine is the recipe store (web/handlers/recipes.js, web/lib/recipe-map.js)"
+  },
+  "recipes:pick-folder": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "the desktop token contract; needs window.wb.web.files.chooseFolder (slice 3, a builder); says \"unavailable\" until it is mounted, never a guessed path"
+  },
+  "recipes:save": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "GET/POST/DELETE /api/recipes: the engine is the recipe store (web/handlers/recipes.js, web/lib/recipe-map.js); a chosen folder is claimed by its token"
+  },
+  "recipes:setup": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "runs a program's prepare step in a folder over a pinned broker; no engine route (dropped for the pilot)"
+  },
+  "recipes:sync": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "nothing to sync: the engine table is the one copy; answers {ok:true}"
+  },
+  "room-templates:call": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop room templates: the feature flag is off in the web build (web/features.json argv is empty), so the page never receives its API; the web has its own first-login setup (the router gate), Add an agent and Recipes"
+  },
+  "room-templates:discard-request": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop room-template discard confirmation: the feature flag is off in the web build (web/features.json argv is empty), so the page never receives its API; the web has its own first-login setup (the router gate), Add an agent and Recipes"
+  },
+  "rooms:assets": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:commands": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:connection": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:create": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:deliver-held": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:download": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "the browser's download of the file's bytes (an <a download> on a blob typed application/octet-stream, so it is never rendered)"
+  },
+  "rooms:draft": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:draft-set": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:family-check": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:history-cancel": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:history-export": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:history-get": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:history-set": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:history-start": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:image": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:line": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:list": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:me": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:note": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:note-attach": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:note-close": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:note-create": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:note-set": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:notes": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:open-window": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "a tab on the engine's own raw route (sandboxed by the engine's CSP), never a blob: URL, which would run an uploaded SVG or HTML as this page"
+  },
+  "rooms:patch": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:pick-files": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "the browser's file input (a person's click opens the chooser); up to 10 files, bytes only up to 25 MB, as on the desktop"
+  },
+  "rooms:picture": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:post": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:presence": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:recipes": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:retry": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:room": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:scratch": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:scratch-order": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:scratch-remove": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:scratch-upload": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:search": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:seat-add": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:seat-close-window": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:seat-disconnect": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:seat-end": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "the real handler refuses unless a local shell seat, which a hosted engine never has"
+  },
+  "rooms:seat-history": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:seat-move": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:seat-patch": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:seat-profile": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:seat-reload": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:seat-reload-preview": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:seat-remove": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:seat-start": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:seen": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:settings": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:signin": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:signout": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:state": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:status": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:tasks": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "web/handlers/modules.js: POST /api/modules/:id/rooms/:roomId/tasks, admitted IN THE ENGINE (M4); replaces the rooms core desktop admission"
+  },
+  "rooms:tasks-approve": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "web/handlers/modules.js: POST .../tasks/approve, the engine one-use purge token (M4)"
+  },
+  "rooms:thumb": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:visible": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:wake-deliver": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "rooms:workgroup": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "real src/rooms core behind shims"
+  },
+  "scratchpad:*": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "Desktop personal Scratchpad storage/location is absent; browser per-room view uses wb.web.files and /api/rooms/:id/files."
+  },
+  "scratchpad:location": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "Desktop personal Scratchpad storage/location is absent; browser per-room view uses wb.web.files and /api/rooms/:id/files."
+  },
+  "server:forget-host-key": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "server:host-key": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "servers:action": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "servers:approve": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "servers:decline": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "servers:get": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "servers:grant": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "servers:install": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "servers:list": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "servers:people": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "servers:policy": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "servers:refresh-me": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "servers:reopen": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "servers:revoke": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "servers:role": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop accounts, servers tab, key fallback, realm console: one person per server, no realm"
+  },
+  "session:attached": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "releases the bytes held for a page that has just mapped the id; sends the size"
+  },
+  "session:close": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "POST /api/sessions/:paneid/end for a pane the person started; a seat viewer only lets go"
+  },
+  "session:create": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "recipe: POST /api/recipes/:id/launch then attach spawn; plain shell: the engine recipe \"Shell\"; attachOnly and a seat's terminal attach to an existing pane and never spawn. web/handlers/session.js on the engine's WS /pty with the sign-in cookie (web/lib/pty-link.js)"
+  },
+  "session:hide": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "multi-window flyout and tab moves"
+  },
+  "session:hideRemote": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "multi-window flyout and tab moves"
+  },
+  "session:input": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "input frame while this tab holds the keyboard lease; otherwise \"typing paused\", never queued"
+  },
+  "session:meta": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "the tab name and hue, kept in the page's session list (not written back to the recipe)"
+  },
+  "session:moveHere": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "multi-window flyout and tab moves"
+  },
+  "session:open": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "no hidden sessions in a page: every session is open in it"
+  },
+  "session:permit": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "a one-use token: a CLI starts only from an explicit launch (60 s, spent once)"
+  },
+  "session:resize": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "resize frame, honoured only for the lease holder"
+  },
+  "session:retry": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "a permit relaunches (Run again, Restore, Start fresh, spawn); without one it only reattaches"
+  },
+  "session:seen": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "attention.ack frame"
+  },
+  "session:term-control": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "takeControl on /pty; there is no release frame on /pty, so releasing answers false"
+  },
+  "session:title": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "the tab title, kept in the page's session list"
+  },
+  "sessions:dismiss": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "POST /api/interrupted/dismiss, then the empty offer view"
+  },
+  "sessions:offer": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "honestly empty: the interrupted-sessions offer and Recently closed are a desktop disk store with no engine equivalent (dropped for the pilot)"
+  },
+  "sessions:remove": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "honestly empty (see sessions:offer); answers the empty offer view"
+  },
+  "sessions:restore-spec": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "nothing to restore: answers null, the desktop's own answer for a row that is not restorable"
+  },
+  "shell:open-external": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "browser API with the same contract"
+  },
+  "snapshot:reply": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "window chrome, multi-window tabs and drag"
+  },
+  "starter-rooms:call": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop starter workrooms: the feature flag is off in the web build (web/features.json argv is empty), so the page never receives its API; the web has its own first-login setup (the router gate), Add an agent and Recipes"
+  },
+  "starter:terminal-intent": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "desktop starter-terminal intents: the feature flag is off in the web build (web/features.json argv is empty), so the page never receives its API; the web has its own first-login setup (the router gate), Add an agent and Recipes"
+  },
+  "startup:done": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "main-process bookkeeping with no web meaning: a harmless no-op (modules:theme feeds module windows, which the web build does not have)"
+  },
+  "state:report": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "main-process bookkeeping with no web meaning: a harmless no-op (modules:theme feeds module windows, which the web build does not have)"
+  },
+  "update:auto": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "the updater, restart and licences window do not exist in the web build: a click is a loud PlatformOnly, not a silent hang (security review L1)"
+  },
+  "update:check": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "the updater, restart and licences window do not exist in the web build: a click is a loud PlatformOnly, not a silent hang (security review L1)"
+  },
+  "update:restart": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "the updater, restart and licences window do not exist in the web build: a click is a loud PlatformOnly, not a silent hang (security review L1)"
+  },
+  "update:state": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "there is no updater in the web build: the state says so (nothing ready, nothing available)"
+  },
+  "win:close": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "window chrome, multi-window tabs and drag"
+  },
+  "win:closeEmpty": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "main-process bookkeeping with no web meaning: a harmless no-op"
+  },
+  "win:maximize": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "window chrome, multi-window tabs and drag"
+  },
+  "win:minimize": {
+   "class": "platform-only",
+   "owner": "web",
+   "status": "done",
+   "note": "window chrome, multi-window tabs and drag"
+  },
+  "win:mode": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "main-process bookkeeping with no web meaning: a harmless no-op (modules:theme feeds module windows, which the web build does not have)"
+  },
+  "window:theme": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "main-process bookkeeping with no web meaning: a harmless no-op (modules:theme feeds module windows, which the web build does not have)"
+  }
+ },
+ "inbound": {
+  "accounts:access-news": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "accounts:changed": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "accounts:link": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "accounts:servers": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "accounts:signed-in": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "accounts:switched": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "app:show-servers": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "broker:groups": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "polled every 15 s while the page is visible; emitted when it changed"
+  },
+  "concierge:reload": {
+   "class": "forward",
+   "owner": "web",
+   "status": "todo",
+   "note": "Concierge dock"
+  },
+  "concierge:taken": {
+   "class": "forward",
+   "owner": "web",
+   "status": "todo",
+   "note": "Concierge dock"
+  },
+  "console:state": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "console:terminal": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "console:terminal-refused": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "debug": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "debug stream: not sent in the web build"
+  },
+  "drop:clear": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "drop:preview": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "init": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "sent by the web runtime after load"
+  },
+  "keys:progress": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "keys:resume": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "keys:state": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "modules:changed": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "web/handlers/modules.js: emitted from GET /api/modules at boot and from the engine modules.changed event"
+  },
+  "modules:frame-revoke": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build: no main denies navigations; the frame link ends itself on a second load (module-frame.js)"
+  },
+  "prefs:changed": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "emitted after prefs:set"
+  },
+  "programs:changed": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "emitted after programs:set"
+  },
+  "recipes:changed": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "emitted after a recipe save, delete, duplicate or import with the fresh list"
+  },
+  "recipes:local-sync-error": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "the desktop's realm sync and offline server banner do not exist here: the engine table is the one copy"
+  },
+  "recipes:local-sync-status": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "the desktop's realm sync and offline server banner do not exist here: the engine table is the one copy"
+  },
+  "recipes:offline": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "the desktop's realm sync and offline server banner do not exist here: the engine table is the one copy"
+  },
+  "room-templates:view": {
+   "class": "forward",
+   "owner": "web",
+   "status": "todo",
+   "note": "first-run setup"
+  },
+  "rooms:account": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "emitted by the real rooms core"
+  },
+  "rooms:line": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "emitted by the real rooms core"
+  },
+  "rooms:read": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "emitted by the real rooms core"
+  },
+  "rooms:room": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "emitted by the real rooms core"
+  },
+  "rooms:rooms": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "emitted by the real rooms core"
+  },
+  "rooms:scratchpad": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "emitted by the real rooms core"
+  },
+  "rooms:seat": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "emitted by the real rooms core"
+  },
+  "rooms:status": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "emitted by the real rooms core"
+  },
+  "rooms:tasks": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "emitted by the real rooms core"
+  },
+  "scratchpad:changed": {
+   "class": "forward",
+   "owner": "web",
+   "status": "todo",
+   "note": "server-side Scratchpad changes"
+  },
+  "session:adopt": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "emitted for each other running plain recipe pane after the page-load terminal, so a reload re-adopts what runs on the server (held until session:attached)"
+  },
+  "session:data": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "pane.data after the page has the id"
+  },
+  "session:exit": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "pane.exit of a plain shell: its tab closes"
+  },
+  "session:gap": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "the engine's replay after a reattach (reset, then write)"
+  },
+  "session:hide-req": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "session:moved-away": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "session:route": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "connecting, up, reconnecting, finished, spawn-failed, viewing, controlling, term-closed from the socket and pane frames"
+  },
+  "session:typing-paused": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "no keyboard lease or a down socket"
+  },
+  "sessions:offer": {
+   "class": "substitute",
+   "owner": "web",
+   "status": "done",
+   "note": "honestly empty (see sessions:offer outbound): never pushed"
+  },
+  "sessions:update": {
+   "class": "forward",
+   "owner": "web",
+   "status": "done",
+   "note": "the page's session list (rail and tabs)"
+  },
+  "snapshot:req": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "tab:activate": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "update:progress": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "update:ready": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  },
+  "win:max": {
+   "class": "absent",
+   "owner": "web",
+   "status": "done",
+   "note": "never fires in the web build"
+  }
+ }
+}

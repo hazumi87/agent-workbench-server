@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Workbench</title>
+<!-- Trusted first-party modules load from local module folders (file:), nothing from the network. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' file:; frame-src 'self' file: wbmod:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'">
+<!-- Material 3 look (own styles + vendored fonts). Only the activity ring (and its tokens) comes from the design. -->
+<link rel="stylesheet" href="../vendor/aurora/window-chrome/tokens.css">
+<link rel="stylesheet" href="../vendor/aurora/window-chrome/hwb-ring.css">
+<link rel="stylesheet" href="../../node_modules/@xterm/xterm/css/xterm.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="apps-settings.css">
+<link rel="stylesheet" href="color-swatches.css">
+<link rel="stylesheet" href="first-run/first-run.css">
+<link rel="stylesheet" href="rooms/rooms.css">
+<link rel="stylesheet" href="rooms/room-activity.css">
+<link rel="stylesheet" href="rooms/starter-workrooms.css">
+<link rel="stylesheet" href="room-templates/page.css">
+<link rel="stylesheet" href="user-picture.css">
+<link rel="stylesheet" href="rooms/composer-add.css">
+<link rel="stylesheet" href="servers/servers.css">
+<link rel="stylesheet" href="codex/codex.css">
+<link rel="stylesheet" href="scratchpad/scratchpad.css">
+<link rel="stylesheet" href="srail.css">
+<link rel="stylesheet" href="recipe-import.css">
+<link rel="stylesheet" href="concierge-slot.css">
+</head>
+<body>
+<div class="hwb is-panes" id="win" style="--base:#428DF0">
+  <!-- Top bar (0.6/0.7): hamburger | module tabs (the module host renders them: Dashboard from the
+       CLI Manager, one more per enabled tab-class module) | caps (0.19.0, the owner : no "+" here; IN THIS WINDOW + in the rail). CLI tabs are hidden
+       for now: a window opens in the grid. -->
+  <div class="hwb-bar">
+    <div class="hwb-act" id="burger" role="button" tabindex="0" aria-haspopup="menu" title="Menu"><span class="ms" aria-hidden="true">menu</span></div>
+    <div class="hwb-apps" role="tablist" aria-label="Workbench"></div>
+    <div class="hwb-tabs"></div>
+    <div class="hwb-dead"></div>
+    <button class="upd" id="updChip" hidden><span class="ms" aria-hidden="true">upgrade</span>Update ready</button>
+    <div class="hwb-caps" data-region="caption-cluster">
+      <button class="hwb-cap" data-cap="minimize" aria-label="Minimize"><span class="ms" aria-hidden="true">remove</span></button>
+      <button class="hwb-cap" data-cap="maximize" aria-label="Maximize"><span class="ms" aria-hidden="true">crop_square</span></button>
+      <button class="hwb-cap close" data-cap="close" aria-label="Close window"><span class="ms" aria-hidden="true">close</span></button>
+    </div>
+  </div>
+  <div class="hwb-sbar" id="sbar"></div>
+  <div id="main">
+    <!-- 0.12.2: the Console tab: the realm's console in a view main draws into .cs-top, and
+         under it, when a terminal link was followed, an SSH pane split top/bottom with a grip -->
+    <div id="console" hidden>
+      <div class="cs-hand" role="status" hidden></div>
+      <div class="cs-top"><div class="cs-msg" hidden></div></div>
+      <div class="cs-div" hidden title="Drag to resize · double-click to reset"><span class="grip" aria-hidden="true"></span></div>
+      <div class="cs-pane" hidden></div>
+    </div>
+    <div id="stage">
+      <div id="grid"></div>
+      <div id="empty" hidden>
+        <span class="ms ei" aria-hidden="true">terminal</span>
+        <div class="et" id="emptyT">No open CLI</div>
+        <div class="eh" id="emptyH">Your hidden CLIs are still running. Open one from the list, or start a new one.</div>
+        <div class="ea"><button id="emptyList" class="tonal">Open the list</button><button id="emptyNew" aria-haspopup="menu"><span class="ms" aria-hidden="true">add</span>New CLI</button></div>
+      </div>
+      <!-- module surfaces: a tab-class module's page shows here, over the grid -->
+      <div id="modStage" hidden></div>
+      <!-- W1: the Workrooms page (src/renderer/rooms), drawn by the core over the grid -->
+      <div id="roomsStage" hidden></div>
+      <!-- 3e: the Servers tab (src/renderer/servers), for a server's admins and managers -->
+      <div id="serversStage" hidden></div>
+      <div id="codexStage" hidden></div>
+      <div id="scratchpadStage" hidden></div>
+    </div>
+    <aside id="dock" aria-label="Concierge">
+      <button id="dockTab" title="Concierge" aria-label="Concierge" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" height="22" width="22" class="concierge-icon" aria-hidden="true" focusable="false" viewBox="0 -960 960 960" fill="currentColor"><path d="M440 -80Q423 -80 411.5 -91.5Q400 -103 400 -120Q400 -137 411.5 -148.5Q423 -160 440 -160H880Q897 -160 908.5 -148.5Q920 -137 920 -120Q920 -103 908.5 -91.5Q897 -80 880 -80ZM440 -200Q440 -281 491.0 -341.5Q542 -402 620 -416V-441Q620 -458 631.5 -469.5Q643 -481 660 -481Q677 -481 688.5 -469.5Q700 -458 700 -441V-416Q777 -402 828.5 -341.5Q880 -281 880 -200ZM545 -281H773Q754 -308 724.5 -324.5Q695 -341 660 -341Q624 -341 594.0 -324.5Q564 -308 545 -281ZM659 -281Q659 -281 659.0 -281.0Q659 -281 659 -281Q659 -281 659.0 -281.0Q659 -281 659 -281ZM40 -520V-800Q40 -833 63.5 -856.5Q87 -880 120 -880H200Q224 -880 248.0 -863.0Q272 -846 280 -822L537 -894Q548 -897 560.0 -897.0Q572 -897 583 -893L852 -809Q865 -805 872.5 -794.5Q880 -784 880 -771V-760Q880 -710 845.0 -675.0Q810 -640 760 -640H680V-616Q680 -591 665.5 -570.5Q651 -550 628 -541L372 -445Q365 -443 358.5 -441.5Q352 -440 344 -440H120Q87 -440 63.5 -463.5Q40 -487 40 -520ZM120 -660V-520Q120 -520 120.0 -520.0Q120 -520 120 -520H200Q200 -520 200.0 -520.0Q200 -520 200 -520V-800Q200 -800 200.0 -800.0Q200 -800 200 -800H120Q120 -800 120.0 -800.0Q120 -800 120 -800ZM280 -630V-520Q280 -520 280.0 -520.0Q280 -520 280 -520H344Q344 -520 344.0 -520.0Q344 -520 344 -520L576 -605Q587 -609 593.5 -618.5Q600 -628 600 -640Q600 -640 600.0 -640.0Q600 -640 600 -640H529L450 -614Q434 -609 419.5 -616.5Q405 -624 400 -641Q395 -657 402.0 -671.0Q409 -685 425 -690L513 -720H760Q769 -720 782.5 -726.5Q796 -733 796 -742L558 -816Q558 -816 558.0 -816.0Q558 -816 558 -816L280 -740Q280 -740 280.0 -740.0Q280 -740 280 -740Z"/></svg></button>
+      <div class="dock-in">
+        <div class="dock-grip" id="dockGrip"></div>
+        <div class="dock-pane">
+          <div class="pane-h" id="dockHead"></div>
+          <div id="dockStrip" hidden></div>
+          <div class="pane-body" id="dockBody"></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div id="flyout" class="pop" hidden></div>
+<!-- Settings: one page at a time. The breadcrumb climbs to Global Settings
+     (Global Settings > Pane, Global Settings > Concierge); the hamburger opens Global Settings directly. -->
+<aside id="settingsPop" class="panel" hidden aria-label="Settings">
+  <div class="ph"><nav class="crumb" id="crumb" aria-label="Settings location"></nav><button id="settingsClose" aria-label="Close settings"><span class="ms">close</span></button></div>
+  <div class="pb">
+    <div class="sec" data-page="pane">
+      <div class="lbl">This pane</div>
+      <input id="tabName" type="text" maxlength="60" spellcheck="false" autocomplete="off" placeholder="Name">
+      <div class="hint">Leave empty to follow what the shell calls itself.</div>
+      <div class="lbl sp1">Color</div>
+      <div id="swatches" class="swatches"></div>
+      <div class="row2"><span>Custom</span><input id="hue" type="range" min="0" max="360" step="1"></div>
+      <div class="hint">The color seeds this pane's whole palette. Changes save automatically.</div>
+    </div>
+    <div class="sec" data-page="concierge">
+      <div class="hint">Your always-on helper. It runs in the strip at the edge of the window.</div>
+      <!-- 0.20.0 (D1, the design <commit>): what it runs, and the two resume switches (they come with step 4) -->
+      <div id="concWhat"></div>
+      <div class="fld wb-desktop-concierge-width"><span>Width</span><input id="concW" type="range" min="260" max="900" step="10"><output id="concWV"></output></div>
+      <div class="hint">This window keeps a separate Concierge recipe and conversation for each account.</div>
+    </div>
+    <div class="sec" data-page="global">
+      <div class="lbl">Appearance <em>(all windows)</em></div>
+      <div class="fld"><span>Theme</span>
+        <div class="seg" id="apTheme"><button data-v="light">Light</button><button data-v="dark">Dark</button><button data-v="system">System</button></div></div>
+      <div class="fld"><span>System color</span><input id="apColor" type="color" aria-label="System color" value="#428df0"></div>
+      <div class="fld"><span>Style</span><select id="apStyle" aria-label="Style"></select></div>
+      <div class="fld"><span>Contrast</span>
+        <div class="seg" id="apContrast"><button data-v="0">Standard</button><button data-v="0.5">Medium</button><button data-v="1">High</button></div></div>
+      <div class="fld"><span>Pane tint</span><input id="apTint" type="range" aria-label="Pane tint" min="0" max="20" step="1"><output id="apTintV"></output></div>
+      <div class="hint">System color paints the title bar and menus. Pane tint is how much each pane's own color shows in its background.</div>
+      <div id="starterVisibilitySettings" hidden></div>
+    </div>
+    <!-- Rows into pages. Accounts (step 3a) shows only when its module is loaded. -->
+    <div class="sec navs" data-page="global">
+      <button class="navrow" id="gsFiles" hidden><span class="ms" aria-hidden="true">folder_open</span><span class="nl">Files</span><span class="nv">Folder</span><span class="ms" aria-hidden="true">chevron_right</span></button>
+      <button class="navrow" id="gsChatHistory" hidden><span class="ms" aria-hidden="true">history</span><span class="nl">Chat history</span><span class="nv">Daily copies</span><span class="ms" aria-hidden="true">chevron_right</span></button>
+      <button class="navrow" id="gsAccounts" hidden><span class="ms" aria-hidden="true">account_circle</span><span class="nl">Accounts</span><span class="nv" id="gsAccountsV"></span><span class="ms" aria-hidden="true">chevron_right</span></button>
+      <button class="navrow" id="gsConcierge"><span class="ms" aria-hidden="true">support_agent</span><span class="nl">Concierge</span><span class="nv wb-desktop-concierge-width-label">Width</span><span class="ms" aria-hidden="true">chevron_right</span></button>
+      <button class="navrow" id="gsServers"><span class="ms" aria-hidden="true">dns</span><span class="nl">Servers</span><span class="nv">This machine</span><span class="ms" aria-hidden="true">chevron_right</span></button>
+      <button class="navrow" id="gsPrograms"><span class="ms" aria-hidden="true">terminal</span><span class="nl">Programs</span><span class="nv" id="gsProgramsV"></span><span class="ms" aria-hidden="true">chevron_right</span></button>
+      <button class="navrow" id="gsApps"><span class="ms" aria-hidden="true">palette</span><span class="nl">Apps</span><span class="nv">Colors</span><span class="ms" aria-hidden="true">chevron_right</span></button>
+      <button class="navrow" id="gsScratchpad"><span class="ms" aria-hidden="true">sticky_note_2</span><span class="nl">Scratchpad</span><span class="nv">Folder</span><span class="ms" aria-hidden="true">chevron_right</span></button>
+      <button class="navrow" id="gsModules"><span class="ms" aria-hidden="true">extension</span><span class="nl">Modules</span><span class="nv" id="gsModulesV"></span><span class="ms" aria-hidden="true">chevron_right</span></button>
+      <button class="navrow" id="gsNotify"><span class="ms" aria-hidden="true">notifications</span><span class="nl">Notifications</span><span class="nv" id="gsNotifyV"></span><span class="ms" aria-hidden="true">chevron_right</span></button>
+    </div>
+    <div class="sec" data-page="accounts" id="secAccounts"></div>
+    <div class="sec" data-page="scratchpad" id="secScratchpad"></div>
+    <div class="sec" data-page="apps" id="secApps"></div>
+    <div class="sec" data-page="files" id="secFiles"></div>
+    <div class="sec" data-page="chat-history" id="secChatHistory"></div>
+    <div class="sec" data-page="servers" id="secServers"></div>
+    <div class="sec" data-page="request" id="secRequest"></div>
+    <div class="sec" data-page="recipes" id="secRecipes"></div>
+    <div class="sec" data-page="recipe" id="secRecipe"></div>
+    <div class="sec" data-page="server" id="secServer"></div>
+    <div class="sec" data-page="machine" id="secMachine"></div>
+    <div class="sec" data-page="programs" id="secPrograms"></div>
+    <div class="sec" data-page="program" id="secProgram"></div>
+    <div class="sec" data-page="notifications" id="secNotify"></div>
+    <div class="sec" data-page="modules" id="secModules"></div>
+    <div class="sec" data-page="message" id="secMessage"></div>
+    <div class="sec" data-page="module" id="secModule"></div>
+    <div class="sec" data-page="global">
+      <div class="lbl">Diagnostics</div>
+      <label class="chk"><input id="dbg" type="checkbox"> Debug log</label>
+      <div class="hint">Timings and events only — never terminal content. <span id="dbgpath"></span></div>
+      <label class="chk"><input id="devmode" type="checkbox"> Developer</label>
+      <div class="hint">Adds Try it to each tool's page in Modules, to run one of its actions and see what it returns.</div>
+      <div class="hint">Startup log (always on, events only): <span id="slogpath" class="pth"></span></div>
+      <div class="hint">Workbench <span id="ver"></span></div>
+    </div>
+    <div class="sec navs" data-page="global">
+      <button class="navrow" id="gsAbout"><span class="ms" aria-hidden="true">info</span><span class="nl">About</span><span class="nv"></span><span class="ms" aria-hidden="true">chevron_right</span></button>
+    </div>
+    <div class="sec" data-page="about" id="secAbout"></div>
+  </div>
+</aside>
+<section id="firstRunStage" class="lf-host" hidden></section>
+
+<script src="../../node_modules/@xterm/xterm/lib/xterm.js"></script>
+<script src="../../node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+<script src="../../node_modules/@xterm/addon-serialize/lib/addon-serialize.js"></script>
+<script type="module" src="renderer.js"></script>
+</body>
+</html>

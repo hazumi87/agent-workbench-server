@@ -1,0 +1,5 @@
+{
+ "header": "default-src 'self'; script-src 'self'; frame-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; frame-ancestors 'self'; base-uri 'none'; form-action 'self'",
+ "meta": "default-src 'self'; script-src 'self'; frame-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'",
+ "note": "Derived from the desktop CSP (src/renderer/index.html): file: and wbmod: dropped (no file pages, no module scheme). connect-src is 'self' ONLY: in Chromium it covers same-origin fetch and the /pty and /term WebSockets, while ws: and wss: would let a page open a socket to any host (security review M3). object-src and base-uri are 'none'. frame-ancestors only as a header (a meta tag ignores it). The header and the meta tag are the SAME policy apart from frame-ancestors. the engine owner reads this file at boot; it does not hard-code a policy."
+}

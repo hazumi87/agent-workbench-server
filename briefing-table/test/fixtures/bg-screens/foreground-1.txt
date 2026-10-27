@@ -1,0 +1,18 @@
+# claude 2.1.299 (Claude Code) | model haiku | turn in progress (spinner)
+# ---- rendered screen (140x45, trimmed) ----
+ ▐▛███▛█   Claude Code v2.1.299
+▝▜██████▀  Haiku 5.5 · Claude Max
+ ▝▝   ▝▝   /tmp/bgcap-1MDPXd
+
+
+❯ Write a 700 word story about a lighthouse keeper. No tools.
+
+●
+
+· Bootstrapping… (2s · ↓ 63 tokens · thinking)
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  svc-ops@homeserver:/tmp/bgcap-1MDPXd                                                                             ◐ medium · /effort
+  ⏵⏵ auto mode on (shift+tab to cycle) · ← 2 agents

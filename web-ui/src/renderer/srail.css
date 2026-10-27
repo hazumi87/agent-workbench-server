@@ -1,0 +1,155 @@
+/* The shared rail (0.19.0, B1–B6; srail.js). the design's "One rail for the Workbench": the Terminals
+   panel is the reference, the Workrooms room rail and the Servers list use the same parts. */
+
+.sr { width: 272px; background: var(--md-sys-color-surface-container); }
+.sr.slim { width: 240px; }
+
+/* Header: 56 px, title-medium 20/28, the pin, ✕ only while floating */
+.sr-h { flex: none; height: 56px; display: flex; align-items: center; gap: 0; padding: 0 4px 0 16px; }
+.sr-h .sr-t { flex: 1; min-width: 0; font: 400 20px/28px var(--font); color: var(--md-sys-color-on-surface); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sr-hb { flex: none; width: 40px; height: 40px; border: 0; border-radius: var(--shape-full); background: none; color: var(--md-sys-color-on-surface-variant); display: inline-grid; place-items: center; cursor: pointer; }
+.sr-hb[hidden] { display: none; }
+.sr-hb .ms { font-size: 22px; }
+.sr-hb:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface-variant) 12%, transparent); }
+.sr-hb:disabled { opacity: .38; cursor: default; }
+.sr-hb:disabled:hover { background: none; }
+.sr-hb.sr-pin.on { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.sr-hb:focus-visible, .sr-gb:focus-visible { outline: 3px solid var(--md-sys-color-secondary); outline-offset: 2px; }
+
+/* Group labels: an icon, capitals at 12 px +0.8, on a band of the group's color; the caret and + at the right */
+.sr-g { --g: var(--md-sys-color-outline); position: relative; flex: none; height: 40px; display: flex; align-items: center; margin: 2px 0; padding: 0 4px 0 12px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--g) 30%, transparent), color-mix(in srgb, var(--g) 6%, transparent) 88%); border-left: 3px solid var(--g);
+  font: 500 12px/16px var(--font); letter-spacing: .8px; text-transform: uppercase; color: color-mix(in srgb, var(--g) 70%, var(--md-sys-color-on-surface)); cursor: pointer; user-select: none; }
+.sr-g .gi { font-size: 18px; margin-right: 8px; flex: none; }
+.sr-g .t { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sr-gb { flex: none; width: 32px; height: 32px; border: 0; border-radius: var(--shape-full); background: none; color: inherit; display: inline-grid; place-items: center; cursor: pointer; padding: 0; }
+.sr-gb .ms { font-size: 20px; }
+.sr-gb:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
+.sr-caret .ms { transition: transform .15s cubic-bezier(.2, 0, 0, 1); }
+.sr-g.collapsed .sr-caret .ms { transform: rotate(-90deg); }
+@media (prefers-reduced-motion: reduce) { .sr-caret .ms { transition: none; } }
+
+/* Rows: 56 px, a 36 px icon, the name at 15 px in the item's own color (--c), a quiet second line */
+.sr-r { --c: var(--md-sys-color-primary); position: relative; flex: none; display: flex; align-items: center; gap: 12px; min-height: 56px; box-sizing: border-box;
+  margin: 0 8px; padding: 0 4px 0 10px; border-radius: 16px; cursor: pointer; outline: none; color: var(--md-sys-color-on-surface); }
+.sr-r:hover, .sr-r.menu-open { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+.sr-r.sel, .sr-r.on { background: color-mix(in srgb, var(--c) 18%, var(--md-sys-color-surface-container)); }
+.sr-r.sel:hover, .sr-r.on:hover { background: color-mix(in srgb, var(--c) 24%, var(--md-sys-color-surface-container)); }
+.sr-r:focus-visible, .sr-r.kb-ring { outline: 3px solid var(--md-sys-color-secondary); outline-offset: -3px; }
+/* step 4: a row focused by a click, a restore or the app shows no ring; the keyboard's does */
+html:not(.kbd) .sr-r:focus-visible:not(.kb-ring), html:not(.kbd) .rr.foc:focus-visible:not(.kb-ring) { outline: none; }
+.sr-r .tx { flex: 1; min-width: 0; }
+.sr-r .n1 { font: 500 15px/20px var(--font); color: color-mix(in srgb, var(--c) 58%, var(--md-sys-color-on-surface)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sr-r .n2 { display: block; font: 400 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sr-r .sr-al { font: 400 12px var(--font); color: var(--md-sys-color-on-surface-variant); margin-left: 4px; }
+.sr-r .sr-lead { font: 500 11px var(--font); padding: 1px 6px; border-radius: var(--shape-s); background: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container); margin-left: 6px; vertical-align: 1px; }
+/* B6: a state chip starts the second line, so the full name always shows on the first */
+.sr-r .sr-chip { display: inline-block; font: 500 11px/16px var(--font); margin-right: 6px; padding: 0 8px; border-radius: var(--shape-full); white-space: nowrap; }
+.sr-r .sr-chip.err { background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error-container); }
+.sr-r .sr-chip.warn { background: color-mix(in srgb, #C98A10 22%, var(--md-sys-color-surface)); color: var(--md-sys-color-on-surface); }
+.sr-r .sr-badge { flex: none; min-width: 20px; height: 20px; box-sizing: border-box; border-radius: 10px; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); font: 600 11px/20px var(--font); text-align: center; padding: 0 6px; }
+/* hover and focus: the actions at the right in 36 px buttons; a count badge gives way to them */
+.sr-r .acts { display: none; flex: none; align-items: center; }
+.sr-r:hover .acts, .sr-r:focus-within .acts, .sr-r.kb-ring .acts, .sr-r.menu-open .acts { display: flex; }
+.sr-r:hover .sr-badge, .sr-r:focus-within .sr-badge, .sr-r.menu-open .sr-badge { display: none; }
+.sr-r .acts button { width: 36px; height: 36px; }
+.sr-r .acts button .ms { font-size: 20px; }
+
+/* The 36 px icon: CLIs keep their tile and ring, rooms a plate, seats a circle */
+.sr-ic { --ps: 36px; flex: none; width: var(--ps); height: var(--ps); box-sizing: border-box; border-radius: 10px; display: inline-grid; place-items: center; }
+.sr-plate { background: color-mix(in srgb, var(--plate) 22%, #14181d); border: 2px solid var(--plate); }
+.sr-plate::after { content: ""; width: 40%; height: 40%; border-radius: 4px; background: #0d1014; opacity: .85; }
+
+/* Nested rows (the room rail): indented 22 px, a parenting line from the parent's plate down a spine
+   with a short rounded elbow into each child (as briefing-table draws it) */
+.sr-r.sub { margin-left: 30px; }
+.sr-r.sub::before { content: ""; position: absolute; left: -2px; top: -26px; width: 12px; height: 54px; border-left: 2px solid var(--md-sys-color-outline-variant); border-bottom: 2px solid var(--md-sys-color-outline-variant); border-radius: 0 0 0 10px; pointer-events: none; }
+.sr-r.sub:not(.last)::after { content: ""; position: absolute; left: -2px; top: 28px; bottom: -28px; border-left: 2px solid var(--md-sys-color-outline-variant); pointer-events: none; }
+
+/* The working ring: a 2 px primary arc, once per 1.2 s, while the seat works;
+   a still amber circle while it waits for you; still under reduced motion */
+.sr-avw { position: relative; border-radius: 50%; }
+.sr-avw .sr-ring { position: absolute; inset: -3px; border-radius: 50%; border: 2px solid transparent; pointer-events: none; }
+.sr-avw.working .sr-ring { border-top-color: var(--md-sys-color-primary); border-right-color: var(--md-sys-color-primary); animation: sr-spin 1.2s linear infinite; }
+.sr-avw.waiting .sr-ring { border-color: #C98A10; }
+@media (prefers-reduced-motion: reduce) { .sr-avw.working .sr-ring { animation: none; } }
+@keyframes sr-spin { to { transform: rotate(360deg); } }
+
+/* The Terminals panel's rows on the shared pattern (rail.js): recipes and servers on a 36 px tile,
+   a broker group's [Open] stays on the row, a denied server's ✕ too */
+.rail.sr .rcp .sic { background: #222831; border-radius: 10px; }
+.rail.sr .rcp .sic .pg-mark, .rail.sr .rcp .sic .pg-mark svg { width: 22px; height: 22px; }
+.rail.sr .srow .sic { width: 36px; height: 36px; border-radius: 10px; }
+.rail.sr .srow .sic .ms { font-size: 20px; }
+.rail.sr .brow.sr-r .acts, .rail.sr .srow.sr-r[data-state=denied] .acts { display: flex; }
+.rail.sr .sr-r .w { margin-left: 4px; }
+.rail.sr .rr .rr-ring { width: 36px; height: 36px; }
+.rail.sr .rail-empty { padding: 10px 20px 12px; text-align: left; font: 400 13px/18px var(--font); }
+.rail.sr .rail-srv-empty { padding: 10px 20px 4px; }
+.rail.sr .reqlink { margin: 4px 18px 8px; }
+.sr-g .cnt { flex: none; margin: 0 4px; }
+
+/* The IN THIS WINDOW + menu (the design's m1): over the page, a hint on the right of each item */
+.nm-menu { position: fixed; right: auto; z-index: 60; min-width: 280px; max-width: 420px; }
+.nm-menu .nm-i { gap: 12px; }
+.nm-menu .nm-l { flex: 1 1 auto; min-width: 0; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nm-menu .nm-h { flex: 0 1 auto; min-width: 0; max-width: 55%; font: 400 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nm-menu .nm-i.cant .nm-l { color: var(--md-sys-color-on-surface-variant); }
+.nm-menu .nm-more { font-size: 18px; margin-left: auto; color: var(--md-sys-color-on-surface-variant); }
+.nm-menu .nm-mk { flex: none; width: 20px; height: 20px; display: inline-grid; place-items: center; }
+.nm-menu .nm-mk .pg-mark, .nm-menu .nm-mk svg { width: 20px; height: 20px; }
+.nm-menu .nm-i:disabled { opacity: .5; cursor: default; }
+.nm-menu .nm-i:disabled:hover { background: none; }
+.nm-menu .nm-div { height: 1px; margin: 6px 0; background: var(--md-sys-color-outline-variant); }
+
+/* The Workrooms room rail on the shared pattern (rooms/page.js, people.js) */
+.wr-rail.sr { background: var(--md-sys-color-surface-container); }
+.wr-rail.sr .wr-railb { padding-bottom: 8px; }
+.wr-rail.sr .sr-r .n1 { display: flex; align-items: baseline; min-width: 0; }
+.wr-rail.sr .sr-r .n1 > .sr-al, .wr-rail.sr .sr-r .n1 > .sr-lead { flex: none; }
+.wr-rail.sr .wr-seat .wr-av { font-size: 12px; }
+.wr-rail.sr .sr-r .wr-ib { width: 36px; height: 36px; }
+
+/* the seat ⋮'s hints: rows 40 px, min width 380, the hint 12 px, quiet, right-aligned;
+   a disabled row 38 % with its hint */
+.wr-pmenu.hints { min-width: 380px; max-width: 460px; }
+.wr-pmenu.hints .wr-menui { height: 40px; }
+.wr-menui .wr-menuhint { flex: none; margin-left: 16px; font: 400 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); white-space: nowrap; }
+.wr-menui.err .wr-menuhint { color: inherit; }
+.wr-pmenu.hints .wr-menui.off { opacity: .38; }
+
+/* Color…: the twelve swatches */
+.wr-swatches { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 4px; max-width: 300px; }
+.wr-sw { width: 36px; height: 36px; border: 0; border-radius: 50%; display: grid; place-items: center; color: #fff; cursor: pointer; padding: 0; }
+.wr-sw.on { outline: 3px solid var(--md-sys-color-on-surface); outline-offset: 2px; }
+.wr-sw:focus-visible { outline: 3px solid var(--md-sys-color-secondary); outline-offset: 2px; }
+.wr-reload { margin: 0; padding-left: 20px; font: 400 14px/20px var(--font); }
+.wr-dlgwarn { margin-top: 8px; color: var(--md-sys-color-error); font: 500 14px/20px var(--font); }
+.wr-check { display: flex; align-items: center; gap: 8px; margin-top: 6px; font: 400 14px/20px var(--font); }
+.wr-railq { flex: none; display: flex; align-items: center; gap: 8px; height: 40px; margin: 0 12px 6px; padding: 0 4px 0 12px; border-radius: var(--shape-full); background: var(--md-sys-color-surface-container-highest); color: var(--md-sys-color-on-surface-variant); }
+.wr-railq .ms { font-size: 20px; }
+.wr-railqi { flex: 1 1 auto; min-width: 0; border: 0; outline: 0; background: none; font: 400 14px/20px var(--font); color: var(--md-sys-color-on-surface); }
+.wr-railqi::-webkit-search-cancel-button { display: none; }
+.wr-railq:focus-within { box-shadow: inset 0 0 0 2px var(--md-sys-color-primary); }
+.wr-railq .wr-railqx { width: 32px; height: 32px; }
+.wr-railnone { padding: 12px 20px; font: 400 13px/18px var(--font); color: var(--md-sys-color-on-surface-variant); }
+
+/* Step 4 (the design's workbench-step4-restore): the offer card heading the rail, stopped rows, Recently closed */
+.rail-offer { margin: 4px 8px 8px; padding: 12px 8px 8px 12px; border-radius: 16px; /* the design , 2: the tertiary container, softened over the rail so the card sits quietly */ background: color-mix(in srgb, var(--md-sys-color-tertiary-container) 45%, var(--md-sys-color-surface-container-low)); color: var(--md-sys-color-on-tertiary-container); }
+.rail-offer .ro-h { display: flex; align-items: flex-start; gap: 10px; }
+.rail-offer .ro-h > .ms { font-size: 20px; margin-top: 1px; }
+.rail-offer .ro-tx { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.rail-offer .ro-tx b { font: 500 14px/20px var(--font); }
+.rail-offer .ro-tx small { font: 400 12px/16px var(--font); opacity: .85; }
+.rail-offer .ro-x { width: 32px; height: 32px; color: inherit; margin: -6px -2px 0 0; }
+.rail-offer .ro-a { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+.rail-offer .ro-btn { height: 36px; padding: 0 16px; border: 0; border-radius: var(--shape-full); font: 500 14px var(--font); cursor: pointer; }
+.rail-offer .ro-btn.text { background: none; color: inherit; }
+.rail-offer .ro-btn.filled { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.rail.sr .rr.stopped .n1 { color: var(--md-sys-color-on-surface-variant); font-weight: 500; }
+.rail.sr .rr.stopped .rr-ring { opacity: .55; }
+.rail-restore { flex: none; height: 28px; padding: 0 12px; border: 1px solid var(--md-sys-color-outline); border-radius: var(--shape-full); background: none; color: var(--md-sys-color-primary); font: 500 12px var(--font); cursor: pointer; }
+.rail-restore:hover { background: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent); }
+.rail.sr .rr.stopped:hover .acts, .rail.sr .rr.stopped:focus-within .acts { display: flex; }
+/* the name never gives way: a stopped row focused by a click keeps ⋯ for hover, a menu or the keyboard */
+html:not(.kbd) .rail.sr .rr.stopped:focus-within:not(:hover):not(.menu-open):not(.kb-ring) .acts { display: none; }

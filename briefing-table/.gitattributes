@@ -1,0 +1,10 @@
+web/aurora/** -text
+
+# Vendored PINNED drops — never line-ending-normalized. Both carry their own
+# integrity check (web/vendor/hwb/PROVENANCE.md records the bridge's sha256;
+# the chrome bundle ships MANIFEST.sha256), and autocrlf=true would rewrite
+# LF files to CRLF on checkout, changing every hash and failing those checks on
+# a fresh clone. Byte-identity is a commitment we made to the toolkit lane so
+# their version pin stays meaningful — this is what enforces it.
+web/vendor/hwb/** -text
+web/assets/aurora/** -text

@@ -1,0 +1,933 @@
+/* Workrooms (W1): the Workrooms tab. the design's step-5 page: sizes and roles, not its CSS. */
+#roomsStage { position: absolute; inset: 0; z-index: 3; display: flex; background: var(--wb-stage-dim, #dcdce3); } /* 0.12.3's neutral stage, not the theme's tint */
+#roomsStage[hidden] { display: none; }
+.wr { position: relative; flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; overflow: hidden; color: var(--md-sys-color-on-surface); font: 400 14px/20px var(--font); }
+.wr .ms { font-size: 20px; }
+
+/* ---- the room-tab strip under the bar */
+.wr-tabs { flex: none; height: 40px; display: flex; align-items: flex-end; gap: 2px; padding: 0 12px; /* the design : the page's gutter, so the first tab starts at the page's edge */ overflow-x: auto; scrollbar-width: none; }
+.wr-tabs::-webkit-scrollbar { display: none; }
+.wr-tab { flex: none; height: 34px; display: inline-flex; align-items: center; gap: 8px; padding: 0 4px 0 12px; border: 0; border-radius: 12px 12px 0 0; background: var(--md-sys-color-surface-container); color: var(--md-sys-color-on-surface-variant); font: 500 13px/18px var(--font); cursor: pointer; white-space: nowrap; }
+.wr-tab.on { background: var(--md-sys-color-surface-container-low); color: var(--md-sys-color-on-surface); }
+.wr-tab.all { padding-right: 12px; }
+.wr-tab.all .n { font: 500 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-tab .ms { font-size: 18px; }
+.wr-tabx { width: 28px; height: 28px; border: 0; border-radius: var(--shape-full); background: none; color: inherit; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.wr-tabx .ms { font-size: 16px; }
+.wr-tabx:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+.wr-badge { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); font: 600 11px/18px var(--font); text-align: center; }
+.wr-badge.big { min-width: 22px; height: 22px; border-radius: 11px; font: 600 12px/22px var(--font); }
+.wr-plate { display: inline-block; flex: none; width: var(--ps, 16px); height: var(--ps, 16px); border-radius: calc(var(--ps, 16px) * .3); background: var(--plate, var(--md-sys-color-primary)); }
+
+/* The current room identifies both columns, above the rail/search and chat. */
+.wr-roomhead { flex: none; min-width: 0; }
+.wr-roomhead[hidden] { display: none; }
+.wr-roomhead .wr-rname { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---- the body: rail | main */
+.wr-body { flex: 1 1 auto; min-height: 0; position: relative; display: flex; }
+.wr-body[hidden], .wr-tabs[hidden] { display: none; }
+.wr-main { flex: 1 1 auto; min-width: 0; margin: 0 6px; background: var(--md-sys-color-surface); display: flex; flex-direction: column; overflow: hidden; border-radius: 0; }
+.wr-rail.pinned + .wr-main { margin-left: 0; }
+
+/* ---- All rooms */
+.wr-grid { flex: 1 1 auto; overflow: auto; padding: 16px 20px; }
+.wr-gh { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.wr-gh h4 { margin: 0; font: 400 22px/28px var(--font); flex: 1 1 auto; }
+.wr-ghr { display: flex; align-items: center; gap: 16px; }
+.wr-hid { font: 400 13px/18px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-link { border: 0; background: none; padding: 0; color: var(--md-sys-color-primary); font: 500 13px/18px var(--font); cursor: pointer; }
+.wr-outl { height: 36px; padding: 0 16px; border: 1px solid var(--md-sys-color-outline); border-radius: var(--shape-full); background: none; color: var(--md-sys-color-primary); font: 500 14px/20px var(--font); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.wr-outl .ms { font-size: 18px; }
+.wr-outl:hover { background: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent); }
+.wr-filled { height: 40px; padding: 0 20px; border: 0; border-radius: var(--shape-full); background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); font: 500 14px/20px var(--font); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.wr-filled:disabled { opacity: .5; cursor: default; }
+.wr-txtb { height: 36px; padding: 0 12px; border: 0; border-radius: var(--shape-full); background: none; color: inherit; font: 500 14px/20px var(--font); cursor: pointer; }
+.wr-txtb:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+.wr-ib { width: 36px; height: 36px; border: 0; border-radius: var(--shape-full); background: none; color: var(--md-sys-color-on-surface-variant); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; flex: none; }
+.wr-ib:hover:not(:disabled) { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+.wr-ib:disabled { opacity: .45; cursor: default; }
+.wr-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.wr-card { display: flex; flex-direction: column; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 16px; background: var(--md-sys-color-surface-container-low); overflow: hidden; min-height: 180px; }
+.wr-card.hidden .wr-roomglyph, .wr-card.hidden .wr-bn { opacity: .72; } /* dim the glyph and the name, not the text under them: the whole card at .72 put the seats line at 3.5:1 */
+.wr-card.new { align-items: center; justify-content: center; gap: 4px; border-style: dashed; background: transparent; cursor: pointer; color: var(--md-sys-color-on-surface-variant); }
+.wr-card.new .ms { font-size: 24px; }
+.wr-nct { font: 500 14px/20px var(--font); color: var(--md-sys-color-on-surface); }
+.wr-ncs { font: 400 12px/16px var(--font); }
+.wr-band { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: color-mix(in srgb, var(--md-sys-color-primary) 28%, var(--md-sys-color-surface-container-low)); }
+.wr-bt { flex: 1 1 auto; min-width: 0; }
+.wr-bn { font: 500 16px/22px var(--font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wr-bs { font: 400 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wr-tag { height: 22px; padding: 0 8px; border-radius: 8px; background: var(--md-sys-color-surface-container-highest); color: var(--md-sys-color-on-surface-variant); font: 500 11px/22px var(--font); }
+.wr-cc { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; }
+.wr-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.wr-gchip { height: 28px; padding: 0 10px; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px; background: none; color: var(--md-sys-color-on-surface); font: 500 12px/18px var(--font); display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.wr-gchip .sq { width: 12px; height: 12px; border-radius: 3px; }
+.wr-gchip:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 6%, transparent); }
+.wr-who { display: flex; padding-right: 6px; }
+.wr-av { display: inline-flex; align-items: center; justify-content: center; flex: none; width: var(--avs, 32px); height: var(--avs, 32px); border-radius: 50%; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); font: 700 11px/1 var(--font); letter-spacing: .3px; }
+.wr-last { font: 400 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wr-last b { color: var(--md-sys-color-on-surface); font-weight: 600; }
+.wr-cf { display: flex; align-items: center; justify-content: space-between; padding: 0 10px 12px 14px; }
+.wr-empty { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 64px 16px; text-align: center; }
+.wr-empty > .ms { font-size: 40px; color: var(--md-sys-color-primary); }
+.wr-et { font: 400 22px/28px var(--font); }
+.wr-eb { max-width: 360px; font: 400 14px/20px var(--font); color: var(--md-sys-color-on-surface-variant); }
+
+/* ---- a room */
+.wr-roomcol { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; position: relative; }
+.wr-rh { flex: none; height: 48px; display: flex; align-items: center; gap: 10px; padding: 0 4px 0 14px; background: var(--md-sys-color-surface-container-low); border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+.wr-rname { font: 500 14px/20px var(--font); white-space: nowrap; }
+.wr-crumb { flex: 1 1 auto; min-width: 0; font: 400 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wr-strip { flex: none; min-height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 6px 0 14px; font: 400 13px/18px var(--font); border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+.wr-strip[hidden] { display: none; }
+.wr-strip .ms { font-size: 18px; }
+.wr-strip .grow { flex: 1 1 auto; }
+.wr-strip.info { background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface-variant); }
+.wr-strip.warn { background: color-mix(in srgb, #C98A10 18%, var(--md-sys-color-surface)); color: var(--md-sys-color-on-surface); }
+.wr-strip.err { background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error-container); }
+.wr-gone { padding: 32px; color: var(--md-sys-color-on-surface-variant); }
+
+/* ---- the line */
+.wr-line { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 12px 16px; display: flex; flex-direction: column; scrollbar-gutter: stable; }
+/* a thin overlay scrollbar: 8 px, the thumb outline-variant, shown on hover and while scrolling */
+.wr-line::-webkit-scrollbar { width: 8px; }
+.wr-line::-webkit-scrollbar-track { background: transparent; }
+.wr-line::-webkit-scrollbar-thumb { background: transparent; border-radius: 4px; }
+.wr-line:hover::-webkit-scrollbar-thumb, .wr-line.scrolling::-webkit-scrollbar-thumb { background: var(--md-sys-color-outline-variant); }
+.wr-top { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 10px; }
+.wr-older { height: 36px; padding: 0 16px; border: 1px solid var(--md-sys-color-outline); border-radius: var(--shape-full); background: none; color: var(--md-sys-color-primary); font: 500 14px/20px var(--font); cursor: pointer; }
+.wr-older[hidden] { display: none; }
+.wr-div { align-self: stretch; display: flex; align-items: center; gap: 12px; font: 500 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-div::before, .wr-div::after { content: ''; flex: 1 1 auto; height: 1px; background: var(--md-sys-color-outline-variant); }
+.wr-div[hidden] { display: none; }
+.wr-div.wr-new { color: var(--md-sys-color-primary); margin: 6px 0; }
+.wr-div.wr-new::before, .wr-div.wr-new::after { background: var(--md-sys-color-primary); }
+.wr-entries { display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
+.wr-msg { display: flex; gap: 10px; max-width: 84%; align-items: flex-start; }
+.wr-msg.mine { align-self: flex-end; flex-direction: row-reverse; }
+.wr-col { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.wr-msg.mine .wr-col { align-items: flex-end; }
+.wr-bubble { border-radius: 4px 16px 16px 16px; background: var(--md-sys-color-surface-container-high); padding: 8px 12px; font: 400 14px/20px var(--font); overflow-wrap: anywhere; }
+.wr-msg.mine .wr-bubble { border-radius: 16px 4px 16px 16px; background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
+.wr-head { display: flex; align-items: baseline; gap: 6px; font: 500 13px/18px var(--font); }
+.wr-to { font-weight: 400; color: var(--md-sys-color-on-surface-variant); }
+.wr-time { margin-left: auto; padding-left: 12px; font: 400 11px/16px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-msg.mine .wr-to, .wr-msg.mine .wr-time { color: color-mix(in srgb, var(--md-sys-color-on-primary-container) 70%, transparent); }
+.wr-quote { display: flex; align-items: center; gap: 6px; margin: 4px 0 6px; padding: 4px 8px; border-left: 3px solid var(--md-sys-color-primary); border-radius: 4px; background: color-mix(in srgb, var(--md-sys-color-on-surface) 6%, transparent); font: 400 12px/16px var(--font); color: inherit; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wr-quote .ms { font-size: 14px; flex: none; }
+.wr-quote b { color: inherit; font-weight: 600; }
+.wr-text { white-space: pre-wrap; }
+.wr-at { color: inherit; font-weight: 500; }
+.wr-msg.mine .wr-at { color: var(--md-sys-color-on-primary-container); }
+.wr-code { font: 400 12.5px/18px var(--mono, 'Roboto Mono', monospace); background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); border-radius: 4px; padding: 0 4px; }
+.wr-files, .wr-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.wr-chip { height: 28px; padding: 0 10px; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; font: 500 12px/18px var(--font); color: var(--md-sys-color-on-surface); }
+.wr-chip .ms { font-size: 16px; }
+.wr-bubble .wr-files .wr-chip { color: inherit; }
+.wr-seen { display: flex; flex-wrap: wrap; gap: 6px; }
+.wr-seenchip { height: 22px; padding: 0 8px; border-radius: var(--shape-full); font: 500 11px/20px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-seenchip .ms { font-size: 14px; }
+.wr-fact { align-self: center; display: flex; align-items: center; gap: 6px; font: 400 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); text-align: center; }
+.wr-fact .ms { font-size: 16px; }
+.wr-jump { position: absolute; right: 16px; bottom: calc(var(--cmp-h, 0px) + 16px); height: 32px; padding: 0 12px 0 8px; border: 0; border-radius: var(--shape-full); background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); font: 500 12px/18px var(--font); display: inline-flex; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+.wr-jump[hidden] { display: none; }
+.wr-jump .ms { font-size: 16px; }
+
+/* ---- the room's rail */
+.wr-rail { flex: none; width: 272px; display: flex; flex-direction: column; background: var(--page-bg); border-right: 1px solid var(--md-sys-color-outline-variant); overflow: hidden; }
+.wr-rail[hidden] { display: none; }
+.wr-rail.slim { width: 240px; } /* the design : 240 px under 900 */
+.wr-rail.open { position: absolute; left: 0; top: 0; bottom: 0; z-index: 4; box-shadow: 0 8px 24px rgba(0,0,0,.28); border-radius: 0 16px 16px 0; border-right: 0; }
+.wr-railb { flex: 1 1 auto; overflow: auto; padding-bottom: 8px; }
+/* the owner : one search row, with the pin where the redundant family title was. */
+.wr-railtoolbar { flex: none; display: flex; align-items: center; gap: 2px; min-height: 56px; box-sizing: border-box; padding: 8px 4px 8px 12px; }
+.wr-railtoolbar .wr-railq { flex: 1 1 auto; min-width: 0; height: 36px; margin: 0; gap: 6px; padding-left: 10px; }
+.wr-railtoolbar .sr-hb { width: 32px; height: 36px; }
+.wr-railtoolbar .wr-railqx { width: 28px; height: 32px; }
+.wr-railtoolbar [hidden] { display: none; }
+
+/* The room tree uses small, light plates and one straight spine, as in the
+   original room list. These overrides stay within Workrooms; other rails keep
+   their own icon sizing. The surface tokens also give dark mode a readable fill. */
+.wr-rail .wr-rrow.sr-r { margin: 0 4px; padding: 0 12px; min-height: 52px; gap: 10px; border-radius: 0; }
+.wr-rail .wr-rrow.sr-r.on { background: color-mix(in srgb, var(--c) 8%, var(--md-sys-color-surface-container)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 45%, var(--md-sys-color-outline-variant)); }
+.wr-rail .wr-rrow.sr-r.on:hover { background: color-mix(in srgb, var(--c) 14%, var(--md-sys-color-surface-container)); }
+.wr-rail .wr-rrow .sr-plate { --ps: 28px; border-radius: 6px; border: 1px solid color-mix(in srgb, var(--plate) 70%, var(--md-sys-color-surface)); background: color-mix(in srgb, var(--plate) 30%, var(--md-sys-color-surface)); }
+.wr-rail .wr-rrow .sr-plate::after { width: 58%; height: 58%; border-radius: 3px; background: color-mix(in srgb, var(--plate) 10%, var(--md-sys-color-surface)); opacity: 1; }
+.wr-rail .wr-rrow.sr-r.sub { margin-left: 4px; padding-left: 34px; min-height: 48px; }
+.wr-rail .wr-rrow.sub .sr-plate { --ps: 20px; border-radius: 4px; }
+.wr-rail .wr-rrow.sub .sr-plate::after { border-radius: 2px; }
+.wr-rail .wr-rrow.sr-r.has-children::after { content: ''; position: absolute; left: 25.5px; top: calc(50% + 14px); bottom: 0; width: 0; border-left: 1px solid var(--md-sys-color-outline); pointer-events: none; }
+.wr-rail .wr-rrow.sr-r.sub::before { content: ''; position: absolute; left: 25.5px; top: 0; bottom: 0; width: 0; height: auto; border-left: 1px solid var(--md-sys-color-outline); border-bottom: 0; border-radius: 0; pointer-events: none; }
+.wr-rail .wr-rrow.sr-r.sub::after { content: ''; position: absolute; left: 25.5px; top: calc(50% - .5px); bottom: auto; width: 8.5px; height: 0; border-left: 0; border-top: 1px solid var(--md-sys-color-outline); pointer-events: none; }
+.wr-rail .wr-rrow.sr-r.sub.last::before { bottom: 50%; }
+.wr-rail .wr-rrow.sr-r.sub.no-parent::before, .wr-rail .wr-rrow.sr-r.sub.no-parent::after { content: none; }
+
+/* ---- signed out */
+.wr-signin { flex: 1 1 auto; margin: 8px 12px 0; background: var(--md-sys-color-surface); display: flex; align-items: center; justify-content: center; padding: 24px; } /* on the surface page inside the gutters */
+.wr-field { position: relative; }
+.wr-field input { width: 100%; height: 56px; padding: 20px 14px 6px; border: 1px solid var(--md-sys-color-outline); border-radius: 4px; background: transparent; color: var(--md-sys-color-on-surface); font: 400 16px/24px var(--font); }
+.wr-field input:focus { outline: 0; border: 2px solid var(--md-sys-color-primary); padding: 19px 13px 5px; }
+.wr-field label { position: absolute; left: 12px; top: 16px; padding: 0 4px; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface-variant); font: 400 16px/24px var(--font); pointer-events: none; transition: top .12s, font-size .12s; }
+.wr-field input:focus + label, .wr-field input:not(:placeholder-shown) + label { top: -8px; font: 400 12px/16px var(--font); color: var(--md-sys-color-primary); }
+.wr-field input:not(:focus):not(:placeholder-shown) + label { color: var(--md-sys-color-on-surface-variant); }
+.wr-signin[hidden] { display: none; }
+.wr-sicard { width: 360px; max-width: 100%; display: flex; flex-direction: column; gap: 12px; align-items: stretch; text-align: center; }
+.wr-sicard .ms.big { font-size: 40px; color: var(--md-sys-color-primary); }
+.wr-sit { font: 400 16px/24px var(--font); margin-bottom: 4px; }
+.wr-in { height: 48px; padding: 0 14px; border: 1px solid var(--md-sys-color-outline); border-radius: 4px; background: transparent; color: var(--md-sys-color-on-surface); font: 400 14px/20px var(--font); }
+.wr-in:focus { outline: 0; border: 2px solid var(--md-sys-color-primary); padding: 0 13px; }
+.wr-sierr { font: 400 13px/18px var(--font); color: var(--md-sys-color-error); text-align: left; }
+.wr-sierr[hidden] { display: none; }
+/* A1: the quiet sign-in's reason line: body size, gray, an info icon at the left, no error color */
+.wr-sinote { display: flex; gap: 8px; align-items: flex-start; text-align: left; font: 400 14px/20px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-sinote .ms { font-size: 18px; line-height: 20px; flex: none; }
+.wr-silink { all: unset; cursor: pointer; color: var(--md-sys-color-primary); text-decoration: underline; text-underline-offset: 2px; }
+.wr-silink:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 2px; border-radius: 2px; }
+
+/* ---- the image viewer: over the whole Workrooms tab */
+.wr-viewer { position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; background: rgba(0,0,0,.9); color: #fff; } /* 90% black */
+.wr-viewer[hidden] { display: none; }
+.wr-vbar { flex: none; height: 52px; display: flex; align-items: center; gap: 4px; padding: 0 8px 0 16px; }
+.wr-vtitle { flex: 1 1 auto; font: 500 14px/20px var(--font); }
+.wr-vib { width: 40px; height: 40px; border: 0; border-radius: var(--shape-full); background: none; color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.wr-vib:hover { background: rgba(255,255,255,.14); }
+.wr-vstage { flex: 1 1 auto; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; }
+.wr-vimg { max-width: 62%; max-height: 78%; border-radius: 8px; object-fit: contain; }
+.wr-vimg.loading { opacity: .3; }
+.wr-varrow { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border: 0; border-radius: 50%; background: rgba(255,255,255,.14); color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.wr-varrow.left { left: 16px; }
+.wr-varrow.right { right: 16px; }
+.wr-varrow[hidden] { display: none; }
+.wr-varrow .ms { font-size: 28px; }
+.wr-vcount { flex: none; height: 44px; display: flex; align-items: center; justify-content: center; font: 400 13px/18px var(--font); color: rgba(255,255,255,.8); }
+
+/* ---- the Workrooms pill's dot: something new for you in an open room you can't see */
+.hwb-apptab .wr-pdot { width: 6px; height: 6px; border-radius: 50%; background: var(--md-sys-color-primary); margin-left: -2px; }
+
+/* the top-level host while on Workrooms: the grid and the empty state step aside */
+#win.on-rooms #stage > #grid, #win.on-rooms #stage > #empty { visibility: hidden; }
+
+/* ---- W2: the composer under the line (the design's #w2: sizes and roles) */
+.wr-cmp { flex: none; position: relative; padding: 8px 12px 12px; display: flex; flex-direction: column; }
+.wr-ci { min-height: 48px; display: flex; align-items: flex-end; gap: 4px; padding: 4px; border-radius: 24px; background: var(--md-sys-color-surface-container-high); box-shadow: inset 0 0 0 1px transparent; }
+.wr-ci:focus-within { box-shadow: inset 0 0 0 2px var(--md-sys-color-primary); } /* 2 px primary, as M3's outlined fields */
+.wr-ci.over, .wr-ci.over:focus-within { box-shadow: inset 0 0 0 2px var(--md-sys-color-error); }
+.wr-cib { width: 44px; height: 44px; flex: none; border: 0; border-radius: 50%; background: none; color: var(--md-sys-color-on-surface-variant); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.wr-cib:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+.wr-ta { flex: 1 1 auto; min-width: 0; align-self: center; resize: none; border: 0; outline: 0; background: none; color: var(--md-sys-color-on-surface); font: 400 14px/20px var(--font); padding: 7px 0; max-height: 134px; overflow-y: auto; }
+/* 0.22.2: the typed names' colors. The mirror and the textarea share one grid cell and every metric (font,
+   padding, wrapping), so the colored glyphs sit exactly under the caret; the textarea's own text is transparent. */
+.wr-taw { flex: 1 1 auto; min-width: 0; align-self: center; display: grid; }
+.wr-taw > .wr-ta, .wr-taw > .wr-tamirror { grid-area: 1 / 1; scrollbar-gutter: stable; }
+.wr-taw > .wr-ta { color: transparent; caret-color: var(--md-sys-color-on-surface); position: relative; z-index: 1; }
+.wr-taw > .wr-ta::selection { color: var(--md-sys-color-on-surface); background: color-mix(in srgb, var(--md-sys-color-primary) 28%, transparent); }
+.wr-tamirror { font: 400 14px/20px var(--font); padding: 7px 0; max-height: 134px; overflow: hidden; white-space: pre-wrap; overflow-wrap: break-word; word-break: normal; color: var(--md-sys-color-on-surface); pointer-events: none; }
+.wr-tam { color: var(--md-sys-color-on-surface); }
+.wr-ta::placeholder { color: var(--md-sys-color-on-surface-variant); }
+.wr-count { flex: none; align-self: center; padding-right: 8px; font: 500 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-count.over { color: var(--md-sys-color-error); }
+.wr-count[hidden] { display: none; }
+.wr-send { width: 44px; height: 44px; flex: none; border: 0; border-radius: 50%; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.wr-send:disabled { background: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent); color: color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent); cursor: default; }
+.wr-cmphint { display: flex; align-items: center; gap: 6px; margin: 6px 0 0 12px; font: 400 12px/16px var(--font); color: var(--md-sys-color-error); }
+.wr-cmphint .ms { font-size: 16px; }
+.wr-cmphint[hidden] { display: none; }
+.wr-dl { height: 16px; margin-top: 6px; padding-left: 12px; display: flex; gap: 6px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 400 11px/16px var(--font); color: var(--md-sys-color-on-surface-variant); }
+/* the reply chip over the field */
+.wr-rpl { align-self: flex-start; max-width: 100%; height: 32px; margin-bottom: 6px; padding: 0 4px 0 12px; display: flex; align-items: center; gap: 8px; border-radius: 12px; background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); font: 400 12px/16px var(--font); }
+.wr-rpl[hidden] { display: none; }
+.wr-rpl > .ms { font-size: 18px; }
+.wr-rplt { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wr-rplt b { font-weight: 600; }
+.wr-rplx { width: 28px; height: 28px; flex: none; border: 0; border-radius: 50%; background: none; color: inherit; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.wr-rplx .ms { font-size: 16px; }
+.wr-rplx:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+/* the draft tray over the field */
+.wr-tray { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 6px; padding-top: 12px; }
+.wr-tray[hidden] { display: none; }
+.wr-tri { position: relative; height: 64px; display: flex; align-items: center; gap: 8px; padding: 0 34px 0 12px; border-radius: 12px; background: var(--md-sys-color-surface-container-high); }
+.wr-tri.img { width: 72px; height: 72px; padding: 0; overflow: visible; }
+.wr-tri.img img { width: 72px; height: 72px; border-radius: 12px; object-fit: cover; display: block; }
+.wr-tri.err { box-shadow: inset 0 0 0 1px var(--md-sys-color-error); }
+.wr-tri > .ms { font-size: 20px; color: var(--md-sys-color-on-surface-variant); }
+.wr-trit { display: flex; flex-direction: column; min-width: 0; max-width: 180px; }
+.wr-trit .n { font: 500 13px/18px var(--font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wr-trit .s { font: 400 11px/16px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-tri.err .wr-trit .s { color: var(--md-sys-color-error); }
+.wr-triup { position: absolute; left: 8px; right: 8px; bottom: 6px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--md-sys-color-primary) 30%, transparent 30%) 0 0 / 200% 100%; animation: wr-up 1.2s linear infinite; }
+@keyframes wr-up { to { background-position: -200% 0; } }
+.wr-trix { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border: 0; border-radius: 50%; background: var(--md-sys-color-inverse-surface); color: var(--md-sys-color-inverse-on-surface); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.wr-tri.img .wr-trix { top: -6px; right: -6px; }
+.wr-trix .ms { font-size: 14px; }
+/* the newer-draft offer and the confirm bar over the field */
+.wr-draftoffer, .wr-confirm { min-height: 40px; margin-bottom: 6px; padding: 0 4px 0 12px; display: flex; align-items: center; gap: 8px; border-radius: 12px; font: 400 13px/18px var(--font); }
+.wr-draftoffer { background: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container); }
+.wr-confirm { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.wr-draftoffer[hidden], .wr-confirm[hidden] { display: none; }
+.wr-draftoffer > .ms, .wr-confirm > .ms { font-size: 18px; }
+.wr-draftoffer .grow, .wr-confirm .grow { flex: 1 1 auto; min-width: 0; }
+.wr-draftoffer .wr-txtb, .wr-confirm .wr-txtb { height: 32px; font: 500 13px/18px var(--font); }
+/* the @ list and the / list, over the field */
+.wr-pop { position: absolute; bottom: calc(100% - 4px); /* 4 px over the top-most piece: the chip, the tray or the field */ left: 52px; width: 280px; z-index: 3; padding: 4px 0; border-radius: 8px; background: var(--md-sys-color-surface-container-highest); box-shadow: 0 4px 14px rgba(0,0,0,.24); }
+.wr-pop.slash { left: 24px; width: 340px; }
+.wr-pop[hidden] { display: none; }
+.wr-popr { min-height: 40px; padding: 0 12px; display: flex; align-items: center; gap: 10px; font: 400 14px/20px var(--font); cursor: pointer; }
+.wr-pop.slash .wr-popr { padding: 8px 12px; align-items: baseline; }
+.wr-popr.on, .wr-popr:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 10%, transparent); }
+.wr-popr .wr-av { font-size: 9px; }
+.wr-popt { white-space: nowrap; }
+.wr-pop.slash .wr-popt { font-weight: 500; }
+.wr-pops { margin-left: auto; font: 400 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-popd { min-width: 0; font: 400 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wr-pop.slash { left: 12px; right: 12px; width: auto; bottom: 100%; box-sizing: border-box; max-height: min(344px, 40vh); overflow-y: auto; overscroll-behavior: contain; animation: wr-command-open 100ms ease-out; }
+.wr-pop.slash .wr-popr { box-sizing: border-box; height: 56px; min-height: 56px; padding: 8px 12px; display: block; }
+.wr-pop.slash .wr-popt { overflow: hidden; text-overflow: ellipsis; font-weight: 400; }
+.wr-pop.slash .wr-popt strong, .wr-pop.slash .wr-popd strong { font-weight: 700; }
+.wr-popargs { color: var(--md-sys-color-on-surface-variant); }
+.wr-pop.keyboard .wr-popr.on { outline: 2px solid var(--md-sys-color-primary); outline-offset: -2px; }
+html:not(.dark) .wr-pop.slash .wr-popr.on, html:not(.dark) .wr-pop.slash .wr-popr:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 4%, transparent); }
+.wr-popgroup { padding: 6px 12px 2px; font: 500 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-popempty { padding: 8px 12px; font: 400 14px/20px var(--font); overflow-wrap: anywhere; color: var(--md-sys-color-on-surface); }
+.wr-popstatus { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@keyframes wr-command-open { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 600px) { .wr-pop.slash { max-height: min(232px, 40dvh); } }
+@media (prefers-reduced-motion: reduce) { .wr-pop.slash { animation: none; } }
+/* drop to attach, over the line and the composer */
+.wr-drop { position: absolute; inset: 56px 12px 12px 12px; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 2px dashed var(--md-sys-color-primary); border-radius: 16px; background: color-mix(in srgb, var(--md-sys-color-primary) 10%, var(--md-sys-color-surface)); pointer-events: none; }
+.wr-drop[hidden] { display: none; }
+.wr-drop > .ms { font-size: 36px; color: var(--md-sys-color-primary); }
+.wr-dropt { font: 500 16px/24px var(--font); color: var(--md-sys-color-primary); }
+.wr-drops { font: 400 13px/18px var(--font); color: var(--md-sys-color-on-surface-variant); }
+
+/* ---- W2 in the line: your unsent lines, and Reply on hover */
+.wr-msg { position: relative; }
+.wr-msg.pending.failed .wr-bubble { background: color-mix(in srgb, var(--md-sys-color-error) 14%, var(--md-sys-color-surface)); color: var(--md-sys-color-on-surface); }
+.wr-msg.pending.sending .wr-bubble, .wr-msg.pending.waiting .wr-bubble { opacity: .72; }
+.wr-local { display: flex; align-items: center; gap: 4px; font: 500 12px/16px var(--font); }
+.wr-local .ms { font-size: 16px; color: var(--md-sys-color-error); }
+.wr-msg.pending.waiting .wr-local .ms, .wr-msg.pending.sending .wr-local .ms { color: var(--md-sys-color-on-surface-variant); }
+.wr-ns { color: var(--md-sys-color-error); }
+.wr-ns.wait { color: var(--md-sys-color-on-surface-variant); font-weight: 400; }
+.wr-lnk { margin-left: 6px; border: 0; background: none; padding: 0; color: var(--md-sys-color-primary); font: 500 12px/16px var(--font); cursor: pointer; }
+.ac-snack.wr-snack { transform: none; } /* placed by the page: 8 px above the composer, bottom left */
+
+/* ---- W2: the room's side column, Notes · Assets (the design's #w2: 340 px, over the line under 1000 px) */
+.wr-side { flex: none; width: 340px; margin-right: 6px; display: flex; flex-direction: column; background: var(--md-sys-color-surface); border-left: 1px solid var(--md-sys-color-outline-variant); overflow: hidden; }
+.wr-side[hidden] { display: none; }
+.wr-main.withside { margin-right: 0; }
+.wr-side.over { position: absolute; top: 0; bottom: 0; left: 6px; right: 6px; width: auto; margin: 0; z-index: 4; border-left: 0; }
+/* beside a pinned rail it covers the room's line only, not the rail */
+.wr-rail.pinned ~ .wr-side.over { left: 278px; }
+.wr-rail.pinned.slim ~ .wr-side.over { left: 246px; }
+.wr-sideh { flex: none; height: 48px; display: flex; align-items: center; gap: 8px; padding: 0 4px 0 14px; background: var(--md-sys-color-surface-container-low); border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+.wr-side.over .wr-sideh { padding-left: 4px; }
+.wr-sideback[hidden], .wr-sidex[hidden] { display: none; }
+.wr-sideg { display: inline-flex; color: var(--md-sys-color-on-surface-variant); }
+.wr-sideg .ms { font-size: 22px; }
+.wr-sidet { flex: 1 1 auto; min-width: 0; font: 500 14px/20px var(--font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wr-sidetabs { flex: none; display: flex; gap: 2px; padding: 0 8px; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+.wr-sidetab { position: relative; height: 40px; padding: 0 12px; border: 0; background: none; color: var(--md-sys-color-on-surface-variant); font: 500 14px/20px var(--font); cursor: pointer; }
+.wr-sidetab.on { color: var(--md-sys-color-primary); }
+.wr-sidetab.on::after { content: ''; position: absolute; left: 8px; right: 8px; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--md-sys-color-primary); }
+.wr-sidetab:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 6%, transparent); }
+.wr-sideb { flex: 1 1 auto; min-height: 0; overflow: auto; }
+.wr-sidemsg { padding: 16px 4px; font: 400 13px/18px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-notes { display: flex; flex-direction: column; gap: 6px; padding: 8px 12px; }
+.wr-newnote { align-self: flex-start; height: 36px; padding: 0 12px 0 8px; border: 0; border-radius: var(--shape-full); background: none; color: var(--md-sys-color-primary); font: 500 14px/20px var(--font); display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.wr-newnote .ms { font-size: 18px; }
+.wr-newnote:hover { background: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent); }
+.wr-note { padding: 10px 12px; border-radius: 12px; background: var(--md-sys-color-surface-container-low); box-shadow: inset 0 0 0 1px var(--md-sys-color-outline-variant); font: 400 13px/18px var(--font); cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+.wr-note:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 4%, var(--md-sys-color-surface-container-low)); }
+.wr-note:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 1px; }
+.wr-note.editing { background: var(--md-sys-color-surface); box-shadow: inset 0 0 0 2px var(--md-sys-color-primary); cursor: text; }
+.wr-notet { font: 500 14px/20px var(--font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wr-noteb { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.wr-notem { margin-top: 4px; font: 400 11px/16px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-noteta { width: 100%; min-height: 96px; resize: none; border: 0; outline: 0; background: none; color: var(--md-sys-color-on-surface); font: 400 13px/18px var(--font); padding: 0; }
+.wr-assets { display: flex; flex-direction: column; padding: 6px 4px; }
+.wr-asset { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 8px 10px; border: 0; border-radius: 12px; background: none; color: var(--md-sys-color-on-surface); text-align: left; cursor: pointer; }
+.wr-asset:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 6%, transparent); }
+.wr-assetp { flex: none; width: 48px; height: 48px; border-radius: 8px; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface-variant); }
+.wr-assetp img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wr-assett { min-width: 0; display: flex; flex-direction: column; }
+.wr-assetn { font: 500 13px/18px var(--font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wr-assets2 { font: 400 11px/16px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-assetq { font: 400 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* the room's ⋯ menu */
+.wr-menu { position: absolute; z-index: 5; min-width: 180px; padding: 4px 0; border-radius: 8px; background: var(--md-sys-color-surface-container); box-shadow: 0 4px 14px rgba(0,0,0,.24); }
+.wr-menu[hidden] { display: none; }
+.wr-menui { width: 100%; height: 44px; padding: 0 16px 0 12px; border: 0; background: none; color: var(--md-sys-color-on-surface); font: 400 14px/20px var(--font); display: flex; align-items: center; gap: 12px; cursor: pointer; text-align: left; }
+.wr-menui .ms { color: var(--md-sys-color-on-surface-variant); }
+.wr-menui:hover, .wr-menui:focus-visible { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); outline: 0; }
+.wr-menui:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: -2px; }
+/* a bubble never runs past its column: the one-line reply quote ellipsizes instead of setting the width */
+.wr-msg { min-width: 0; }
+.wr-col { max-width: 100%; }
+.wr-bubble { max-width: 100%; min-width: 0; box-sizing: border-box; }
+.wr-quote { max-width: 100%; box-sizing: border-box; }
+.wr-popg { flex: none; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.wr-popg .ms { font-size: 16px; }
+
+/* ---- W2: mentions in the line: a seat in its color, the rest primary; yours marked; a click adds it to your message */
+.wr-at { cursor: pointer; border-radius: 4px; }
+.wr-at:hover { text-decoration: underline; }
+.wr-at.me { cursor: default; padding: 0 4px; background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); text-decoration: none; }
+.wr-assetq { cursor: pointer; }
+.wr-assetq:hover { color: var(--md-sys-color-primary); text-decoration: underline; }
+.wr-msg .wr-bubble { transition: box-shadow .6s ease-out; }
+.wr-msg.flash .wr-bubble { box-shadow: 0 0 0 2px var(--md-sys-color-primary); transition: none; }
+@media (prefers-reduced-motion: reduce) { .wr-msg .wr-bubble { transition: none; } }
+/* a seat's mention: its hue at tone 30 (85 in dark) so the text reads on any bubble */
+.wr-at:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 1px; }
+
+/* ---- W3: people */
+/* the rail's label rows: ROOM + (New workgroup), SEATS · N + (Add a seat) */
+/* a seat row: chips, ⋯ on hover or focus */
+/* menus with submenus */
+.wr-pmenu { min-width: 200px; max-width: 320px; }
+.wr-menui.err { color: var(--md-sys-color-error); }
+.wr-menui.err .ms { color: var(--md-sys-color-error); }
+.wr-menui.off { opacity: .45; cursor: default; }
+.wr-menui .wr-menut { flex: 1 1 auto; }
+.wr-menui .wr-menuar { margin-left: auto; font-size: 18px; }
+.wr-menui .ms.wr-mhide { visibility: hidden; }
+.wr-menud { height: 1px; margin: 4px 0; background: var(--md-sys-color-outline-variant); }
+.wr-menuh { padding: 8px 16px 6px; font: 500 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); }
+/* dialogs */
+.wr-scrim { position: absolute; inset: 0; z-index: 8; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.32); padding: 16px; }
+.wr-dlg { width: 420px; max-width: 100%; max-height: calc(100% - 32px); overflow: auto; display: flex; flex-direction: column; gap: 16px; padding: 24px; border-radius: 28px; background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface); box-shadow: 0 8px 28px rgba(0,0,0,.28); }
+.wr-dlgt { font: 400 24px/32px var(--font); }
+.wr-dlgx { font: 400 14px/20px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-dlgb { display: flex; flex-direction: column; gap: 12px; }
+.wr-dlgform { display: flex; flex-direction: column; gap: 14px; }
+/* 0.22.1 Model & effort: the room's own select (.wr-sel) with its label (.wr-sellbl) above */
+.wr-ofield { position: relative; height: 52px; width: 100%; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 16px; border: 1px solid var(--md-sys-color-outline); border-radius: 4px; background: none; color: var(--md-sys-color-on-surface); font: 400 16px/24px var(--font); text-align: left; cursor: pointer; }
+.wr-ofield:hover { border-color: var(--md-sys-color-on-surface); }
+.wr-ofield:focus-visible, .wr-ofield[aria-expanded=true] { outline: 0; border: 2px solid var(--md-sys-color-primary); padding: 0 7px 0 15px; }
+.wr-ofl { position: absolute; left: 12px; top: -9px; padding: 0 4px; background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface-variant); font: 400 12px/16px var(--font); }
+.wr-ofv { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wr-ofield > .ms { font-size: 24px; color: var(--md-sys-color-on-surface-variant); }
+.wr-dlgnote { font: 400 14px/20px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-dlge { font: 400 13px/18px var(--font); color: var(--md-sys-color-error); }
+.wr-dlge[hidden] { display: none; }
+.wr-dlga { display: flex; justify-content: flex-end; gap: 8px; }
+.wr-dlgbtn { height: 40px; padding: 0 20px; border: 0; border-radius: var(--shape-full); font: 500 14px/20px var(--font); cursor: pointer; background: none; color: var(--md-sys-color-primary); }
+.wr-dlgbtn.filled { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.wr-dlgbtn.error { background: var(--md-sys-color-error); color: var(--md-sys-color-on-error); }
+.wr-dlgbtn.tonal { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.wr-dlgbtn:disabled { opacity: .38; cursor: default; }
+.wr-dlgbtn[data-busy] { pointer-events: none; opacity: .7; }
+.wr-dlgfw { display: flex; flex-direction: column; gap: 4px; }
+.wr-dlgf input { background: transparent; }
+.wr-dlgf label { background: var(--md-sys-color-surface-container-high); }
+.wr-dlgh { padding: 0 16px; font: 400 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-dlgsub { font: 500 14px/20px var(--font); margin-top: 4px; }
+.wr-seg { display: inline-flex; align-self: flex-start; border: 1px solid var(--md-sys-color-outline); border-radius: var(--shape-full); overflow: hidden; }
+.wr-segb { height: 40px; padding: 0 20px; border: 0; background: none; color: var(--md-sys-color-on-surface); font: 500 14px/20px var(--font); cursor: pointer; }
+.wr-segb + .wr-segb { border-left: 1px solid var(--md-sys-color-outline); }
+.wr-segb.on { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.wr-sellbl { font: 400 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); padding-left: 4px; }
+.wr-sel { height: 48px; padding: 0 12px; border: 1px solid var(--md-sys-color-outline); border-radius: 4px; background: transparent; color: var(--md-sys-color-on-surface); font: 400 15px/20px var(--font); }
+.wr-radios { gap: 4px; }
+.wr-radio { display: flex; align-items: flex-start; gap: 12px; padding: 8px 4px; border-radius: 12px; cursor: pointer; }
+.wr-radio:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 6%, transparent); }
+.wr-radio input { margin-top: 3px; accent-color: var(--md-sys-color-primary); }
+.wr-radiot { display: flex; flex-direction: column; }
+.wr-radion { font: 500 14px/20px var(--font); }
+.wr-radios2 { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font: 400 13px/18px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-step { display: inline-flex; align-items: center; gap: 2px; border: 1px solid var(--md-sys-color-outline-variant); border-radius: var(--shape-full); }
+.wr-step[hidden] { display: none; }
+.wr-step .wr-ib { width: 28px; height: 28px; }
+.wr-step .wr-ib .ms { font-size: 16px; }
+.wr-stepv { min-width: 18px; text-align: center; font: 500 14px/20px var(--font); color: var(--md-sys-color-on-surface); }
+.wr-checks { display: flex; flex-direction: column; max-height: 168px; overflow: auto; }
+.wr-checkhold { font: 400 13px/18px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-check { display: flex; align-items: center; gap: 12px; padding: 6px 4px; border-radius: 12px; cursor: pointer; }
+.wr-check:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 6%, transparent); }
+.wr-check input { accent-color: var(--md-sys-color-primary); }
+.wr-checkt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.wr-checkn { font: 500 14px/20px var(--font); }
+.wr-checks2 { font: 400 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-leadtag[hidden] { display: none; }
+/* the brief in the side column */
+.wr-brief { display: flex; flex-direction: column; gap: 12px; padding: 12px 16px; }
+.wr-brieftext { white-space: pre-wrap; font: 400 14px/20px var(--font); }
+.wr-briefa { display: flex; justify-content: flex-end; gap: 8px; }
+.wr-briefta { width: 100%; min-height: 220px; resize: vertical; padding: 10px 12px; border: 2px solid var(--md-sys-color-primary); border-radius: 8px; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); font: 400 14px/20px var(--font); box-sizing: border-box; }
+/* the line: not delivered, held, didn't answer in time */
+.wr-undeliv { align-self: flex-end; display: flex; align-items: center; gap: 6px; margin-top: -4px; font: 400 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-undeliv .ms, .wr-heldrow .ms { font-size: 16px; }
+.wr-undeliv.done, .wr-heldrow.done { color: var(--md-sys-color-primary); }
+.wr-heldrow { display: flex; align-items: center; gap: 6px; font: 400 12px/16px var(--font); color: color-mix(in srgb, #8a5a00 80%, var(--md-sys-color-on-surface)); }
+.wr-fact.warn .ms { color: #C98A10; }
+.wr-fact .wr-lnk { margin-left: 6px; }
+.wr-nudged { margin-left: 6px; color: var(--md-sys-color-primary); font-weight: 500; }
+/* the header: mode, floor, presence */
+.wr-hchip { flex: none; height: 28px; display: inline-flex; align-items: center; gap: 4px; padding: 0 10px 0 6px; border-radius: 8px; font: 500 12px/16px var(--font); white-space: nowrap; }
+.wr-hchip .ms { font-size: 16px; }
+.wr-hchip.mode { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.wr-hchip.floor { background: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container); }
+@container (max-width: 600px) { .wr-hchip.floor .wr-floorw { display: none; } }
+.wr-presence { flex: none; display: inline-flex; align-items: center; gap: 2px; height: 36px; padding: 0 6px 0 4px; border: 0; border-radius: var(--shape-full); background: none; cursor: pointer; color: var(--md-sys-color-on-surface-variant); }
+.wr-presence:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+.wr-presn { font: 500 12px/16px var(--font); }
+.wr-presmenu { padding-bottom: 6px; }
+.wr-presrow { display: flex; align-items: center; gap: 10px; padding: 6px 16px; font: 400 14px/20px var(--font); color: var(--md-sys-color-on-surface); }
+.wr-presrow .ms { font-size: 18px; color: var(--md-sys-color-on-surface-variant); }
+.wr-sidetabs[hidden] { display: none; }
+
+/* W3 fixes */
+.wr-dlgfw[hidden] { display: none; }
+.wr-pmenu { z-index: 9; } /* over a dialog's scrim */
+.wr-selectf .wr-selb { width: 100%; height: 56px; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 14px; border: 1px solid var(--md-sys-color-outline); border-radius: 4px; background: transparent; color: var(--md-sys-color-on-surface); font: 400 16px/24px var(--font); text-align: left; cursor: pointer; }
+.wr-selectf .wr-selb:focus { outline: 0; border: 2px solid var(--md-sys-color-primary); padding: 0 7px 0 13px; }
+.wr-selectf .wr-selv { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wr-selectf .wr-seldd { color: var(--md-sys-color-on-surface-variant); }
+.wr-selectf label { position: absolute; left: 12px; top: 16px; padding: 0 4px; background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface-variant); font: 400 16px/24px var(--font); pointer-events: none; transition: top .12s, font-size .12s; }
+.wr-selectf.filled label, .wr-selectf .wr-selb:focus + label { top: -8px; font: 400 12px/16px var(--font); }
+.wr-selectf .wr-selb:focus + label { color: var(--md-sys-color-primary); }
+.wr-selmenu { max-height: 260px; overflow: auto; }
+/* M3 checkboxes: an 18 px square with a 2 px outline; checked fills primary with a white check */
+.wr-check input[type=checkbox] { appearance: none; -webkit-appearance: none; flex: none; width: 18px; height: 18px; margin: 3px; border: 2px solid var(--md-sys-color-on-surface-variant); border-radius: 2px; background: transparent; cursor: pointer; }
+.wr-check input[type=checkbox]:checked { border-color: var(--md-sys-color-primary); background: var(--md-sys-color-primary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='white' d='M9.55 17.65 4.2 12.3l1.4-1.4 3.95 3.95 8.85-8.85 1.4 1.4z'/%3E%3C/svg%3E") center / 16px no-repeat; }
+.wr-check input[type=checkbox]:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 2px; }
+.wr-checkn { display: flex; align-items: center; gap: 6px; }
+/* the cards' who's-in-it stack: 6 px overlap, never squeezed, at most 4 then "+N" */
+.wr-markmore { flex: none; margin-left: 10px; font: 500 12px/24px var(--font); color: var(--md-sys-color-on-surface-variant); }
+
+/* C9: hovering a line shows a pill with Reply and "…" at the top right of its bubble, half over
+   its top edge (28 px buttons); the line takes focus (R replies, Shift+F10 / Menu opens the menu) */
+.wr-hasacts { position: relative; }
+.wr-acts { position: absolute; top: -14px; right: 8px; z-index: 2; display: none; gap: 0; padding: 0 2px; border-radius: var(--shape-full); border: 1px solid var(--md-sys-color-outline-variant); background: var(--md-sys-color-surface-container-highest); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.wr-msg:hover .wr-acts, .wr-msg:focus-within .wr-acts, .wr-msg:focus .wr-acts, .wr-fact:hover .wr-acts, .wr-fact:focus .wr-acts, .wr-hasacts.menu-open .wr-acts { display: flex; }
+.wr-act { width: 28px; height: 28px; padding: 0; border: 0; border-radius: var(--shape-full); background: none; color: var(--md-sys-color-on-surface-variant); display: inline-grid; place-items: center; cursor: pointer; }
+.wr-act .ms { font-size: 18px; }
+.wr-act:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 10%, transparent); }
+.wr-msg:focus, .wr-fact:focus { outline: none; }
+.wr-msg:focus-visible, .wr-fact:focus-visible { outline: 2px solid var(--md-sys-color-secondary); outline-offset: 2px; border-radius: 12px; } /* keyboard focus only */
+.wr-pmenu .wr-menuhead { padding: 10px 16px 8px; border-bottom: 1px solid var(--md-sys-color-outline-variant); margin-bottom: 4px; }
+.wr-pmenu .wr-menuhead b { display: block; font: 600 14px/20px var(--font); }
+.wr-pmenu .wr-menuhead span { font: 400 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-msg.wr-ring .wr-bubble, .wr-fact.wr-ring { box-shadow: 0 0 0 2px var(--md-sys-color-secondary); }
+
+/* ---- 0.19.0: the room's color in the page (C1), the message box (C5), seat colors in the line (C2) */
+.wr-main.tint { background: var(--page-bg); }
+.wr[data-room-palette] .wr-roomhead .wr-rh { background: var(--page-header-bg); border-bottom-color: color-mix(in srgb, var(--md-sys-color-primary) 30%, var(--md-sys-color-outline-variant)); }
+.wr-main.tint .wr-ci { background: color-mix(in srgb, var(--md-sys-color-primary) 13%, var(--md-sys-color-surface-container-high)); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--md-sys-color-primary) 45%, transparent); }
+.wr-main.tint .wr-ci:focus-within { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--md-sys-color-primary) 75%, var(--md-sys-color-on-surface)); }
+.wr-main.tint .wr-ci.over, .wr-main.tint .wr-ci.over:focus-within { box-shadow: inset 0 0 0 2px var(--md-sys-color-error); }
+.wr-main.tint .wr-send:not(:disabled) { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+/* each seat's color (--c, its recipe's): the bubble 15 % over the page with a 22 % outline, the name at 58 % */
+.wr-msg:not(.mine) .wr-head .wr-who { font-weight: 600; }
+/* C4: the (i) right after the crumb */
+.wr-crumbw { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 2px; }
+.wr-crumbw .wr-crumb { flex: 0 1 auto; }
+.wr-crumbw .wr-info { flex: none; width: 32px; height: 32px; }
+.wr-crumbw .wr-info .ms { font-size: 18px; }
+.wr-ib.on { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+
+/* ---- C3: the find bar under the header, its results, the filter's chip and popover (u1, u2) */
+.wr-tools { flex: none; position: relative; z-index: 3; }
+.wr-tools:empty { display: none; }
+.wr-find { display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 8px 0 16px; background: var(--md-sys-color-surface-container-high); border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+.wr-findf { flex: 1 1 auto; min-width: 0; height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-radius: var(--shape-full); background: var(--md-sys-color-surface); box-shadow: inset 0 0 0 1.5px var(--md-sys-color-primary); color: var(--md-sys-color-on-surface-variant); }
+.wr-findi { flex: 1 1 auto; min-width: 0; border: 0; outline: 0; background: none; font: 400 14px/20px var(--font); color: var(--md-sys-color-on-surface); }
+.wr-findi::-webkit-search-cancel-button { display: none; }
+.wr-findn { flex: none; font: 500 13px/18px var(--font); color: var(--md-sys-color-on-surface-variant); white-space: nowrap; }
+.wr-find .wr-ib { width: 36px; height: 36px; }
+.wr-findl { position: absolute; left: 24px; right: 24px; top: 52px; max-height: min(420px, 60vh); overflow: auto; padding: 4px 0; border-radius: 8px; background: var(--md-sys-color-surface-container); box-shadow: 0 4px 14px rgba(0,0,0,.24); }
+.wr-findlh { padding: 8px 16px 6px; font: 400 12px/16px var(--font); color: var(--md-sys-color-on-surface-variant); }
+.wr-findr { display: block; width: 100%; padding: 8px 16px; border: 0; background: none; text-align: left; cursor: pointer; color: var(--md-sys-color-on-surface); }
+.wr-findr:hover, .wr-findr:focus-visible, .wr-findr.on { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); outline: 0; }
+.wr-findw { display: block; font: 600 12px/16px var(--font); }
+.wr-finds { display: block; font: 400 14px/20px var(--font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wr-finds mark, .wr-text mark { background: color-mix(in srgb, #E6B800 55%, transparent); color: inherit; border-radius: 3px; padding: 0 1px; }
+.wr-fchip { display: inline-flex; align-items: center; gap: 4px; margin: 6px 16px; height: 28px; padding: 0 4px 0 12px; border-radius: var(--shape-s); background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); font: 500 12px/16px var(--font); }
+.wr-fchipx { width: 24px; height: 24px; border: 0; border-radius: 50%; background: none; color: inherit; display: inline-grid; place-items: center; cursor: pointer; padding: 0; }
+.wr-fchipx .ms { font-size: 16px; }
+.wr-filter { min-width: 280px; max-height: min(560px, 80vh); overflow: auto; }
+.wr-filterh { padding: 12px 16px 4px; font: 500 12px/16px var(--font); letter-spacing: .8px; text-transform: uppercase; color: var(--md-sys-color-on-surface-variant); }
+.wr-filtera { position: sticky; bottom: -4px; display: flex; justify-content: flex-end; gap: 8px; margin-bottom: -4px; padding: 8px 12px 10px; background: var(--md-sys-color-surface-container); border-top: 1px solid var(--md-sys-color-outline-variant); } /* Reset and Done stay in view */
+
+/* C6: pictures at briefing-table's size; numbers on tiles when a message has 2+ */
+.wr-thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.wr-thumb { position: relative; width: 120px; height: 120px; border: 0; border-radius: 6px; padding: 0; overflow: hidden; outline: 1px solid color-mix(in srgb, var(--md-sys-color-on-surface) 14%, transparent); background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); cursor: pointer; display: inline-grid; place-items: center; color: var(--md-sys-color-on-surface-variant); }
+.wr-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wr-picmore { font: 500 20px/24px var(--font); color: #fff; background: rgba(0,0,0,.62); } /* a dark scrim, white text */
+.wr-pic1 { position: relative; display: inline-grid; place-items: center; min-width: 120px; min-height: 120px; max-width: min(260px, 100%); max-height: 170px; border: 0; border-radius: 6px; padding: 0; overflow: hidden; background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); cursor: pointer; color: var(--md-sys-color-on-surface-variant); }
+.wr-pic1 img { display: block; max-width: min(260px, 100%); max-height: 170px; width: auto; height: auto; object-fit: contain; }
+.wr-picchip { position: absolute; right: 8px; bottom: 8px; max-width: calc(100% - 16px); padding: 2px 8px; border-radius: 6px; background: rgba(0,0,0,.55); color: #fff; font: 400 11px/16px var(--font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+.wr-num { position: absolute; left: 4px; bottom: 4px; min-width: 16px; height: 16px; box-sizing: border-box; padding: 0 4px; border-radius: 8px; background: rgba(0,0,0,.62); color: #fff; font: 600 10.5px/16px var(--mono, monospace); font-variant-numeric: tabular-nums; text-align: center; pointer-events: none; }
+.wr-files .wr-chip { position: relative; }
+.wr-files .wr-chip .wr-num { position: static; margin-left: 6px; }
+
+/* A4: your own color (Settings › Accounts › Your color): your bubbles at 15 % with a 22 % outline */
+.ac-yourcolor { margin-top: 24px; }
+.ac-yourcolor .ac-sub { font: 400 14px/20px var(--font); color: var(--md-sys-color-on-surface-variant); margin: 4px 0 8px; }
+/* C11: a floor line folds away when its turn closes (150 ms) */
+.wr-fact.wr-folding { overflow: hidden; transition: height .15s cubic-bezier(.2, 0, 0, 1), opacity .15s; opacity: 0; }
+
+/* C7: the thinking chip above the message box, one per seat working on your message */
+.wr-think { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 0 16px 4px; }
+.wr-think[hidden] { display: none; }
+.wr-thinkc { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px 0 4px; border-radius: var(--shape-full); background: color-mix(in srgb, var(--c) 15%, var(--md-sys-color-surface)); outline: 1px solid color-mix(in srgb, var(--c) 30%, transparent); font: 500 13px/18px var(--font); color: color-mix(in srgb, var(--c) 58%, var(--md-sys-color-on-surface)); }
+.wr-thinka { position: relative; display: inline-flex; }
+.wr-thinka::after, .wr-msg.wr-working > .wr-av::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; border: 2px solid transparent; border-top-color: var(--c, var(--md-sys-color-primary)); border-right-color: var(--c, var(--md-sys-color-primary)); animation: sr-spin 1.2s linear infinite; pointer-events: none; }
+.wr-msg.wr-working > .wr-av { position: relative; }
+@media (prefers-reduced-motion: reduce) { .wr-thinka::after, .wr-msg.wr-working > .wr-av::after { animation: none; } }
+/* a line the filter or the engine leaves out (C3, C10, meta.hidden) is gone, whatever its own display */
+.wr-entries > [hidden] { display: none !important; }
+
+.ac-yourcolor-foot { margin-top: 6px; }
+.ac-yourcolor-foot .slink { border: 0; padding: 0; background: none; font: inherit; color: var(--md-sys-color-primary); text-decoration: underline; cursor: pointer; }
+.wr-scratchrow { width: calc(100% - 16px); border: 0; border-radius: 0; background: transparent; color: var(--md-sys-color-on-surface); text-align: left; font: inherit; cursor: pointer; }
+.wr-scratchrow .sr-ic { color: var(--md-sys-color-primary); }
+.wr-scratchrow:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: -2px; }
+.wr-seatglyph { flex: none; }
+.wr-roomglyph { flex: none; }
+.wr-inline-terminal { position: relative; flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; overflow: hidden; }
+.wr-inline-terminal[hidden] { display: none; }
+.wr-inline-terminal > .pane { position: relative; flex: 1 1 auto; width: 100%; height: 100%; min-width: 0; min-height: 0; }
+.wr-roomcol.has-terminal > :not(.wr-inline-terminal):not(.wr-strip) { display: none !important; }
+.wr-who .wr-cardseat { margin-right: -4px; }
+html:not(.dark) .wr-seatglyph { --b-field: color-mix(in srgb, var(--brand-src) 16%, var(--md-sys-color-surface)); --b-edge: var(--brand-src); --b-ink: color-mix(in srgb, var(--brand-src) 70%, var(--md-sys-color-on-surface)); }
+.wr-seat .wr-statechip { background: var(--md-sys-color-surface-container-highest); color: var(--md-sys-color-on-surface); }
+.wr-seat .wr-statechip[data-state="working"], .wr-seat .wr-statechip[data-state="starting"] { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
+.wr-seatrestore { flex: none; min-height: 30px; padding: 0 10px; border: 1px solid var(--md-sys-color-outline); border-radius: 8px; background: transparent; color: var(--md-sys-color-primary); font: 500 12px/18px var(--font); cursor: pointer; }
+.wr-seatrestore:hover, .wr-seatrestore:focus-visible { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
+.wr-seatrestore:disabled { opacity: 1; background: none; color: color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent); border-color: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent); cursor: wait; }
+.wr-seatrestore:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 2px; }
+
+/* A local room disconnect retains its rail position and color band. */
+.wr-rrow.disconnected .wr-rn { color: var(--md-sys-color-on-surface-variant); }
+.wr-rrow.disconnected .wr-roomglyph { opacity: .55; }
+.wr-disconnected { flex: 1; justify-content: center; }
+.wr-disconnected p { max-width: 420px; color: var(--md-sys-color-on-surface-variant); }
+.wr-card.disconnected .wr-bn { color: var(--md-sys-color-on-surface-variant); }
+.wr-card.disconnected .wr-band { background: color-mix(in srgb, var(--md-sys-color-primary) 12%, var(--md-sys-color-surface-container-low)); }
+.wr-card.disconnected .wr-roomglyph { opacity: .55; }
+
+/* Keep Start and More clear when a seat name and lead chip need another line. */
+.wr-seat .wr-rtx { flex: 1 1 0; min-width: 0; }
+.wr-seat .wr-rn { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; white-space: normal; overflow: visible; }
+.wr-seat.sr-r .wr-seatname { flex: 0 1 auto; min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+.wr-seat.sr-r .wr-lead { flex: none; margin-left: 0; }
+.wr-seat.sr-r { padding-top: 6px; padding-bottom: 6px; }
+.wr-seat.sr-r .wr-rs { white-space: normal; overflow: visible; }
+.wr-seat.sr-r .wr-statechip { max-width: 100%; box-sizing: border-box; margin-right: 0; white-space: normal; }
+/* Reserve More's slot before hover so Start never moves under the pointer. */
+.wr-rail .wr-seat.sr-r > .acts { width: 32px; height: 32px; flex: 0 0 32px; display: flex; opacity: 0; pointer-events: none; transition: opacity .12s var(--ease); }
+.wr-rail .wr-seat.sr-r:hover > .acts, .wr-rail .wr-seat.sr-r:focus-within > .acts, .wr-rail .wr-seat.sr-r.kb-ring > .acts, .wr-rail .wr-seat.sr-r.menu-open > .acts { opacity: 1; pointer-events: auto; }
+
+.wr-rail .wr-seat.sr-r > .acts > .wr-seatmore { width: 32px; height: 32px; }
+
+/* The existing slim class avoids containing or restacking rail descendants. */
+.wr-rail.slim .wr-seat.sr-r { display: grid; grid-template-columns: 36px minmax(0, 1fr) 48px 32px; column-gap: 12px; row-gap: 6px; align-items: center; }
+.wr-rail.slim .wr-seat.sr-r > .wr-seatglyph { grid-column: 1; grid-row: 1; }
+.wr-rail.slim .wr-seat.sr-r > .wr-rtx { grid-column: 2 / -1; grid-row: 1; }
+.wr-rail.slim .wr-seat.sr-r > .wr-seatrestore { grid-column: 3; grid-row: 2; justify-self: end; }
+.wr-rail.slim .wr-seat.sr-r > .acts { grid-column: 4; grid-row: 2; }
+.wr-rail.slim .wr-seat.sr-r .wr-seatname, .wr-rail.slim .wr-seat.sr-r .wr-statechip { white-space: nowrap; overflow-wrap: normal; }
+
+/* Tasks seam S1: a host-drawn tool card in the Workrooms rail (the design notes; the design's
+   three-row card, the tasks-tool mockup: 68 px, 256 px in the 272 px rail,
+   224 px in the 240 px one). Colours are roles only; a module draws nothing here. */
+.wr-rail .wr-toolcard.sr-r { width: calc(100% - 16px); border: 0; margin: 2px 8px; padding: 8px 10px; min-height: 0; height: 68px; flex-direction: column; align-items: stretch; gap: 4px;
+  border-radius: 12px; background: var(--md-sys-color-surface); text-align: left; }
+.wr-rail .wr-toolcard.sr-r:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 6%, var(--md-sys-color-surface)); }
+.wr-rail .wr-toolcard.sr-r:focus-visible { outline: 3px solid var(--md-sys-color-primary); outline-offset: 2px; }
+.wr-toolcard .tc-h { display: flex; align-items: center; gap: 6px; height: 18px; min-width: 0; font: 600 13px/18px var(--font); color: var(--md-sys-color-on-surface); }
+.wr-toolcard .tc-h .sr-ic { width: 18px; height: 18px; flex: none; }
+/* the icon tile (24 px round, the tool's tone) and the card still 68 px: 6 + 24 + 4 + 10 + 4 + 14 + 6 */
+.wr-rail .wr-toolcard.sr-r { padding-top: 6px; padding-bottom: 6px; }
+.wr-toolcard .tc-h { height: 24px; gap: 8px; }
+.wr-toolcard .tc-h .tc-ic { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; }
+.wr-toolcard .tc-h .tc-ic .ms { font-size: 18px; }
+.wr-toolcard .tc-t { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wr-toolcard .tc-link { flex: none; display: inline-flex; color: var(--md-sys-color-on-surface-variant); }
+.wr-toolcard .tc-badge { margin-left: auto; flex: none; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 999px;
+  background: var(--md-sys-color-error); color: var(--md-sys-color-on-error); font: 600 11px/18px var(--font); text-align: center; }
+.wr-toolcard .tc-strip { position: relative; display: block; height: 10px; flex: none; border-radius: 4px; overflow: hidden; background: var(--md-sys-color-surface-container-high); }
+.wr-toolcard .tc-s { position: absolute; top: 0; bottom: 0; }
+.wr-toolcard .tc-line { display: block; height: 12px; flex: none; min-width: 0; font: 400 11px/12px var(--font); color: var(--md-sys-color-on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wr-toolcard .tc-s.n1 { background: color-mix(in srgb, var(--md-sys-color-primary) 38%, var(--md-sys-color-surface-container-high)); }
+.wr-toolcard .tc-s.n2 { background: color-mix(in srgb, var(--md-sys-color-primary) 62%, var(--md-sys-color-surface-container-high)); }
+.wr-toolcard .tc-s.n3 { background: color-mix(in srgb, var(--md-sys-color-primary) 82%, var(--md-sys-color-surface-container-high)); }
+.wr-toolcard .tc-s.n4, .wr-toolcard .tc-s.n5, .wr-toolcard .tc-s.n6, .wr-toolcard .tc-s.n7, .wr-toolcard .tc-s.n8 { background: var(--md-sys-color-primary); }
+.wr-toolcard .tc-s.needs { top: auto; height: 4px; background: var(--md-sys-color-error); }
+.wr-toolcard .tc-p { display: flex; align-items: center; gap: 8px; height: 14px; }
+.wr-toolcard .tc-track { flex: 1; height: 4px; border-radius: 999px; overflow: hidden; background: var(--md-sys-color-surface-container-highest); }
+.wr-toolcard .tc-track i { display: block; height: 100%; border-radius: 999px; background: var(--md-sys-color-primary); }
+.wr-toolcard .tc-p b { min-width: 30px; text-align: right; font: 600 12px var(--font); color: var(--md-sys-color-on-surface); }
+@media (prefers-reduced-motion: reduce) { .wr-toolcard.sr-r { transition: none; } }
+
+/* Tasks seam S2: a module's own page in the side column (340 px, or over the line under 1000 px) */
+.wr-toolframe { display: block; flex: 1 1 auto; width: 100%; min-height: 0; height: 100%; border: 0; background: var(--md-sys-color-surface); }
+
+/* Per-room roles: named wrappers, with the room column reset to window roles. */
+.wr-tab[data-room-palette].on { background: color-mix(in srgb, var(--md-sys-color-primary) 16%, var(--md-sys-color-surface-container-high)); }
+.wr-band[data-room-palette] { color: var(--md-sys-color-on-surface); }
+.wr-band[data-room-palette] .wr-bs { color: inherit; } /* on the room's tint the seats line takes the name's colour: the grey-blue was 4.35:1 there; the size already tells them apart */
+.wr-rail .sr-g[data-room-palette] { --g: var(--md-sys-color-primary); color: var(--md-sys-color-on-surface); }
+.wr-rrow[data-room-palette] .wr-rn { color: var(--md-sys-color-on-surface); }
+.wr-rrow[data-room-palette] .sr-plate { background: var(--md-sys-color-primary-container); border-color: var(--md-sys-color-primary); }
+.wr-rrow[data-room-palette] .sr-plate::after { background: var(--md-sys-color-on-primary-container); }
+.wr-roomglyph[data-room-palette] .rg-wbody { fill: var(--md-sys-color-primary-container); stroke: var(--md-sys-color-primary); }
+.wr-roomglyph[data-room-palette] .rg-wear { fill: var(--md-sys-color-secondary-container); stroke: var(--md-sys-color-primary); }
+
+.wr[data-room-palette] .wr-roomhead .wr-rh { color: var(--md-sys-color-header-fg); --md-sys-color-on-surface-variant: var(--md-sys-color-header-fg); }
+
+/* Host menus, message actions and confirmations always keep the window palette. */
+.wr-menu, .wr-dlg, .wr-pop, .wr-addmenu, .wr-acts {
+  --md-sys-color-primary: var(--window-color-primary);
+  --md-sys-color-on-primary: var(--window-color-on-primary);
+  --md-sys-color-primary-container: var(--window-color-primary-container);
+  --md-sys-color-on-primary-container: var(--window-color-on-primary-container);
+  --md-sys-color-secondary: var(--window-color-secondary);
+  --md-sys-color-on-secondary: var(--window-color-on-secondary);
+  --md-sys-color-secondary-container: var(--window-color-secondary-container);
+  --md-sys-color-on-secondary-container: var(--window-color-on-secondary-container);
+  --md-sys-color-tertiary: var(--window-color-tertiary);
+  --md-sys-color-on-tertiary: var(--window-color-on-tertiary);
+  --md-sys-color-tertiary-container: var(--window-color-tertiary-container);
+  --md-sys-color-on-tertiary-container: var(--window-color-on-tertiary-container);
+  --md-sys-color-error: var(--window-color-error);
+  --md-sys-color-on-error: var(--window-color-on-error);
+  --md-sys-color-error-container: var(--window-color-error-container);
+  --md-sys-color-on-error-container: var(--window-color-on-error-container);
+  --md-sys-color-surface: var(--window-color-surface);
+  --md-sys-color-surface-dim: var(--window-color-surface-dim);
+  --md-sys-color-surface-bright: var(--window-color-surface-bright);
+  --md-sys-color-surface-container-lowest: var(--window-color-surface-container-lowest);
+  --md-sys-color-surface-container-low: var(--window-color-surface-container-low);
+  --md-sys-color-surface-container: var(--window-color-surface-container);
+  --md-sys-color-surface-container-high: var(--window-color-surface-container-high);
+  --md-sys-color-surface-container-highest: var(--window-color-surface-container-highest);
+  --md-sys-color-on-surface: var(--window-color-on-surface);
+  --md-sys-color-on-surface-variant: var(--window-color-on-surface-variant);
+  --md-sys-color-outline: var(--window-color-outline);
+  --md-sys-color-outline-variant: var(--window-color-outline-variant);
+  --md-sys-color-inverse-surface: var(--window-color-inverse-surface);
+  --md-sys-color-inverse-on-surface: var(--window-color-inverse-on-surface);
+  --md-sys-color-inverse-primary: var(--window-color-inverse-primary);
+  --md-sys-color-scrim: var(--window-color-scrim);
+  --md-sys-color-shadow: var(--window-color-shadow);
+}
+
+/* Each message and mention explicitly owns its recipe/person palette. */
+.wr-msg[data-identity-palette] .wr-bubble { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); outline: 1px solid var(--md-sys-color-outline-variant); }
+.wr-msg[data-identity-palette] .wr-head .wr-who,
+.wr-msg[data-identity-palette] .wr-to,
+.wr-msg[data-identity-palette] .wr-time { color: var(--md-sys-color-on-primary-container); }
+.wr-msg .wr-at[data-identity-palette], .wr-at[data-identity-palette] { color: var(--md-sys-color-on-primary); background: var(--md-sys-color-primary); border-radius: 4px; padding: 0 3px; }
+.wr-seat[data-identity-palette] .wr-rn { color: var(--md-sys-color-on-surface); }
+
+.wr-tam[data-identity-palette] { color: var(--md-sys-color-on-primary-container); background: var(--md-sys-color-primary-container); border-radius: 2px; }
+.wr-msg .wr-at[data-same-hue="true"] { color: var(--md-sys-color-on-primary-container); background: var(--md-sys-color-primary-container); outline: 1px solid var(--md-sys-color-primary); outline-offset: -1px; }
+
+/* touch targets: at phone width the tabs, the buttons and the room's menu are 44 px or more each way (quality pass item 5) */
+@media (max-width: 600px) {
+  .wr-tab { height: 44px; }
+  .wr-outl, .wr-txtb { min-height: 44px; }
+  .wr-ib { width: 44px; height: 44px; }
+  .wr-link { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
+}
+
+/* dark palette: tonal dialog buttons in light text (>= 9:1), text inputs on the container-highest fill (see style.css) */
+html.dark .wr-dlgbtn.tonal { color: var(--md-sys-color-on-surface); }
+html.dark .wr-in { background: var(--md-sys-color-surface-container-highest); }
+
+/* the room header on a phone keeps the room's full name: the secondary line (alias, lead, seats) goes, the name takes the room (quality walk (b)) */
+@media (max-width: 600px) {
+  .wr-rh .wr-crumbw .wr-crumb { display: none; }
+  .wr-rh { gap: 2px; padding-left: 10px; }
+  .wr-rh .wr-rname { flex: 1 1 auto; min-width: 0; padding-left: 4px; }
+  .wr-crumbw { flex: none; }
+  .wr-crumbw .wr-info { width: 44px; height: 44px; }
+}
+
+/* composer buttons and the held line's Deliver now: 44 px, 48 on a phone (quality walk (c)) */
+.wr-lnk { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0 8px; }
+@media (max-width: 600px) {
+  .wr-cib, .wr-send { width: 48px; height: 48px; }
+  .wr-lnk { min-width: 48px; min-height: 48px; }
+}
+
+/* dialog buttons and checkbox rows: 44 px, 48 on a phone (a11y walk: New room dialog at 390 had 40 px buttons and 36 px rows) */
+.wr-dlgbtn { min-height: 44px; }
+.wr-check { min-height: 44px; }
+@media (max-width: 600px) { .wr-dlgbtn { min-height: 48px; } .wr-check { min-height: 48px; } }
+
+/* phone: more room for the chat (the Try demo's vertical-space edits, the owner ): the tab row goes (the back arrow is the way out),
+   the empty delivery line under the message box takes no height, and the box's hint stays on one line with an ellipsis */
+@media (max-width: 599px) {
+  .wr-tabs { display: none; }
+  .wr-dl:empty { display: none; }
+  .wr-ta:placeholder-shown { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+
+/* a card's note ("· 2 seats quiet", the design's Tasks §4) is muted text after the %, display only */
+.wr-toolcard .tc-note { flex: none; font: 400 11.5px/14px var(--font); color: var(--md-sys-color-on-surface-variant); white-space: nowrap; }
+
+/* the seats sheet on a phone (the design s8): under 600 px the header drops the room's name (the app bar shows it) and gains "Seats · n";
+   the sheet lists the seats, each with its state in words and ONE 96 x 48 button */
+.wr-seatsb { display: none; }
+@media (max-width: 599px) {
+  .wr-rh .wr-rname { display: none; }
+  .wr-rh .wr-seatsb { display: inline-flex; align-items: center; justify-content: center; gap: 2px; width: auto; min-width: 48px; height: 48px; padding: 0 8px; }
+  .wr-rh .wr-seatsb[hidden] { display: none; }
+  .wr-seatsn { font: 500 14px/1 var(--wb-font, inherit); }
+  .wr-rh { padding-left: 12px; }
+}
+.wr-sheetscrim { position: absolute; inset: 0; z-index: 8; display: flex; align-items: flex-end; background: rgba(0,0,0,.32); }
+.wr-sheet { width: 100%; max-height: 82%; display: flex; flex-direction: column; border-radius: 28px 28px 0 0; background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface); box-shadow: 0 -4px 24px rgba(0,0,0,.28); }
+.wr-sheethead { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 8px 8px 0 24px; min-height: 56px; }
+.wr-sheettitle { font: 500 18px/24px var(--wb-font, inherit); }
+.wr-sheetx { width: 48px; height: 48px; }
+.wr-sheetlist { overflow-y: auto; padding: 0 16px 16px; display: flex; flex-direction: column; gap: 0; }
+.wr-sheetrow { display: flex; align-items: center; gap: 12px; min-height: 72px; padding: 8px 0; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+.wr-sheetrow .wr-seatglyph { flex: none; }
+.wr-sheettx { flex: 1 1 auto; min-width: 0; }
+.wr-sheetnm { font: 500 16px/22px var(--wb-font, inherit); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wr-sheetst { font-size: 14px; line-height: 20px; color: var(--md-sys-color-on-surface-variant); }
+.wr-sheeterr { font-size: 13px; line-height: 18px; margin-top: 2px; color: var(--md-sys-color-error); }
+.wr-sheetbtn { flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 96px; height: 48px; border-radius: var(--shape-full, 24px); border: 1px solid var(--md-sys-color-outline); background: transparent; color: var(--md-sys-color-primary); font: 500 14px/20px var(--wb-font, inherit); cursor: pointer; }
+.wr-sheetbtn.start, .wr-sheetbtn.restore { border-color: transparent; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.wr-sheetbtn:disabled { opacity: .72; cursor: default; }
+.wr-sheetbtn .ms { font-size: 20px; }
+.wr-sheetspin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: wr-sheetspin 0.9s linear infinite; }
+@keyframes wr-sheetspin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .wr-sheetspin { animation: none; } }
+.wr-sheetnone { margin: 8px 0 0; padding: 16px 0; color: var(--md-sys-color-on-surface-variant); }
+.wr-sheetadd { margin-top: 16px; min-height: 48px; border-radius: var(--shape-full, 24px); border: 1px solid var(--md-sys-color-outline); background: transparent; color: var(--md-sys-color-primary); font: 500 14px/20px var(--wb-font, inherit); cursor: pointer; }
+.wr-sheetbtn:focus-visible, .wr-sheetadd:focus-visible, .wr-sheetx:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 2px; }
+
+/* the tools sheet on a phone (the design s10): the seats sheet's pattern, a row per tool; the header's "Tools" button with its count (hidden at 0 tools) */
+.wr-toolrow { width: 100%; border: 0; border-bottom: 1px solid var(--md-sys-color-outline-variant); background: transparent; color: inherit; text-align: left; cursor: pointer; font: inherit; }
+.wr-tooltile { flex: none; width: 48px; height: 48px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.wr-toolrow .wr-sheettx { display: flex; flex-direction: column; }
+.wr-toolchev { flex: none; color: var(--md-sys-color-on-surface-variant); }
+.wr-toolrow:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: -2px; }
+.wr-toolsb { display: inline-flex; align-items: center; justify-content: center; gap: 2px; min-width: 44px; height: 44px; padding: 0 6px; }
+.wr-toolsb[hidden] { display: none; }
+.wr-toolsn { font: 500 14px/1 var(--wb-font, inherit); }
+@media (max-width: 599px) { .wr-toolsb { min-width: 48px; height: 48px; } }
+/* one Tools button in the header: when the room's tools button is showing, the widget layer's own button (same icon) stays out of the row (the design s10) */
+.wr-rh .wr-toolsb:not([hidden]) ~ .wbw-btn { display: none; }
+
+/* the chats sheet on a phone (the design s11): the header's "Chats" button (forum icon, the number of chats on it; hidden with no workgroup, and from
+   600 px up, where the rail lists the chats); a 72 px row per chat, the one you are in marked "Open now"; "New workgroup" ends the list */
+.wr-chatsb { display: none; }
+@media (max-width: 599px) {
+  .wr-rh .wr-chatsb { display: inline-flex; position: relative; align-items: center; justify-content: center; width: 48px; height: 48px; }
+  .wr-rh .wr-chatsb[hidden] { display: none; }
+}
+.wr-chatsn { position: absolute; top: 4px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; border-radius: 9px; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); font: 600 11px/18px var(--wb-font, inherit); text-align: center; }
+.wr-chatrow { width: 100%; border: 0; border-bottom: 1px solid var(--md-sys-color-outline-variant); background: transparent; color: inherit; text-align: left; cursor: pointer; font: inherit; }
+.wr-chatrow .wr-sheettx { display: flex; flex-direction: column; }
+.wr-chatrow .wr-sheetst { font-size: 13px; line-height: 18px; }
+.wr-chatnew { font-size: 13px; line-height: 18px; color: var(--md-sys-color-on-surface-variant); }
+.wr-chatnew.has { color: var(--md-sys-color-primary); font-weight: 500; }
+.wr-chatnow { flex: none; display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px; border-radius: 8px; background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); font: 500 12px/18px var(--wb-font, inherit); }
+.wr-chatnow .ms { font-size: 16px; }
+.wr-chatrow:focus-visible, .wr-chatsb:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: -2px; }
+.wr-chatsadd { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%; }
+.wr-chatsadd .ms { font-size: 20px; }
+
+/* a module's full page (the owner's pattern: rail brief → preview → full page as a tab): its tab in the strip like a room
+   tab; the page replaces the room view (rail, line, side column) in the body row, and stays mounted while other tabs
+   show; on a phone the strip is hidden, so a 48 px "Back to the room" bar sits on top of the full-screen page */
+.wr-body.has-toolpage > :not(.wr-toolpages) { display: none !important; }
+.wr-toolpages { flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; margin: 0 6px; background: var(--md-sys-color-surface); }
+.wr-toolpages[hidden], .wr-toolpage[hidden] { display: none; }
+.wr-toolpage { flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.wr-toolpagebar { display: none; }
+.wr-tooltab .ms { font-size: 16px; }
+@media (max-width: 600px) {
+  .wr-toolpages { margin: 0; }
+  .wr-toolpagebar { flex: none; display: flex; align-items: center; gap: 4px; height: 48px; padding: 0 8px 0 0;
+    background: var(--md-sys-color-surface-container-low); border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+  .wr-toolpageback { width: 48px; height: 48px; }
+  .wr-toolpaget { font: 500 14px/20px var(--font); color: var(--md-sys-color-on-surface); }
+}
+/* a tool's preview on a phone (the design's s10): its back arrow "Back to the room" is a 48 px target */
+@media (max-width: 600px) { .wr-side.over .wr-sideback { width: 48px; height: 48px; } }
+
+/* phone header (the design s11/header answer): under 600 px the row is exactly Seats, Chats, Search, Filter, Tools, ⋯, six 48 px targets that fit 320 px with 16 px of padding:
+   the room icon and the room name go (the app bar has the name), the info button goes (Brief is in ⋯), and the presence avatar becomes a row of ⋯ */
+@media (max-width: 599px) {
+  .wr-rh { gap: 0; padding: 0 4px 0 12px; justify-content: flex-end; }
+  .wr-rh > .wr-roomglyph { display: none; }
+  .wr-rh .wr-crumbw { display: none; }
+  .wr-rh .wr-presence { display: none; }
+  .wr-rh .wr-ib { flex: none; }
+  .wr-rh .wr-searchb, .wr-rh .wr-filterb, .wr-rh .wr-more { width: 48px; height: 48px; }
+}
+
+/* the Send button's options menu: 48 px rows on a phone */
+@media (max-width: 599px) { .wr-pmenu .wr-menui { min-height: 48px; } }
+
+/* "More for @name" in the seats sheet (the design s11): a 48 px ⋮ at the end of every row, opening the rail's menu as a second sheet of 48 px rows */
+.wr-sheetmore { flex: none; width: 48px; height: 48px; }
+.wr-moreitem { display: flex; align-items: center; gap: 16px; width: 100%; min-height: 56px; padding: 4px 8px; border: 0; background: transparent; color: var(--md-sys-color-on-surface); text-align: left; font: inherit; cursor: pointer; }
+.wr-moreitem .ms { flex: none; width: 24px; }
+.wr-moretx { display: flex; flex-direction: column; min-width: 0; }
+.wr-moreitem.err { color: var(--md-sys-color-error); }
+.wr-moreitem:disabled { opacity: .72; cursor: default; }
+.wr-moreitem:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: -2px; }
+.wr-moresheet { z-index: 9; }
+
+/* "Find a room or seat" at the top of the Workrooms list under 600 px (the design s11) */
+.wr-gfind { display: none; }
+@media (max-width: 599px) {
+  .wr-gfind { display: flex; align-items: center; gap: 4px; margin: 0 0 12px; padding: 0 4px 0 14px; min-height: 48px; border-radius: var(--shape-full, 24px); background: var(--md-sys-color-surface-container-high); }
+  .wr-gfic { display: inline-flex; color: var(--md-sys-color-on-surface-variant); }
+  .wr-gfin { flex: 1 1 auto; min-width: 0; height: 48px; border: 0; background: transparent; color: var(--md-sys-color-on-surface); font: inherit; outline: none; }
+  .wr-gclear { width: 48px; height: 48px; }
+  .wr-gclear[hidden] { display: none; }
+  .wr-gres { display: flex; flex-direction: column; gap: 8px; }
+  .wr-gseat { display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: 0; border-radius: 12px; background: var(--md-sys-color-surface-container); color: var(--md-sys-color-on-surface); font: inherit; text-align: left; cursor: pointer; }
+  .wr-gnone { padding: 16px 4px; color: var(--md-sys-color-on-surface-variant); }
+}
+.wr-gfin::-webkit-search-cancel-button, .wr-gfin::-webkit-search-decoration { -webkit-appearance: none; appearance: none; display: none; }
+.wr-gfin:focus, .wr-gfin:focus-visible { outline: none; box-shadow: none; }
+.wr-gfind:focus-within { outline: 2px solid var(--md-sys-color-primary); outline-offset: 0; }
+.wr-gfind .wr-gfin, .wr-gfind .wr-gfin:focus, .wr-gfind .wr-gfin:focus-visible { outline: none !important; box-shadow: none !important; }
+
+/* an http(s) address in a message (web): a link in a new tab */
+.wr-url { color: var(--md-sys-color-primary); text-decoration: underline; overflow-wrap: anywhere; }
+.wr-url:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 2px; border-radius: 2px; }
+/* P05 the approval plate under a seat's "APPROVAL:" line (the design s12): shield, "@{seat} needs your approval.", Approve (filled) and Reply…
+   (outlined), both 48 px; once answered, a quiet line with a check */
+.wr-approval { margin-top: 6px; max-width: 420px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--md-sys-color-outline-variant); background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface); display: flex; flex-direction: column; gap: 10px; }
+.wr-approvalhead { display: flex; align-items: center; gap: 8px; font: 500 14px/20px var(--font); }
+.wr-approvalhead .ms { font-size: 20px; color: var(--md-sys-color-primary); }
+.wr-approvalacts { display: flex; gap: 8px; flex-wrap: wrap; }
+.wr-approvalbtn { min-height: 48px; min-width: 96px; padding: 0 20px; border-radius: var(--shape-full, 24px); font: 500 14px/20px var(--font); cursor: pointer; border: 1px solid var(--md-sys-color-outline); background: transparent; color: var(--md-sys-color-primary); }
+.wr-approvalbtn.yes { border-color: transparent; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.wr-approvalbtn:disabled { opacity: .72; cursor: default; }
+.wr-approvalbtn:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 2px; }
+.wr-approval.done { flex-direction: row; align-items: center; gap: 6px; padding: 0; border: 0; background: transparent; color: var(--md-sys-color-on-surface-variant); font: 400 13px/18px var(--font); }
+.wr-approval.done .ms { font-size: 16px; }
+
+/* P01 needs you (the design s12): always words and an icon. The room card's chip "Needs you · {n}"; in the seats sheet the state line and the
+   filled Open; in the rail the seat's "needs you" chip carries the priority icon */
+.wr-needschip { flex: none; display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px; border-radius: 8px; background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error-container); font: 500 12px/18px var(--font); white-space: nowrap; }
+.wr-needschip .ms { font-size: 16px; }
+.wr-sheetst.needs { display: flex; align-items: center; gap: 4px; color: var(--md-sys-color-error); font-weight: 500; }
+.wr-sheetst.needs .ms { font-size: 18px; }
+.wr-sheetbtn.open.needs { border-color: transparent; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.wr-needs .ms { font-size: 14px; vertical-align: -2px; margin-right: 2px; }
+
+/* the design s10 (the final walk): on a phone a tool layer, the preview over the room or the full page, is the whole screen with ONE back
+   arrow: the app bar (its "Back to Rooms") and the room header hide while it is open; the bottom bar is already hidden in a room.
+   Set by rooms/page.js on the web build only (the desktop's top bar is its window chrome). */
+@media (max-width: 599px) {
+  html[data-wb-toollayer] .hwb-bar,
+  html[data-wb-toollayer] .wr-roomhead,
+  html[data-wb-toollayer] .wb-bnav { display: none !important; }
+}
+.wr-layerguard { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.wr-body.has-toolpage > .wr-layerguard { display: block !important; } /* the full page's focus guards stay focusable */

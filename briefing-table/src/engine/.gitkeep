@@ -1,0 +1,4 @@
+# src/engine/ — the vendor-agnostic model (split-tree, pane lifecycle, the
+# rehydration TRIGGER #1). Empty at M0: with zero components there is no pane
+# tree to model yet. Populated when the first component lifecycle lands (M1+).
+# Keep the #1 (trigger) / #2 (per-component mechanics) line drawn here — Seam C1.

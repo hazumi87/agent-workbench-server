@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>mock CLI Manager (hub)</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="stylesheet" href="/assets/aurora/window-chrome/tokens.css">
+<style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: var(--font); background: var(--ink); color: var(--text);
+    padding: 16px 20px; display: flex; flex-direction: column; gap: 12px;
+  }
+  h1 { font-size: 16px; margin: 0; }
+  p.hint { color: var(--dim); font-size: 12px; margin: 0; }
+  table { border-collapse: collapse; width: 100%; max-width: 780px; font-size: 13px; }
+  th { text-align: left; color: var(--dim); font-weight: 600; padding: 4px 8px; }
+  td { padding: 5px 8px; border-top: 1px solid var(--border); }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+  .alive { background: var(--act-streaming); }
+  .dead { background: var(--dim3); }
+  button {
+    background: var(--surface2); color: var(--text); border: 1px solid var(--border2);
+    border-radius: 4px; padding: 4px 10px; font-size: 12px; cursor: pointer; margin-right: 4px;
+  }
+  button:hover { background: var(--surface3); }
+  #log {
+    flex: 1; min-height: 80px; overflow-y: auto; background: #0b0e11;
+    border: 1px solid var(--border); font-family: var(--mono); font-size: 12px;
+    padding: 6px 10px; white-space: pre-wrap;
+  }
+</style>
+</head>
+<body>
+  <h1>Mock CLI Manager (hub)</h1>
+  <p class="hint">Stands in for briefing-table's manager so the hub behaviors can be exercised
+    host-side: reports the count of LIVE sessions to the chrome, opens a session as a tab in
+    this window, and kills sessions (count updates live). Real data/duties stay engine-side.</p>
+
+  <table>
+    <thead><tr><th>Session</th><th>State</th><th style="width:260px">Actions</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <div id="log"></div>
+
+<script>
+  const embedded = window.parent !== window;
+  const SESSIONS = [
+    { id: 'sess-example', name: 'Example style guide', alive: true },
+    { id: 'sess-harbor', name: 'Harbor Canonical', alive: true },
+    { id: 'sess-platform', name: 'Platform Opus', alive: true },
+    { id: 'sess-hearth', name: 'Example project', alive: false },
+  ];
+
+  function log(s) {
+    const el = document.getElementById('log');
+    el.textContent += '[' + new Date().toISOString().substr(11, 12) + '] ' + s + '\n';
+    el.scrollTop = el.scrollHeight;
+  }
+  function post(msg) {
+    if (!embedded) { log('not embedded: ' + JSON.stringify(msg)); return; }
+    window.parent.postMessage(msg, '*');
+    log('-> shell ' + JSON.stringify(msg));
+  }
+
+  function aliveCount() { return SESSIONS.filter(s => s.alive).length; }
+
+  // the hub's headline number: sessions resident in the broker
+  function pushBadge() { post({ hwbBadge: aliveCount() }); }
+
+  function sessionUrl(s) {
+    return new URL('mock-session.html?name=' + encodeURIComponent(s.name)
+      + '&answer=parked', location.href).href;
+  }
+
+  function render() {
+    const tb = document.getElementById('rows');
+    tb.replaceChildren();
+    SESSIONS.forEach((s) => {
+      const tr = document.createElement('tr');
+      const td1 = document.createElement('td');
+      td1.innerHTML = '<span class="dot ' + (s.alive ? 'alive' : 'dead') + '"></span>' + s.name;
+      const td2 = document.createElement('td');
+      td2.textContent = s.alive ? 'alive' : 'not running';
+      td2.style.color = s.alive ? 'var(--text)' : 'var(--dim)';
+      const td3 = document.createElement('td');
+
+      const openTab = document.createElement('button');
+      openTab.textContent = s.alive ? 'Open as tab' : 'Launch as tab';
+      openTab.onclick = () => {
+        if (!s.alive) { s.alive = true; render(); pushBadge(); }
+        // shell focuses it if this session is already a tab here
+        post({ hwbOpenTab: { url: sessionUrl(s), title: s.name, sessionId: s.id } });
+      };
+
+      const kill = document.createElement('button');
+      kill.textContent = 'Kill session';
+      kill.disabled = !s.alive;
+      kill.onclick = () => { s.alive = false; render(); pushBadge(); log('killed ' + s.id); };
+
+      td3.append(openTab, kill);
+      tr.append(td1, td2, td3);
+      tb.appendChild(tr);
+    });
+  }
+
+  // the hub is itself a tab: identify + report state like any embedded page
+  post({ hwbSessionId: 'cli-manager' });
+  post({ hwbState: 'idle', title: 'CLI Manager' });
+  render();
+  pushBadge();
+  log('hub ready; embedded=' + embedded + '; alive=' + aliveCount());
+
+  // hub is not a session: answer close instantly so ✕ never hangs
+  window.addEventListener('message', (e) => {
+    if (e.data && e.data.hwbClose === true) { post({ hwbCloseResult: 'parked' }); }
+  });
+</script>
+</body>
+</html>

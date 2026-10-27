@@ -1,0 +1,36 @@
+# Default gitleaks rules, plus FIVE exact synthetic test values. No path is excluded: a different value in the same
+# file, or the same value in any other file, is still reported. Each entry needs BOTH its file path AND its exact value.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "made-up test values (exact value + exact file)"
+condition = "AND"
+targetRules = ["generic-api-key"]
+paths = ['''(^|/)briefing-table/test/proof-w1-terminal-trace\.test\.mjs$''']
+regexTarget = "secret"
+regexes = ['''^PERSON-KEYS-92c6$''']
+
+[[allowlists]]
+description = "the standard sample websocket nonce from RFC 6455"
+condition = "AND"
+targetRules = ["generic-api-key"]
+paths = ['''(^|/)briefing-table/test/local-mode-engine\.test\.mjs$''']
+regexTarget = "secret"
+regexes = ['''^dGhlIHNhbXBsZSBub25jZQ==$''']
+
+[[allowlists]]
+description = "made-up upload key in the room-attach test"
+condition = "AND"
+targetRules = ["generic-api-key"]
+paths = ['''(^|/)briefing-table/test/room-attach\.test\.mjs$''']
+regexTarget = "secret"
+regexes = ['''^upkey-onwire-0002$''']
+
+[[allowlists]]
+description = "made-up token in the redaction test"
+condition = "AND"
+targetRules = ["generic-api-key"]
+paths = ['''(^|/)briefing-table/test/switch-packet\.test\.ts$''']
+regexTarget = "secret"
+regexes = ['''^abcdef123456789$''']

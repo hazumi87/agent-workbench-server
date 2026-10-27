@@ -1,0 +1,6 @@
+/* PINNED - marked 15.0.7 (vendored 2026-10-01), MIT license.
+   Source: https://cdnjs.cloudflare.com/ajax/libs/marked/15.0.7/marked.min.js
+   (the same version the knowledge-base viewer loads from a CDN).
+   sha256 934e3e36e9e2da0afb1a6e75075bb0f09af05293a844e84a7477ef40911c349a
+   Pre-built UMD; defines window.marked. Loaded lazily by web/room-doc-view.mjs.
+   Do not hand-edit; to update, re-fetch and replace wholesale. */

@@ -1,0 +1,28 @@
+<!doctype html>
+<!-- FULL PAGE of a room app's panel [ticket]: a thin host. web/room-app.mjs
+     loads the room and the panel from the same engine APIs the room page uses
+     and frames the panel's own app under a slim header. -->
+<html lang="en">
+<head>
+  <!-- global color palette, first paint (hub V2): see web/palette-boot.js -->
+  <script src="/palette-boot.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0C1014" />
+  <title>Full page</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/vendor/aurora-tokens.css" />
+  <link rel="stylesheet" href="/room.css" />
+  <link rel="stylesheet" href="/room-app-page.css" />
+  <link rel="stylesheet" href="/light-mode.css" />
+</head>
+<body class="ra-body">
+  <header class="ra-top">
+    <span class="ra-title" id="raTitle">Full page</span>
+    <a class="ra-back" id="raBack" href="/" hidden>Back to room</a>
+  </header>
+  <main class="ra-main" id="raMain"></main>
+  <div class="ra-toast" id="raToast" role="status" hidden></div>
+  <script type="module" src="/room-app.mjs"></script>
+</body>
+</html>

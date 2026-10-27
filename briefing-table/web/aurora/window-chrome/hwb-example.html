@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>hwb — minimal working example</title>
+<link href="tokens.css" rel="stylesheet">
+<link href="hwb-chrome.css" rel="stylesheet">
+<link href="hwb-ring.css" rel="stylesheet">
+<link href="hwb-drag.css" rel="stylesheet">
+<link href="hwb-copy.css" rel="stylesheet">
+<link href="hwb-watermark.css" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+/* ---- everything below is EXAMPLE PAGE only. None of it is the component. ---- */
+body{background:#05070a;font-family:var(--font);padding:26px;color:var(--text);}
+h1{font-family:var(--display);font-size:1rem;margin-bottom:4px;}
+p.s{font-size:.8rem;color:var(--dim);margin-bottom:18px;max-width:760px;line-height:1.5;}
+.frame{width:1000px;max-width:100%;border:1px solid var(--border2);border-radius:8px;overflow:hidden;
+  box-shadow:0 18px 44px -18px rgba(0,0,0,.8);}
+.term{position:relative;color:var(--d-termfg);font-family:var(--mono);
+  font-size:12px;line-height:1.7;padding:12px 14px;height:230px;overflow:hidden;white-space:pre;}
+.term .wmhold{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.term .body{position:relative;z-index:1;}
+.ctl{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0;}
+.ctl button{font:600 .72rem var(--font);color:var(--dim);background:var(--ghost-fill);
+  border:1px solid var(--border2);border-radius:var(--corner);padding:6px 11px;cursor:pointer;}
+.ctl button:hover{color:var(--text);}
+</style></head>
+<body>
+<h1>hwb — minimal working example</h1>
+<p class="s">Everything below the frame's chrome is example scaffolding. The chrome itself is
+<code>hwb-chrome.css</code> + <code>hwb-chrome.js</code> with no modifications. Open the console: the
+acceptance invariants are asserted on load and on resize.</p>
+
+<div class="frame">
+  <!-- ===================== THE COMPONENT — copy from here ===================== -->
+  <div class="hwb is-tabbed is-lead" id="win" style="--base:#428DF0">
+    <div class="hwb-bar">
+      <div class="hwb-lead"></div>
+      <div class="hwb-act"><span class="hwb-pip st-streaming"></span></div>
+      <div class="hwb-gutter"></div>
+      <div class="hwb-title">
+        <span class="hwb-titletext">home-server — agent-user</span>
+        <span class="hwb-chip attention">Needs you</span>
+        <span class="hwb-chip severed">Disconnected</span>
+        <span class="hwb-chip ended">Ended</span>
+      </div>
+      <!-- D3: the blocked-count chip lives in the BAR, not inside .hwb-title,
+           which is display:none while tabbed. Coral = alert. -->
+      <span class="hwb-agg"></span>
+      <div class="hwb-tabs"></div>
+      <div class="hwb-dead"></div>
+      <div class="hwb-caps" data-region="caption-cluster">
+        <button class="hwb-cap" data-cap="minimize" aria-label="Minimize"><span class="hwb-capglyph"><svg viewBox="0 0 10 10"><path d="M1 5h8"/></svg></span></button>
+        <button class="hwb-cap" data-cap="maximize" aria-label="Maximize"><span class="hwb-capglyph"><svg viewBox="0 0 10 10"><rect x="1" y="1" width="8" height="8"/></svg></span></button>
+        <button class="hwb-cap close" data-cap="close" aria-label="Close window"><span class="hwb-capglyph"><svg viewBox="0 0 10 10"><path d="M1 1l8 8M9 1l-8 8"/></svg></span></button>
+      </div>
+    </div>
+    <div class="hwb-seam"></div>
+    <!-- v21: the SESSION BAR — project mark · project name · session title … brand watermark · icons -->
+    <div class="hwb-sbar" id="sbar"></div>
+
+    <!-- the content area lives INSIDE .hwb: --d-termbg / --d-ghost are declared
+         on the root, so anything that needs them must be a descendant. -->
+    <!-- v21: the pane watermark — project wash (ll-mid), backlit mark in its line style -->
+    <div class="term wm-pane" id="term"><div class="wmhold"><div class="wm-backlit" id="wmark"></div></div><div class="body">$ …</div></div>
+  </div>
+  <!-- ===================== to here ===================== -->
+</div>
+
+<div class="ctl" id="ctl"></div>
+
+<!-- ===== C · COPY FIELDS — what the tab's items notice opens. Two
+     widths on one page: the 320px column is the constraint, not an afterthought,
+     and it uses the SAME markup with no breakpoint between them. ===== -->
+<h3 style="font:600 11px/1 var(--font);text-transform:uppercase;letter-spacing:.08em;
+    color:var(--dim);margin:26px 0 10px">copy fields — desktop and 320px, one layout</h3>
+<div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+  <div style="width:520px;max-width:100%"><div id="cfWide"></div></div>
+  <div style="width:320px"><div id="cfNarrow"></div></div>
+</div>
+
+<!-- ===== D · the pip, retained and deprecated, beside the ring that replaced
+     it. Same six states, both languages, so the ruling can be looked at rather
+     than argued about. ===== -->
+<h3 style="font:600 11px/1 var(--font);text-transform:uppercase;letter-spacing:.08em;
+    color:var(--dim);margin:26px 0 10px">D · pip (deprecated) vs ring — same six states</h3>
+<div id="glyphCompare" style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start"></div>
+
+<!-- ===== dual-ring session status — additive; the chrome above does
+     not depend on it. Both rows hold the SAME eight sessions; the only
+     difference is the motion context rule. ===== -->
+<h3 style="font:600 11px/1 var(--font);text-transform:uppercase;letter-spacing:.08em;
+    color:var(--dim);margin:26px 0 10px">single-session context — every glyph animates</h3>
+<div class="ringrow" id="ringSingle"></div>
+<h3 style="font:600 11px/1 var(--font);text-transform:uppercase;letter-spacing:.08em;
+    color:var(--dim);margin:22px 0 10px">aggregate context — only the lead animates</h3>
+<div class="ringrow" id="ringAgg"></div>
+<h3 style="font:600 11px/1 var(--font);text-transform:uppercase;letter-spacing:.08em;
+    color:var(--dim);margin:22px 0 10px">attached, device unknown — and the rule still holds</h3>
+<div class="ringrow" id="ringInterim"></div>
+<p style="font:400 12px var(--font);color:var(--dim);margin:10px 0 0" id="ringNote"></p>
+<style>.ringrow{display:flex;gap:18px;align-items:center;flex-wrap:wrap}</style>
+
+<script type="module">
+import { hwbSetState, hwbSetFocused, hwbRenderTabs, hwbAssertInvariants, HWB_RANK,
+         hwbNoticeClock, hwbTabNotices, hwbNoteCountdown } from './hwb-chrome.js';
+import { cfRender, cfValue, cfCopy } from './hwb-copy.js';
+import { LOGO_PRESETS } from './hwb-logo-presets.js';
+import { hwbRing, hwbRingSpec, hwbRingLead, hwbRingAggregate, hwbRingApplyContext } from './hwb-ring.js';
+import { hwbDropPreview, hwbClearDropPreview, hwbDropIndex, hwbTearGhost, hwbMoveGhost } from './hwb-drag.js';
+import { hwbRenderSessionBar } from './hwb-chrome.js';
+/* brand-marks v1 is a SEPARATE bundle, pinned beside this one */
+import { brandMarkPath } from '../brand-marks/aurora-brand-marks.js';
+const BRAND_HUE = { claude: 'oklch(.65 .13 39)', codex: 'oklch(.65 .13 164)', gemini: 'oklch(.65 .13 260)' };
+const PROJECT = { a:'Aurora Styleguide', b:'Console', c:'Speech', d:'Library', e:'Image editor' };
+const WM = { a:{scale:.55,line:'blueprint'}, b:{scale:.8,line:'outline'}, c:{scale:.5,line:'halftone'}, d:{scale:.5,line:'engrave'}, e:{scale:.5,line:'none'} };
+
+const win = document.getElementById('win');
+const HUB = '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="8.5" height="8.5"/><rect x="13.5" y="2" width="8.5" height="8.5"/><rect x="2" y="13.5" width="8.5" height="8.5"/><rect x="13.5" y="13.5" width="8.5" height="8.5"/></svg>';
+
+let tabs = [
+  /* NOTICES (v20). Deliberately spread across the cases that have to coexist:
+     a NOTICE on a tab that is also in DEMAND (b) is the pairing the whole
+     no-borrowed-urgency rule exists to survive, and 'ok' on (d) must render
+     nothing at all. */
+  { id:'a', name:'laptop — main', base:'var(--id-cobalt)', state:'streaming',    logo:LOGO_PRESETS['styleguide'],   active:true, brand:'claude', brandColor:BRAND_HUE.claude, messages:4, handoff:2, links:1,
+    badge:{ kind:'warn', text:'sudo credential expires in 4h12m', expiresAt: Date.now() + (4*60+12)*60000 } },
+  { id:'b', name:'server — jobs',            base:'var(--id-green)',  state:'waiting',      logo:LOGO_PRESETS['harbor'], brand:'gemini', brandColor:BRAND_HUE.gemini,
+    items:{ count:3 } },
+  { id:'c', name:'desktop — build',             base:'var(--id-orange)', state:'disconnected', logo:LOGO_PRESETS['speech'], brand:'codex', brandColor:BRAND_HUE.codex,
+    badge:{ kind:'cold', text:'no sudo credential cached', short:'NO CRED', expiresAt:null }, items:{ count:12 } },
+  { id:'d', name:'notes — indexer',              base:'var(--id-violet)', state:'idle',         logo:LOGO_PRESETS['library'], brand:'claude', brandColor:BRAND_HUE.claude,
+    badge:{ kind:'ok', text:'sudo credential valid', expiresAt: Date.now() + 9e6 } },
+  { id:'e', name:'clips',                     base:'var(--id-orchid)', state:'ended', exit:'fail', logo:LOGO_PRESETS['image-editor'], brand:'ollama', brandColor:'oklch(.65 .13 122)'}  /* SHORT on purpose — the × placement defect was invisible with long titles only */
+];
+
+function draw(){
+  hwbRenderTabs(win, {
+    tabs, hubMark: HUB,
+    liveCount: tabs.filter(t => t.state !== 'ended').length,
+    brandMarkPath,
+    /* 1d: close-view keeps the session in the broker; end-session ends it.
+       Either way this window drops the tab. */
+    onClose: (id, reason) => { console.log('hwb: close-view', id, reason); drop(id); },
+    onEndSession: id => { console.log('hwb: end-session', id); drop(id); },
+    onRefresh: id => console.log('hwb: refresh view', id),
+    onSelect: id => { tabs.forEach(t => t.active = (t.id === id)); draw(); },
+    onNew: () => console.log('hwb: bring the single CLI Manager to the front')
+  });
+  const act = tabs.find(t => t.active);
+  /* v21 session bar + pane watermark follow the ACTIVE session */
+  hwbRenderSessionBar(document.getElementById('sbar'), act ? {
+    project:{ name: PROJECT[act.id], mark: act.logo, color: act.base }, title: act.name,
+    brand: act.brand, brandColor: act.brandColor, brandMarkPath: brandMarkPath(act.brand),
+    messages: act.messages || 0, handoff: act.handoff || 0, links: act.links || 0 } : {});
+  const term = document.getElementById('term'), w = WM[act?.id] || {scale:.5,line:'none'};
+  term.style.setProperty('--wm-pc', act ? act.base : 'var(--dim2)');
+  const px = Math.round(1000 * w.scale * .5);
+  document.getElementById('wmark').innerHTML = act ? act.logo.replace('<svg', `<svg class="wm${w.line !== 'none' ? ' wm-line-' + w.line : ''}" width="${px}" height="${px}"`) : '';
+  const errs = hwbAssertInvariants(win);
+  console.log(errs.length ? '✗ invariants: ' + errs.join(' | ') : '✓ invariants hold');
+}
+function drop(id){ const was = tabs.find(t=>t.id===id)?.active;
+  tabs = tabs.filter(t => t.id !== id); if (was && tabs[0]) tabs[0].active = true; draw(); }
+draw();
+/* The countdown ticks locally off expiresAt — no polling, and it re-renders
+   TEXT only, so a tab is never rebuilt under the pointer. */
+hwbNoticeClock(win, tabs);
+addEventListener('resize', () => console.log(hwbAssertInvariants(win).join(' | ') || '✓ invariants hold'));
+
+/* ---- dual-ring demo. Same specs in both rows; the context rule is the
+        only difference, which is the point. ---- */
+const SESSIONS = [
+  { session:'alert',            viewer:{device:'laptop', presence:'active'} },
+  { session:'attention',        viewer:null },                                  /* the §7 winner */
+  { session:'alert',            viewer:{device:'vrpc',   presence:'away'  } },
+  { session:'active-streaming', viewer:{device:'vrpc',   presence:'active'} },
+  { session:'attention',        viewer:{device:'phone',  presence:'active'} },
+  { session:'active-streaming', viewer:null },
+  { session:'active-idle',      viewer:{device:'console',presence:'away'  } },
+  { session:'restorable',       viewer:{device:'vrpc',   presence:'active'} }   /* viewer DISCARDED — no live pty */
+];
+const specs = SESSIONS.map(hwbRingSpec);
+
+/* An engine that knows SOMEONE is attached but not yet WHICH DEVICE renders a
+   neutral filled center — honest, and it lights up with no visual rework when a
+   viewer registry lands. This spec goes to hwbRing() directly, which is exactly
+   the path that must still enforce the viewer-less rule. */
+const INTERIM = [
+  { state:'attention',        viewer:null, presence:'active' },  /* attached, device unknown */
+  { state:'active-streaming', viewer:null, presence:'active' },
+  { state:'ended',            viewer:'vrpc', presence:'active' } /* MUST come out parked */
+];
+
+for (const [id, aggregate] of [['ringSingle', false], ['ringAgg', true]]) {
+  const host = document.getElementById(id);
+  const glyphs = specs.map(sp => hwbRing(host.appendChild(document.createElement('span')), sp, 26));
+  if (aggregate) hwbRingApplyContext(host, glyphs, specs);
+}
+const interimHost = document.getElementById('ringInterim');
+INTERIM.forEach(sp => hwbRing(interimHost.appendChild(document.createElement('span')), sp, 26));
+
+const agg = hwbRingAggregate(specs);
+document.getElementById('ringNote').textContent =
+  `lead = ${specs[hwbRingLead(specs)].state} (${specs[hwbRingLead(specs)].presence}) · ` +
+  `one aggregate glyph for all eight would read ${agg.state} / ${agg.presence}`;
+
+/* ---- drag affordances. Static demo: the HOST owns the gesture,
+        this bundle owns what the gesture LOOKS like. ---- */
+hwbDropPreview(win, 2);                       // caret before the third tab
+const ghost = hwbTearGhost({ name: tabs[1].name, base: tabs[1].base, logo: tabs[1].logo });
+document.body.appendChild(ghost);
+hwbMoveGhost(ghost, 760, 300);
+
+const ctl = document.getElementById('ctl');
+HWB_RANK.forEach(s => { const b=document.createElement('button'); b.textContent=s;
+  b.onclick=()=>{ const a=tabs.find(t=>t.active); if(a){a.state=s;draw();} }; ctl.appendChild(b); });
+const f=document.createElement('button'); f.textContent='toggle focus';
+f.onclick=()=>hwbSetFocused(win, win.classList.contains('is-unfocused')); ctl.appendChild(f);
+
+/* ---- C · copy fields. The secret is masked by CSS and copies UNMASKED — the
+        harness asserts exactly that, because a credential that silently copies
+        as dots is worse than one that will not copy. ---- */
+const FIELDS = [
+  { label:'Preview URL',      kind:'url',    value:'https://example.com/preview/tab-notices.html?v=20' },
+  { label:'Bridge token',     kind:'secret', value:'hwb_example_token_not_real' },
+  { label:'Commit',           kind:'text',   value:'feat(window-chrome): v20 — tab notices, copy fields' },
+  { label:'A value long enough that truncating it would look like a value', kind:'text',
+    value:'sha256:76bdf60b533f261e0c4a9d7e18b3ac5591fe2d0a7c46bb8319ee5f2a4d70c831' }
+];
+cfRender(document.getElementById('cfWide'),   FIELDS, { title:'Handed to you', onOpen:v => console.log('open', v) });
+cfRender(document.getElementById('cfNarrow'), FIELDS, { title:'Handed to you', onOpen:v => console.log('open', v) });
+
+/* ---- D · pip vs ring, side by side. ---- */
+const GC = document.getElementById('glyphCompare');
+GC.innerHTML = HWB_RANK.map(st => `
+  <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:92px">
+    <span class="hwb-pip st-${st}"></span>
+    <span class="ring" data-gc="${st}"></span>
+    <span style="font:500 10px var(--mono);color:var(--dim2)">${st}</span>
+  </div>`).join('');
+GC.querySelectorAll('.ring[data-gc]').forEach(el =>
+  hwbRing(el, hwbRingFromChromeLocal(el.dataset.gc), 16));
+function hwbRingFromChromeLocal(st){
+  const A = { streaming:'active-streaming', idle:'active-idle', waiting:'attention',
+              disconnected:'alert', ended:'ended', watching:'active-idle' };
+  return { state:A[st], viewer:null, presence: st==='ended' ? 'parked' : 'active' };
+}
+</script>
+</body></html>

@@ -1,0 +1,28 @@
+.web-oobe { box-sizing:border-box; padding:32px 24px; background:var(--md-sys-color-surface); color:var(--md-sys-color-on-surface); overflow:auto; }
+.web-oobe [hidden], .web-oobe[hidden] { display:none !important; }
+/* The gate centres grid items; give its setup card a width independent of step contents. */
+.wb-gate-body.web-oobe { width:min(668px,100%); align-self:start; }
+.web-oobe-column { width:100%; max-width:620px; margin:auto; }
+.web-oobe h1 { font-size:24px; margin:12px 0; }
+.web-oobe p { line-height:1.5; color:var(--md-sys-color-on-surface-variant); }
+.web-oobe small { display:block; margin-top:6px; line-height:1.5; color:var(--md-sys-color-on-surface-variant); }
+.web-oobe button { min-height:44px; padding:10px 18px; border:1px solid var(--md-sys-color-outline); border-radius:24px; background:var(--md-sys-color-surface); color:var(--md-sys-color-on-surface); font:inherit; cursor:pointer; }
+.web-oobe button:disabled { opacity:.5; cursor:default; }
+.web-oobe button:focus-visible, .web-oobe input:focus-visible { outline:2px solid var(--md-sys-color-primary); outline-offset:3px; }
+.web-oobe .web-oobe-choice { display:block; width:100%; text-align:left; border-radius:12px; margin-block:8px; }
+.web-oobe .web-oobe-choice[aria-checked="true"] { border-color:var(--md-sys-color-primary); background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); }
+.web-oobe-choice[aria-checked="true"] small { color:var(--md-sys-color-on-secondary-container); }
+.web-oobe .web-oobe-primary { background:var(--md-sys-color-primary); color:var(--md-sys-color-on-primary); border-color:transparent; }
+.web-oobe-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; margin-top:24px; }
+.web-oobe-agent { display:flex; flex-wrap:wrap; gap:12px; align-items:center; padding-block:16px; border-bottom:1px solid var(--md-sys-color-outline-variant); }
+.web-oobe-agent > div { flex:1; min-width:140px; }
+.web-oobe input { box-sizing:border-box; width:100%; padding:12px; margin:8px 0 12px; border:1px solid var(--md-sys-color-outline); border-radius:8px; background:var(--md-sys-color-surface); color:var(--md-sys-color-on-surface); font:inherit; }
+.web-oobe-disclosure { box-sizing:border-box; width:min(560px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); overflow:auto; padding:24px; border:1px solid var(--md-sys-color-outline-variant); border-radius:24px; background:var(--md-sys-color-surface-container-high); color:var(--md-sys-color-on-surface); }
+.web-oobe-disclosure::backdrop { background:color-mix(in srgb,var(--md-sys-color-scrim) 40%,transparent); }
+@media(max-width:480px){.web-oobe{padding:24px 16px;}.web-oobe-disclosure{padding:20px;}}
+
+.web-oobe-radio-mark{float:left;margin-inline-end:10px;font-size:20px;line-height:1}
+.web-oobe-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--md-sys-color-outline);border-radius:10px;padding:5px 10px;background:var(--md-sys-color-surface-container);color:var(--md-sys-color-on-surface);white-space:nowrap}
+.web-oobe-folder-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-block:8px}
+.web-oobe-folder-row input[readonly]{flex:1;min-width:160px;margin:0;background:var(--md-sys-color-surface-container);border-style:dashed;cursor:default}
+.web-oobe-folder-row+ p{margin-top:4px}

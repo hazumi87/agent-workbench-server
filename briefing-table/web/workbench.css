@@ -1,0 +1,348 @@
+/* Workbench engine — empty-shell styling (Milestone 0).
+   Consumes the pinned the design system tokens (web/vendor/aurora-tokens.css). Colors,
+   surfaces, and typography come from there; this file is layout + the bare
+   frame chrome only. No pane/drag styling yet — that is the guest model (M1+). */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+.dim { color: var(--dim); }
+code { font-family: var(--mono); color: var(--dim); }
+
+/* ---- host page (the thing the Workbench overlays) ---- */
+.host-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  padding: 0 18px;
+  background: var(--nav);
+  border-bottom: 1px solid var(--border);
+}
+.host-brand { font-family: var(--display); font-weight: 600; letter-spacing: .2px; }
+
+.host-body {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 64px 18px;
+}
+.host-card {
+  max-width: 560px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 30px;
+  line-height: 1.55;
+}
+.host-card h1 { font-family: var(--display); margin: 0 0 4px; font-size: 26px; }
+.host-card p { margin: 10px 0 0; }
+
+/* ---- buttons ---- */
+.btn {
+  font: inherit;
+  color: var(--text);
+  background: var(--ghost-fill);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+.btn:hover { background: var(--ghost-fill-hover); }
+
+/* ---- right-edge dock entry tab (v5 side tab) ---- */
+.wb-sidetab {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  writing-mode: vertical-rl;
+  font: inherit;
+  font-family: var(--display);
+  letter-spacing: .5px;
+  color: var(--text);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  padding: 14px 7px;
+  cursor: pointer;
+  box-shadow: -6px 0 18px rgba(0, 0, 0, .35);
+  z-index: 5;
+}
+.wb-sidetab:hover { background: var(--surface3); }
+
+/* ---- the Workbench overlay frame ---- */
+.wb-stage { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
+.wb-stage[data-mode="off"] { display: none; }
+
+.wb-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 7, 10, .58);
+  opacity: 0;
+  transition: opacity .15s ease;
+  pointer-events: none;
+}
+.wb-stage[data-mode="modal"] .wb-scrim,
+.wb-stage[data-mode="full"] .wb-scrim { opacity: 1; pointer-events: auto; }
+
+.wb-frame {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
+  pointer-events: auto;
+  overflow: hidden;
+}
+
+/* modal: centered card over the scrim */
+.wb-stage[data-mode="modal"] .wb-frame {
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  width: min(880px, 92vw);
+  height: min(620px, 86vh);
+  border-radius: 14px;
+}
+/* dock: right rail, host page stays usable on the left (no scrim) */
+.wb-stage[data-mode="dock"] .wb-frame {
+  inset: 0 0 0 auto;
+  width: min(420px, 33vw);
+  border-radius: 0;
+  border-right: none;
+  border-top: none;
+  border-bottom: none;
+}
+/* full: fills the viewport */
+.wb-stage[data-mode="full"] .wb-frame {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 0;
+}
+
+.wb-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  padding: 0 8px 0 14px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+.wb-title { font-family: var(--display); font-weight: 600; }
+.wb-actions { display: flex; gap: 2px; }
+
+.bar-btn {
+  font: inherit;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+}
+.bar-btn:hover:not(:disabled) { background: var(--surface3); border-color: var(--border2); }
+.bar-btn:disabled { color: var(--dim); opacity: .45; cursor: default; }
+
+.wb-canvas {
+  flex: 1 1 auto;
+  display: grid;
+  /* M4: many panes. Auto-fit columns so 1 pane fills, N panes tile. Min 320px
+     keeps a terminal usable; rows stretch to fill the canvas height. */
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 1px;
+  padding: 0;
+  min-height: 0; /* let a grid child (the pane) actually shrink to fit */
+  background: var(--border); /* shows through the 1px gap as gridlines */
+}
+/* empty-state framing only when there are no panes */
+.wb-canvas.is-empty {
+  grid-template-columns: 1fr;
+  place-items: center;
+  gap: 0;
+  padding: 24px;
+  background:
+    linear-gradient(var(--border) 1px, transparent 1px) 0 0 / 100% 40px,
+    linear-gradient(90deg, var(--border) 1px, transparent 1px) 0 0 / 40px 100%,
+    var(--surface);
+  background-blend-mode: soft-light;
+}
+
+.wb-empty { max-width: 360px; text-align: center; }
+.wb-empty-glyph {
+  font-size: 40px;
+  color: var(--teal);          /* cli accent — the first component class */
+  opacity: .55;
+  margin-bottom: 8px;
+}
+.wb-empty-head { font-family: var(--display); font-size: 18px; margin: 0 0 6px; }
+.wb-empty-sub { margin: 0; line-height: 1.5; font-size: 13px; }
+
+/* ---- pane (M4: many panes; split-tree/drag still later) ---- */
+.pane {
+  /* --fn = FUNCTION color (encodes WHAT the pane does, not where it is).
+     --pane-accent = the user's per-pane IDENTITY color (set via setPrefs); it
+     defaults to --fn so an un-customized pane still reads by function, and the
+     user's color overrides it for at-a-glance project identity. */
+  --fn: var(--teal);
+  --pane-accent: var(--fn);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--ink);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--pane-accent); /* the identity stripe */
+}
+.pane.fn-cli { --fn: var(--teal); }
+.pane.fn-web { --fn: var(--sky); }
+.pane.fn-doc { --fn: var(--indigo); }
+.pane.fn-log { --fn: var(--amber); }
+
+.pane-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 6px 0 10px;
+  flex: 0 0 auto;
+  /* tint the head with the user's identity color (falls back to function color) */
+  background: color-mix(in srgb, var(--pane-accent) 14%, var(--surface2));
+  border-bottom: 1px solid var(--border);
+}
+.pane-dot {            /* status: live | killed */
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--dim);
+}
+.pane-dot[data-state="live"] { background: var(--lime); box-shadow: 0 0 6px var(--lime); }
+.pane-dot[data-state="killed"] { background: var(--coral); }
+.pane-fn-dot {         /* function color */
+  width: 8px; height: 8px; border-radius: 2px;
+  background: var(--fn);
+}
+.pane-name { font-family: var(--display); font-weight: 600; font-size: 13px; }
+.pane-state { font-family: var(--mono); font-size: 11px; color: var(--dim); margin-left: 2px; }
+
+/* per-pane pref controls — the STAND-IN editor (the design system picker replaces these).
+   Pushed to the right; compact so they don't crowd the head. */
+.pane-prefs { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.pane-prefs .pane-name-input,
+.pane-prefs .pane-wm {
+  font: inherit; font-size: 11px;
+  width: 84px;
+  color: var(--text); background: var(--ink);
+  border: 1px solid var(--border2); border-radius: 5px;
+  padding: 2px 5px;
+}
+.pane-prefs .pane-wm { width: 72px; }
+/* a swatch = a tiny glyph label wrapping a hidden-ish color input. The glyph
+   says WHICH color (▍ accent · A text · ▢ background); clicking opens the picker. */
+.pane-swatch {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px;
+  font-size: 11px; line-height: 1; color: var(--dim);
+  border: 1px solid var(--border2); border-radius: 5px;
+  cursor: pointer; position: relative; overflow: hidden;
+}
+.pane-swatch:hover { color: var(--text); border-color: var(--fn); }
+.pane-swatch input[type="color"] {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; cursor: pointer; padding: 0; border: 0;
+}
+
+.pane-kill {
+  font: inherit; font-size: 13px; line-height: 1;
+  color: var(--dim); background: transparent;
+  border: 1px solid transparent; border-radius: 6px;
+  width: 26px; height: 26px; cursor: pointer;
+}
+.pane-kill:hover { color: var(--text); background: var(--surface3); border-color: var(--border2); }
+.pane-kill:disabled { opacity: .35; cursor: default; }
+
+/* body stacks the watermark BEHIND the terminal surface (renderer chrome) */
+.pane-body { position: relative; flex: 1 1 auto; min-height: 0; }
+.pane-watermark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(28px, 9vw, 96px);
+  color: var(--pane-accent);
+  opacity: .07;
+  pointer-events: none;
+  user-select: none;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  z-index: 0;
+}
+.pane-term {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  min-height: 0;
+  padding: 0;            /* xterm owns the bg now; no padding gap to leak through */
+  overflow: hidden;
+}
+/* Right-edge gutter — the padding takes width from the text, the translate puts
+   the bar back on the edge. Full reasoning in web/solo.css. */
+.pane-term .xterm { height: 100%; padding: 4px 8px 4px 6px; }
+.pane-term .xterm-scrollable-element > .scrollbar.vertical { transform: translateX(8px); }
+/* The user's bg lives on .pane-term (the stable element). xterm's OWN layers must
+   ALL be transparent so that element bg shows through the whole surface, not just
+   the padding edges. xterm's DOM renderer paints a bg on the root, viewport,
+   screen AND rows — any one left opaque covers the center (the "black main area,
+   colored border" symptom). theme.background is also set to 'transparent' in JS
+   so xterm doesn't write an inline opaque bg these rules would have to fight. */
+.pane-term .xterm,
+.pane-term .xterm-viewport,
+.pane-term .xterm-screen,
+.pane-term .xterm-rows {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+/* Scrollbar. The 2026-06-10 note here said the native bar was "left NATIVE on
+   purpose (white Windows up/down arrows + thumb)". That bar turned out to be
+   DEAD: xterm 6 scrolls through its own `.xterm-scrollable-element` overlay,
+   and `.xterm-viewport` never scrolls at all (400 lines of scrollback:
+   scrollHeight === clientHeight, wheel moved the rows, scrollTop stayed 0).
+   Its `overflow-y: scroll` is a leftover in the PINNED vendor CSS that paints a
+   permanently-full native bar — 15px wide where the OS uses classic scrollbars
+   — over the right edge of the text. So the arrows were never a control, and
+   removing them costs no affordance. Full note in web/solo.css.
+   Still do NOT re-impose a custom ::-webkit-scrollbar on the REAL bar. */
+.pane-term .xterm-viewport { overflow-y: hidden; }
+
+/* ---- debug readout ---- */
+.wb-debug {
+  position: fixed;
+  left: 10px;
+  bottom: 10px;
+  z-index: 20;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+  background: color-mix(in srgb, var(--nav) 85%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 5px 9px;
+  pointer-events: none;
+}

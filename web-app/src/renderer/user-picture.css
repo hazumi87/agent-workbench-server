@@ -1,0 +1,8 @@
+.ac-yourpicture { padding: 0 0 24px; margin-bottom: 24px; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+.ac-picture-preview.wr-av { margin: 16px 0; font: 500 28px/1 var(--font); background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.ac-picture-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.ac-picture-buttons button { min-height: 48px; }
+.ac-picture-message { min-height: 20px; margin: 8px 0 0; font-size: 12px; color: var(--md-sys-color-on-surface-variant); }
+.ac-picture-message.err { color: var(--md-sys-color-error); }
+.wr-msg.mine + .wr-msg.mine > .wr-user-picture { visibility: hidden; }
+@media (max-width: 600px) { .ac-picture-buttons { flex-direction: column; align-items: stretch; } }

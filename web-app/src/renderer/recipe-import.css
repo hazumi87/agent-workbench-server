@@ -1,0 +1,61 @@
+.ri-preview { color: var(--md-sys-color-on-surface); min-width: 0; }
+.ri-preview h2 { font: 500 24px/32px var(--font); margin: 0 0 8px; }
+.ri-scroll { overflow: auto; margin: 16px 0; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 12px; }
+.ri-table { border-collapse: collapse; width: 100%; font: 400 13px/20px var(--font); text-align: left; }
+.ri-table th { font-weight: 600; background: var(--md-sys-color-surface-container); }
+.ri-table th, .ri-table td { padding: 12px 10px; vertical-align: top; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+.ri-table td p { margin: 0 0 6px; min-width: 130px; }
+.ri-table td strong { display: block; min-width: 100px; }
+.ri-table img { object-fit: contain; vertical-align: middle; margin-right: 6px; }
+.ri-table small { display: block; max-width: 150px; color: var(--md-sys-color-on-surface-variant); }
+.ri-table input:not([type=checkbox]), .ri-table select { width: 170px; box-sizing: border-box; min-height: 40px; border: 1px solid var(--md-sys-color-outline); border-radius: 6px; padding: 8px; background: var(--md-sys-color-surface-container-lowest); color: var(--md-sys-color-on-surface); font: inherit; }
+.ri-button, .ri-primary { min-height: 40px; padding: 8px 16px; border: 0; border-radius: 20px; font: 500 13px/20px var(--font); cursor: pointer; background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.ri-table .ri-button { margin-top: 8px; }
+.ri-primary { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.ri-primary:disabled { opacity: .38; cursor: default; }
+.ri-footer { display: flex; align-items: center; gap: 12px; }
+.ri-footer > span { margin-right: auto; }
+.ri-error { color: var(--md-sys-color-error); }
+.ri-preview :is(button,input,select):focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 3px; }
+
+.ri-scroll:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 3px; }
+.ri-table td p { overflow-wrap: anywhere; }
+@media (max-width: 899px) {
+  .ri-scroll { overflow: visible; }
+  .ri-table, .ri-table tbody { display: block; width: 100%; }
+  .ri-table thead { display: block; }
+  .ri-table thead tr { display: flex; }
+  .ri-table th:not(:first-child) { display: none; }
+  .ri-table th:first-child { width: 100%; text-align: left; border-radius: 12px 12px 0 0; }
+  .ri-table th:first-child::after { content: 'Select all'; margin-left: 8px; }
+  .ri-table tbody tr { display: grid; grid-template-columns: 24px minmax(0, 1fr) minmax(0, 1fr); gap: 8px 12px; padding: 16px 12px; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+  .ri-table td { display: block; min-width: 0; padding: 0; border: 0; }
+  .ri-table td:nth-child(1) { grid-column: 1; grid-row: 1; }
+  .ri-table td:nth-child(2) { grid-column: 2 / 4; grid-row: 1; }
+  .ri-table td:nth-child(3) { grid-column: 2; grid-row: 2; }
+  .ri-table td:nth-child(4) { grid-column: 3; grid-row: 2; }
+  .ri-table td:nth-child(5) { grid-column: 2 / 4; grid-row: 3; }
+  .ri-table td:nth-child(6) { grid-column: 2 / 4; grid-row: 4; }
+  .ri-table td:nth-child(n+3)::before { content: attr(data-label); display: block; margin: 0 0 4px; font-weight: 600; color: var(--md-sys-color-on-surface-variant); }
+  .ri-table td p, .ri-table td strong { min-width: 0; }
+  .ri-table small { max-width: none; }
+  .ri-table input:not([type=checkbox]), .ri-table select { max-width: 100%; width: 100%; }
+}
+
+.ri-table td strong { overflow-wrap: anywhere; }
+
+/* A blocked target stays explainable by mouse and keyboard. No geometry changes. */
+.rf-blocked-chip { background: var(--md-sys-color-surface-container-highest); color: var(--md-sys-color-on-surface); font: 500 11px/16px var(--font); padding: 2px 6px; border-radius: 6px; }
+.rcp .rail-ib[aria-disabled="true"] { opacity: .38; cursor: default; }
+.wr-seatrestore[aria-disabled="true"] { opacity: 1; background: none; color: color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent); border-color: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent); cursor: default; }
+
+/* the pick boxes: a 44 px target that draws a 24 px box in the app's colours (the native box read 1.7:1 against the table) */
+.ri-table input[type=checkbox] { appearance: none; -webkit-appearance: none; position: relative; width: 44px; height: 44px; margin: 0; padding: 0; border: 0; background: none; cursor: pointer; vertical-align: middle; }
+.ri-table input[type=checkbox]::before { content: ''; position: absolute; inset: 10px; box-sizing: border-box; border: 2px solid var(--md-sys-color-on-surface-variant); border-radius: 4px; background: transparent center / 16px no-repeat; }
+.ri-table input[type=checkbox]:checked::before { border-color: var(--md-sys-color-primary); background-color: var(--md-sys-color-primary); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E"); }
+.ri-table input[type=checkbox]:disabled { opacity: .38; cursor: default; }
+.ri-table input[type=checkbox]:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: -2px; border-radius: 8px; }
+
+/* buttons and fields: 44 px, 48 on a phone (a11y walk: 40 px at 390) */
+.ri-button, .ri-primary, .ri-table input:not([type=checkbox]), .ri-table select { min-height: 44px; }
+@media (max-width: 600px) { .ri-button, .ri-primary, .ri-table input:not([type=checkbox]), .ri-table select { min-height: 48px; } }

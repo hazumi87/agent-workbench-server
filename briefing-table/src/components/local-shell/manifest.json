@@ -1,0 +1,11 @@
+{
+  "id": "local-shell",
+  "title": "Local Shell",
+  "class": "cli",
+  "fn": "cli",
+  "descriptor": {
+    "binary": "powershell.exe",
+    "args": [],
+    "cwd": null
+  }
+}

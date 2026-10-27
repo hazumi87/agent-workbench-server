@@ -1,0 +1,25 @@
+/* ==== LINE HALO [rooms/line-halo] (the design system ruling 2026-09-28) =================
+   Text that sits DIRECTLY on the line's backdrop (the room art, drawn like a
+   terminal pane: .wm-pane) wears the chrome's own halo, the one tab labels
+   and the session-bar title wear over their watermark (hwb-chrome.css
+   .hwb-tab .tname / .hwb-sbar .sb-title): 0 0 3px + 0 0 6px of the ground
+   under it. Here the ground is the pane's own, --wm-term (hwb-watermark.css).
+   Always on: over quiet art it is the ground on the ground, invisible.
+   Never inside a bubble (a bubble is its own ground), never an art-opacity
+   cap, never a backing box.
+   Covered: facts and deliveries (.entry.by-room), the read line ("seen",
+   "not yet", "can't tell"), voice notes and the files note under a bubble,
+   "start of the line", and the delivery status above the composer.
+   ========================================================================== */
+.rm-line.wm-pane :is(
+  .entry.by-room,
+  .entry-reads,
+  .entry-vnotes,
+  .entry-files,
+  .entry-files button,
+  .rm-start,
+  .rm-delivery
+) {
+  text-shadow: 0 0 3px var(--wm-term), 0 0 6px var(--wm-term);
+}
+/* ==== /LINE HALO ==== */

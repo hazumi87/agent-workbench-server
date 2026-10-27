@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- global color palette, first paint (hub V2): see web/palette-boot.js -->
+  <script src="/palette-boot.js"></script>
+  <meta charset="utf-8" />
+  <!-- No `maximum-scale` / `user-scalable=no`: see web/solo.html — they cost the
+       right quarter of the app on a phone with iOS Display Zoom. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1016" />
+  <title>Art · Briefing Table</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/aurora/window-chrome/tokens.css" />
+  <!-- The v21 watermark rendering itself (.wm-pane / .wm / .wm-line-* / the
+       backlit wrapper), vendored from the design system. This page previews the art in
+       the REAL pane treatment, so it needs the bundle's sheet exactly as
+       solo.html does — a mock of it could not show a line style honestly. -->
+  <link rel="stylesheet" href="/aurora/window-chrome/hwb-watermark.css" />
+  <link rel="stylesheet" href="/art.css" />
+  <link rel="stylesheet" href="/light-mode.css" />
+</head>
+<body>
+  <header class="ic-top">
+    <!-- NOT "Harbor", NOT "icons" (Owner, 2026-09-21): harbor is the supervisor
+         this engine happens to run under, and what this page manages is a
+         PROJECT'S ART — the watermark behind its terminals and the mark on its
+         tabs — together with the color everything else derives from.
+         The TINT ROW IS GONE with the same breath: it was a study control from
+         when this page was a lab, and it overrode every preview with one
+         chosen color. Now that each project's art carries its own, an override
+         does not illustrate anything — it HIDES the thing you came to see. -->
+    <span class="ic-brand">Briefing Table <span class="dim">· Art</span></span>
+    <span class="ic-note dim" id="counts"></span>
+    <a class="btn btn-ghost" href="/manager.html">← Manager</a>
+  </header>
+
+  <!-- MASTER / DETAIL. The page is a management surface now, not a study: pick a
+       set on the left, see it at both sizes on the right, and act on it. The
+       horse-race grid that chose the pipeline was deleted once it had — its
+       answer is baked into the import path (the design notes keeps the
+       reasoning). -->
+  <main class="ic-body">
+    <aside class="ic-list">
+      <div class="ic-list-head">
+        <span>Projects</span>
+        <button id="addBtn" class="btn btn-accent" title="Import a PNG or SVG as a new set">＋ Add</button>
+      </div>
+      <div id="listYours" class="ic-group"></div>
+      <div id="listSystem" class="ic-group"></div>
+    </aside>
+
+    <section class="ic-detail" id="detail">
+      <div class="ic-empty" id="detailEmpty">Select a project on the left.</div>
+    </section>
+  </main>
+
+  <!-- Hidden file input, shared by Add and Replace. -->
+  <input type="file" id="fileInput" accept="image/png,image/jpeg,image/svg+xml" hidden />
+
+  <script type="module" src="/art.js"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+{ "id": "service-set", "name": "Service set", "version": "0.1.0", "class": "tool", "provides": ["svc.tool"], "contexts": ["dashboard"], "actions": "actions.json", "service": "service.json" }

@@ -1,0 +1,22 @@
+/* The model & effort card (web/agent-profile-card.mjs): the room seat menu's
+   confirm card look (room.css .rsm-card), self-contained so the CLI Manager can
+   use it without room.css. Tokens only. */
+.apc-scrim { position: fixed; inset: 0; z-index: 85; display: grid; place-items: center; background: color-mix(in srgb, var(--ink) 70%, transparent); padding: 16px; }
+.apc-card { --pc-ink: oklch(from var(--pc, var(--teal)) .82 clamp(.02, calc(c * .6), .13) h); width: min(380px, 100%); background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; box-shadow: 0 24px 60px -12px rgba(0, 0, 0, .8); outline: 0; }
+.apc-card .hd { padding: 18px 20px 10px; font: 700 1rem var(--display, var(--font)); overflow-wrap: anywhere; }
+.apc-card .hd code { font: 600 .95em var(--mono); color: var(--pc-ink); }
+.apc-card .bd { padding: 0 20px 14px; font-size: 13.5px; line-height: 1.5; color: var(--dim); }
+.apc-f { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: center; gap: 10px; margin-top: 10px; color: var(--text); }
+.apc-f select { min-height: 34px; padding: 0 8px; border-radius: 8px; border: 1px solid var(--border2); background: var(--surface2); color: var(--text); font: 500 13px var(--font); }
+.apc-f select:focus-visible, .apc-btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.apc-note { margin-top: 12px; font-size: 12px; color: var(--dim); }
+.apc-msg { margin-top: 8px; min-height: 1.4em; }
+.apc-msg.ok { color: var(--teal); }
+.apc-msg.bad { color: var(--coral); }
+.apc-card .ft { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px 16px; border-top: 1px solid var(--border); }
+.apc-btn { min-height: 34px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--border2); background: none; color: var(--text); font: 500 13px var(--font); cursor: pointer; }
+.apc-btn.apc-go { border-color: var(--teal); color: var(--teal); }
+.apc-btn:disabled { opacity: .5; cursor: default; }
+@media (max-width: 600px) {
+  .apc-f select, .apc-btn { min-height: 44px; font-size: 16px; }
+}

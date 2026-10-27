@@ -1,0 +1,121 @@
+/* REPLY TO A LINE (the design system room-reply-v1; web/room-reply.mjs). Tokens only.
+   NO BARS: a quote is an inset box (a hairline all round), never a left rule.
+   The flash on arrival is THE LIFT (--surface3 + a --dim2 hairline). */
+
+.rm-scroll { overflow-x: hidden; } /* a swiped line slides; the column never scrolls sideways */
+
+/* ---- the line: focusable, the hover pill on its top outer corner ---- */
+.entry.rp-line { position: relative; }
+.entry.rp-line:focus { outline: none; }
+.entry.rp-line:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 3px; border-radius: 10px; }
+.entry.rp-line > .entry-bubble { position: relative; transition: background-color .9s, border-color .9s; }
+.entry.by-room.rp-line > .entry-body { border-radius: 8px; transition: background-color .9s, box-shadow .9s; }
+.rp-acts {
+  /* the bubble's OUTER corner (its 1px border is outside this padding box) */
+  position: absolute; top: -1px; right: -7px; transform: translateY(-50%); z-index: 3;
+  display: none; gap: 2px; padding: 2px;
+  background: var(--surface3); border: 1px solid var(--border2); border-radius: 8px; box-shadow: 0 6px 14px -6px rgba(0, 0, 0, .6);
+}
+.entry.by-user .rp-acts { right: auto; left: -7px; }
+.entry.rp-line:hover .rp-acts, .entry.rp-line:focus-within .rp-acts { display: flex; }
+@media (hover: none) { .entry.rp-line:hover:not(:focus-within) .rp-acts { display: none; } }
+.rp-act { width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; display: grid; place-items: center; background: none; color: var(--dim); cursor: pointer; }
+.rp-act:hover { background: var(--cap-hover); color: var(--text); }
+.rp-act:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.rp-act svg, .rp-qh svg, .rp-chip svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.rp-act[data-a="more"] svg { fill: currentColor; stroke: none; }
+
+/* ---- the arrival flash: the lift, held a beat, fading back over .9s ---- */
+.entry.rp-flash > .entry-bubble { background: var(--surface3) !important; border-color: var(--dim2) !important; transition: none; }
+.entry.by-room.rp-flash > .entry-body { background: var(--surface3); box-shadow: 0 0 0 1px var(--dim2); transition: none; }
+
+/* ---- the quote header inside a sent reply: an inset box, a hairline all round ---- */
+.rp-qh {
+  display: flex; align-items: center; gap: 7px; width: 100%; min-height: 32px; margin: 3px 0 7px; padding: 6px 9px;
+  border-radius: 6px; border: 1px solid var(--border2); background: color-mix(in srgb, var(--ink) 55%, transparent);
+  font: inherit; font-size: 12.5px; text-align: left; color: var(--dim); cursor: pointer;
+}
+.rp-qh:hover { border-color: var(--dim2); color: var(--text); }
+.rp-qh:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 2px; }
+.rp-qh .rp-qr { flex: none; }
+.rp-qh .rp-qa { flex: none; font: 500 12px var(--mono); color: var(--pc-ink, var(--dim)); }
+.rp-qh .rp-qa.mention:not([data-tone="seat"]):not([data-tone="user"]) { color: var(--text); font-weight: 500; }
+.rp-qh .rp-fact { color: var(--dim); }
+.rp-qh .rp-qi { flex: none; display: inline-flex; color: var(--dim2); }
+.rp-qh .rp-qt { min-width: 0; flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rp-qh .rp-thumb { flex: none; width: 22px; height: 22px; border-radius: 3px; border: 1px solid var(--border2); object-fit: cover; margin-left: auto; }
+.rp-qh.gone { cursor: default; font-style: italic; color: var(--dim2); }
+.rp-qh.gone:hover { border-color: var(--border2); color: var(--dim2); }
+/* not loaded: the ↩ becomes a spinner while older lines load */
+.rp-qh.is-loading .rp-qr { animation: rp-spin .8s linear infinite; }
+.rp-qh.is-loading .rp-qr path { stroke-dasharray: 3 3; }
+@keyframes rp-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .rp-qh.is-loading .rp-qr { animation: none; opacity: .5; } }
+
+/* ---- "↓ Back to latest", floating over the line after a jump ---- */
+.rp-latest {
+  position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 12;
+  display: flex; align-items: center; gap: 6px; min-height: 32px; padding: 6px 12px; border-radius: 16px;
+  background: var(--surface3); border: 1px solid var(--border2); box-shadow: 0 8px 20px -8px rgba(0, 0, 0, .7);
+  font: inherit; font-size: 12.5px; color: var(--text); cursor: pointer;
+}
+.rp-latest[hidden] { display: none; }
+.rp-latest:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 2px; }
+
+/* ---- the composer's quote chip: FIRST in the tray, sticky-left ---- */
+.rp-chip {
+  position: sticky; left: 0; z-index: 2; flex: none; width: 260px; height: 64px;
+  display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 2px 8px; align-content: center;
+  padding: 6px 32px 6px 10px; border: 1px solid var(--border2); border-radius: 6px; background: var(--surface3);
+  box-shadow: 8px 0 10px -6px var(--ink);
+}
+.rp-chip .rp-ic { grid-row: 1 / 3; color: var(--dim); align-self: start; margin-top: 2px; }
+.rp-chip .rp-l1 { min-width: 0; font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rp-chip .rp-l1 .rp-who { font: 500 12px var(--mono); }
+.rp-chip .rp-l1 .rp-who:not([data-tone="seat"]):not([data-tone="user"]) { color: var(--text); }
+.rp-chip .rp-to { color: var(--dim); }
+.rp-chip .rp-l2 { min-width: 0; font-size: 12.5px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rp-chip .rp-x svg { width: 10px; height: 10px; stroke-width: 2.4; }
+
+/* ---- the line menu (the seat-menu component): the key hint ---- */
+.rsm-menu[data-menu="line"] .rsm-k { margin-left: auto; font: 400 11px var(--mono); color: var(--dim2); }
+
+/* ---- phone: the chip 230x56, the swipe-to-reply disc ---- */
+@media (max-width: 600px) {
+  .rp-chip { width: 230px; height: 56px; }
+  /* THE CHIP AND THE THUMBNAILS EACH GET A ROW [Owner 2026-10-13, iPhone: with a reply the attachments were "just not present"].
+     In the desktop's one row the sticky 230px chip took 230 of the tray's 358px, so tile 1 sat at x=310 and tiles 2 and 3 at 374 and
+     438 were off the right edge (measured 390x844, Chromium + WebKit), and under the keyboard tile 2 was half cut. Here the tray is a
+     two-row grid: the chip on row 1 (still sticky, still first in the tray), the tiles on row 2 in one sideways-scrolling row. The
+     chip's right margin cancels its width so its column is sized by the tiles, not by it. */
+  .rm-tray:has(> .rp-chip) { display: grid; grid-auto-flow: column; grid-auto-columns: max-content; grid-template-rows: auto auto; justify-content: start; align-content: start; }
+  .rm-tray > .rp-chip { grid-row: 1; grid-column: 1; margin-right: -229px; }
+  .rm-tray:has(> .rp-chip) > :not(.rp-chip) { grid-row: 2; }
+  .rp-acts { display: none !important; }
+}
+@media (max-width: 600px), (pointer: coarse) {
+  .entry.rp-line { touch-action: pan-y; }
+}
+.entry.rp-swiping { transition: none; }
+.entry.rp-line:not(.rp-swiping) { transition: transform .18s ease-out; }
+.rp-disc {
+  position: absolute; left: -44px; top: 50%; transform: translateY(-50%); z-index: 2;
+  width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+  border: 1px solid var(--border2); color: var(--dim); background: var(--surface);
+}
+.rp-disc.on { border-color: var(--room-accent, var(--teal)); color: var(--room-accent, var(--teal)); }
+.rp-disc svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---- touch: the text is selectable, everything around it opens the menu ----
+   (Owner 2026-10-03). The body keeps the browser's own press-and-hold selection
+   and callout; the meta line, the bubble padding, the quote header and the
+   gutter beside the bubble must NOT start a selection (it painted over the
+   menu), and the long press there is ours (room-reply.mjs, the gutter block). */
+@media (max-width: 600px), (pointer: coarse) {
+  .rm-scroll, .entry.rp-line {
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  }
+  .entry.rp-line .entry-body, .entry.rp-line .entry-body * {
+    -webkit-user-select: text; user-select: text; -webkit-touch-callout: default;
+  }
+}

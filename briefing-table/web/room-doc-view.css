@@ -1,0 +1,97 @@
+/* ROOM DOCUMENT VIEWER [ticket] (web/room-doc-view.mjs): the toolbar in the
+   preview header, the rendered document, the full-screen card and the print
+   root. Tokens and the room's font stack only. */
+.pv-tools { display: flex; align-items: center; flex: none; }
+.pv-tools:empty { display: none; }
+.dv-tools { display: flex; align-items: center; }
+.dv-tb {
+  flex: none; width: 32px; height: 32px; border-radius: var(--corner); border: 0; background: none; color: var(--dim);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
+}
+.dv-tb svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.dv-tb:hover { background: var(--cap-hover); color: var(--text); }
+.dv-tb.ok { color: var(--room-accent, var(--teal)); }
+.dv-tb:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.dv-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+
+.dv { min-width: 0; font-size: 13.5px; line-height: 1.6; color: var(--text); overflow-wrap: anywhere; }
+.dv-status, .dv-problem p { margin: 0 0 10px; color: var(--dim); font-size: 13px; }
+.dv-pre {
+  margin: 0; font: 400 12px/1.55 var(--mono); color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 4;
+}
+.dv-pre.nowrap { white-space: pre; overflow-x: auto; overflow-wrap: normal; }
+
+.dv-md > :first-child { margin-top: 0; }
+.dv-md > :last-child { margin-bottom: 0; }
+.dv-md h1, .dv-md h2, .dv-md h3, .dv-md h4, .dv-md h5, .dv-md h6 { margin: 1.3em 0 .5em; line-height: 1.25; font-weight: 650; color: var(--text); }
+.dv-md h1 { font-size: 1.45em; padding-bottom: .3em; border-bottom: 1px solid var(--border); }
+.dv-md h2 { font-size: 1.25em; padding-bottom: .25em; border-bottom: 1px solid var(--border); }
+.dv-md h3 { font-size: 1.1em; }
+.dv-md h4, .dv-md h5, .dv-md h6 { font-size: 1em; }
+.dv-md p, .dv-md ul, .dv-md ol, .dv-md blockquote, .dv-md pre, .dv-md table { margin: 0 0 .9em; }
+.dv-md ul, .dv-md ol { padding-left: 1.5em; }
+.dv-md li + li { margin-top: .25em; }
+.dv-md li > ul, .dv-md li > ol { margin: .25em 0 0; }
+.dv-md a { color: var(--sky); text-decoration: underline; text-underline-offset: 2px; }
+.dv-md a:not([href]) { color: inherit; text-decoration: none; }
+.dv-md code { font: 400 .9em var(--mono); padding: .15em .35em; border-radius: 4px; background: var(--surface2); overflow-wrap: anywhere; }
+.dv-md pre { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--corner); background: var(--surface2); overflow-x: auto; }
+.dv-md pre code { padding: 0; background: none; font-size: 12px; line-height: 1.55; overflow-wrap: normal; white-space: pre; }
+.dv-md blockquote { padding: 0 0 0 12px; border-left: 3px solid var(--border2); color: var(--dim); }
+.dv-md hr { border: 0; border-top: 1px solid var(--border); margin: 1.2em 0; }
+.dv-md img { display: block; max-width: 100%; height: auto; border-radius: var(--corner); }
+.dv-md table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-size: .95em; }
+.dv-md th, .dv-md td { padding: 5px 10px; border: 1px solid var(--border2); text-align: left; vertical-align: top; overflow-wrap: normal; }
+.dv-md th { background: var(--surface2); font-weight: 600; }
+
+/* ---- FULL SCREEN: the .modal-card over the scrim, the room's large-view size ---- */
+.dv-scrim {
+  position: fixed; inset: 0; z-index: 75; display: grid; place-items: center; padding: 16px;
+  background: var(--scrim); backdrop-filter: blur(var(--scrim-blur)); -webkit-backdrop-filter: blur(var(--scrim-blur));
+}
+.modal-card.dv-lg {
+  display: flex; flex-direction: column; width: min(1000px, 94vw); height: min(92vh, 1000px); min-height: 0;
+  background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; overflow: hidden;
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, .8); color: var(--text);
+}
+.modal-card.dv-lg:focus { outline: none; }
+.dv-lg-h { display: flex; align-items: center; gap: 8px; height: 48px; flex: none; padding: 0 6px 0 16px; border-bottom: 1px solid var(--border); }
+.dv-lg-t { flex: 1; min-width: 0; font: 600 13px var(--font); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dv-full { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 20px max(16px, calc((100% - 760px) / 2)); font-size: 15px; }
+.dv-full .dv-pre { font-size: 13px; }
+
+.dv-print-root { display: none; }
+
+@media (max-width: 600px) {
+  .dv-full-btn { display: none; }
+  .dv-tb { width: 40px; height: 40px; }
+  .dv { font-size: 14px; }
+  .dv-md h1 { font-size: 1.3em; }
+  .dv-md h2 { font-size: 1.18em; }
+  .dv-scrim { padding: 0; }
+  .modal-card.dv-lg { width: 100vw; height: 100dvh; border-radius: 0; border: 0; }
+  /* keyboard up: the scrim IS the visible box (room.css), so the viewer fills exactly it, top to just above the keys: no 24px cap strip */
+  html.kb-up .modal-card.dv-lg { height: var(--vvh, 100svh); }
+}
+/* wider than a phone (iPad) the viewer is still a centred card: it keeps the old keyboard cap, owned here, not in room.css's opt-in list */
+@media (min-width: 601px) { html.kb-up .modal-card.dv-lg { max-height: calc(var(--vvh, 100svh) - 24px); overflow-y: auto; } }
+
+/* ---- PRINT: only the rendered document, black on white. The class is set on
+   <html> just before window.print() and removed after (afterprint). ---- */
+@media print {
+  html.dv-printing body > *:not(.dv-print-root) { display: none !important; }
+  html.dv-printing, html.dv-printing body { background: #fff !important; height: auto !important; overflow: visible !important; }
+  html.dv-printing .dv-print-root { display: block !important; position: static !important; background: #fff; color: #000; padding: 0; }
+  html.dv-printing .dv-print-root .dv { margin: 0; padding: 0; min-height: 0; font: 11pt/1.5 var(--font); color: #000; background: #fff; }
+  html.dv-printing .dv-print-root .dv-md > :first-child { margin-top: 0; }
+  html.dv-printing .dv-print-root .dv-md h1, html.dv-printing .dv-print-root .dv-md h2, html.dv-printing .dv-print-root .dv-md h3 { color: #000; border-color: #bbb; break-after: avoid; }
+  html.dv-printing .dv-print-root .dv-md a { color: #0645ad; }
+  html.dv-printing .dv-print-root .dv-md code, html.dv-printing .dv-print-root .dv-md pre, html.dv-printing .dv-print-root .dv-md th { background: #f4f4f4; color: #000; }
+  html.dv-printing .dv-print-root .dv-md pre { border-color: #ccc; white-space: pre-wrap; overflow: visible; break-inside: avoid; }
+  html.dv-printing .dv-print-root .dv-md pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
+  html.dv-printing .dv-print-root .dv-md blockquote { color: #444; border-color: #bbb; }
+  html.dv-printing .dv-print-root .dv-md table { display: table; overflow: visible; }
+  html.dv-printing .dv-print-root .dv-md th, html.dv-printing .dv-print-root .dv-md td { border-color: #bbb; }
+  html.dv-printing .dv-print-root .dv-pre, html.dv-printing .dv-print-root .dv-pre.nowrap { color: #000; white-space: pre-wrap; overflow: visible; overflow-wrap: anywhere; }
+  html.dv-printing .dv-print-root img { max-width: 100%; }
+}

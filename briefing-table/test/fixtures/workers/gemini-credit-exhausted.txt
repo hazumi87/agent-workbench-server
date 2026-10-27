@@ -1,0 +1,7 @@
+{
+  "error": {
+    "type": "Error",
+    "message": "[API Error: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits.]",
+    "code": 429
+  }
+}

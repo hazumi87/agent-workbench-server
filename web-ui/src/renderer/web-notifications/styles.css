@@ -1,0 +1,14 @@
+.wb-notification-message { margin:16px 0; color:var(--md-sys-color-on-surface-variant); font:14px/1.5 var(--font); }
+.wb-notification-ask { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:16px; margin-top:16px; border-radius:16px; background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); }
+.wb-notification-ask[hidden],.wb-notification-message[hidden] { display:none; }.wb-notification-ask p { flex-basis:100%; margin:0 0 8px; }.wb-notification-ask b { flex-basis:100%; }
+.wb-notification-ask button { box-sizing:border-box; height:40px; min-height:40px; padding:8px 16px; border:0; border-radius:20px; font:500 14px/20px var(--font); cursor:pointer; }
+.wb-notification-enable { background:var(--md-sys-color-primary); color:var(--md-sys-color-on-primary); }
+.wb-notification-dismiss { background:transparent; color:var(--md-sys-color-primary); }
+.wb-notification-ask button:disabled { opacity:.38; cursor:default; }.wb-notification-ask button:focus-visible { outline:2px solid var(--md-sys-color-primary); outline-offset:3px; }
+
+/* The optional dock stays out until its engine-backed web slice is ready. */
+html[data-wb-web]:not([data-wb-concierge="ready"]) #dockTab,
+html[data-wb-web]:not([data-wb-concierge="ready"]) #gsConcierge,
+html[data-wb-web]:not([data-wb-concierge="ready"]) .sec[data-page="concierge"],
+html[data-wb-web] .wb-desktop-concierge-width,
+html[data-wb-web] .wb-desktop-concierge-width-label { display:none; }

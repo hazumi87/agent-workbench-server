@@ -1,0 +1,1021 @@
+{
+ "_doc": "Invented agent room lines for the chatter shape labeler (engine/chatter.ts shapeOf). Labels are what a reader would give each line. All text is made up.",
+ "rows": [
+  {
+   "id": 1000,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@lead Yes, that is correct for the palette sync.",
+   "label": "reply"
+  },
+  {
+   "id": 1007,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@user No, the shelf model has not been changed.",
+   "label": "reply"
+  },
+  {
+   "id": 1014,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Updated the texture bake; the measurements are within tolerance (33 checks).",
+   "label": "status"
+  },
+  {
+   "id": 1021,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@ops Report: the lamp mesh has 72 warnings, none blocking.",
+   "label": "status"
+  },
+  {
+   "id": 1028,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead Report: the texture bake has 69 warnings, none blocking.",
+   "label": "status"
+  },
+  {
+   "id": 1035,
+   "author": "builder-b",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@user Yes, the lint pass works as described.",
+   "label": "reply"
+  },
+  {
+   "id": 1042,
+   "author": "builder-b",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead The the cache warmup run finished: 11 items processed, no errors.",
+   "label": "status"
+  },
+  {
+   "id": 1049,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Ack. Got it.",
+   "label": "ack"
+  },
+  {
+   "id": 1056,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Holding. No readings until you say so.",
+   "label": "control"
+  },
+  {
+   "id": 1063,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@ops Still working on the door rig, about 26 minutes in.",
+   "label": "status"
+  },
+  {
+   "id": 1070,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead Report: the palette sync has 27 warnings, none blocking.",
+   "label": "status"
+  },
+  {
+   "id": 1077,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Holding. No readings until you say so.",
+   "label": "control"
+  },
+  {
+   "id": 1084,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@reviewer Updated the import verb; the measurements are within tolerance (58 checks).",
+   "label": "status"
+  },
+  {
+   "id": 1091,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Holding. No readings until you say so.",
+   "label": "control"
+  },
+  {
+   "id": 1098,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@lead Agreed, the sleeve should go first.",
+   "label": "reply"
+  },
+  {
+   "id": 1105,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@ops The result for the nightly build is in the shared folder (55 files).",
+   "label": "status"
+  },
+  {
+   "id": 1112,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@user Yes, the cuff works as described.",
+   "label": "reply"
+  },
+  {
+   "id": 1119,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead The the export run finished: 65 items processed, no errors.",
+   "label": "status"
+  },
+  {
+   "id": 1126,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@user No, the import verb has not been changed.",
+   "label": "reply"
+  },
+  {
+   "id": 1133,
+   "author": "builder-b",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b can you check the texture bake?",
+   "label": "action"
+  },
+  {
+   "id": 1140,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Relayed: the owner wants the first layout kept.",
+   "label": "relay"
+  },
+  {
+   "id": 1147,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@user Yes, the palette sync works as described.",
+   "label": "reply"
+  },
+  {
+   "id": 1154,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b can you check the import verb?",
+   "label": "action"
+  },
+  {
+   "id": 1161,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead Report: the door rig has 73 warnings, none blocking.",
+   "label": "status"
+  },
+  {
+   "id": 1168,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@lead Agreed, the lamp mesh should go first.",
+   "label": "reply"
+  },
+  {
+   "id": 1175,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Relayed: the owner wants the first layout kept.",
+   "label": "relay"
+  },
+  {
+   "id": 1182,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@lead Agreed, the lamp mesh should go first.",
+   "label": "reply"
+  },
+  {
+   "id": 1189,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Ack. Got it.",
+   "label": "ack"
+  },
+  {
+   "id": 1196,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Relayed from the owner: hold the release.",
+   "label": "relay"
+  },
+  {
+   "id": 1203,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@ops Updated the lint pass; the measurements are within tolerance (37 checks).",
+   "label": "status"
+  },
+  {
+   "id": 1210,
+   "author": "builder-b",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@lead Yes, that is correct for the export.",
+   "label": "reply"
+  },
+  {
+   "id": 1217,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@lead Agreed, the door rig should go first.",
+   "label": "reply"
+  },
+  {
+   "id": 1224,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@lead Yes, that is correct for the lint pass.",
+   "label": "reply"
+  },
+  {
+   "id": 1231,
+   "author": "builder-b",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a RUNNER CLEAR. Main abc1234 adds a verb.",
+   "label": "control"
+  },
+  {
+   "id": 1238,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Ack. Got it.",
+   "label": "ack"
+  },
+  {
+   "id": 1245,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@reviewer Still working on the door rig, about 59 minutes in.",
+   "label": "status"
+  },
+  {
+   "id": 1252,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead Ack. Noted.",
+   "label": "ack"
+  },
+  {
+   "id": 1259,
+   "author": "builder-b",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@user No, the nightly build has not been changed.",
+   "label": "reply"
+  },
+  {
+   "id": 1266,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Ack. Got it.",
+   "label": "ack"
+  },
+  {
+   "id": 1273,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b Updated the lamp mesh; the measurements are within tolerance (24 checks).",
+   "label": "status"
+  },
+  {
+   "id": 1280,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@reviewer Still working on the cuff, about 69 minutes in.",
+   "label": "status"
+  },
+  {
+   "id": 1287,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@reviewer The result for the lint pass is in the shared folder (32 files).",
+   "label": "status"
+  },
+  {
+   "id": 1294,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b please rerun the lamp mesh.",
+   "label": "action"
+  },
+  {
+   "id": 1301,
+   "author": "builder-b",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@ops The result for the lint pass is in the shared folder (55 files).",
+   "label": "status"
+  },
+  {
+   "id": 1308,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@reviewer could you review the cuff when free?",
+   "label": "action"
+  },
+  {
+   "id": 1315,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Report: the sleeve has 21 warnings, none blocking.",
+   "label": "status"
+  },
+  {
+   "id": 1322,
+   "author": "builder-b",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b Updated the lint pass; the measurements are within tolerance (44 checks).",
+   "label": "status"
+  },
+  {
+   "id": 1329,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@lead Yes, that is correct for the shelf model.",
+   "label": "reply"
+  },
+  {
+   "id": 1336,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Updated the shelf model; the measurements are within tolerance (47 checks).",
+   "label": "status"
+  },
+  {
+   "id": 1343,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Holding, wait for my go.",
+   "label": "control"
+  },
+  {
+   "id": 1350,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b The the import verb run finished: 29 items processed, no errors.",
+   "label": "status"
+  },
+  {
+   "id": 1357,
+   "author": "builder-b",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Report: the cuff has 13 warnings, none blocking.",
+   "label": "status"
+  },
+  {
+   "id": 1364,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead Ack. Noted.",
+   "label": "ack"
+  },
+  {
+   "id": 1371,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@user No, the import verb has not been changed.",
+   "label": "reply"
+  },
+  {
+   "id": 1378,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b Stop the run now.",
+   "label": "control"
+  },
+  {
+   "id": 1385,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead Ack. Noted.",
+   "label": "ack"
+  },
+  {
+   "id": 1392,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b The the palette sync run finished: 85 items processed, no errors.",
+   "label": "status"
+  },
+  {
+   "id": 1399,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b Relaying the owner: ship the small one first.",
+   "label": "relay"
+  },
+  {
+   "id": 1406,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Ack. Got it.",
+   "label": "ack"
+  },
+  {
+   "id": 1413,
+   "author": "lead",
+   "target": null,
+   "reply": false,
+   "body": "Heads-up: the engine restarts in about 3 minutes. Sessions survive.",
+   "label": "blast"
+  },
+  {
+   "id": 1420,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@ops The the nightly build run finished: 18 items processed, no errors.",
+   "label": "status"
+  },
+  {
+   "id": 1427,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b can you check the texture bake?",
+   "label": "action"
+  },
+  {
+   "id": 1434,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@reviewer Still working on the lint pass, about 75 minutes in.",
+   "label": "status"
+  },
+  {
+   "id": 1441,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Relayed: the owner wants the first layout kept.",
+   "label": "relay"
+  },
+  {
+   "id": 1448,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b Still working on the shelf model, about 63 minutes in.",
+   "label": "status"
+  },
+  {
+   "id": 1455,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@user No, the cuff has not been changed.",
+   "label": "reply"
+  },
+  {
+   "id": 1462,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b please rerun the palette sync.",
+   "label": "action"
+  },
+  {
+   "id": 1469,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b can you check the export?",
+   "label": "action"
+  },
+  {
+   "id": 1476,
+   "author": "builder-b",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@lead Agreed, the door rig should go first.",
+   "label": "reply"
+  },
+  {
+   "id": 1483,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b Stop the run now.",
+   "label": "control"
+  },
+  {
+   "id": 1490,
+   "author": "builder-b",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Relayed from the owner: hold the release.",
+   "label": "relay"
+  },
+  {
+   "id": 1497,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@ops Updated the import verb; the measurements are within tolerance (45 checks).",
+   "label": "status"
+  },
+  {
+   "id": 1504,
+   "author": "builder-b",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Relayed from the owner: hold the release.",
+   "label": "relay"
+  },
+  {
+   "id": 1511,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Relayed: the owner wants the first layout kept.",
+   "label": "relay"
+  },
+  {
+   "id": 1518,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@ops The result for the import verb is in the shared folder (82 files).",
+   "label": "status"
+  },
+  {
+   "id": 1525,
+   "author": "lead",
+   "target": null,
+   "reply": false,
+   "body": "Heads-up: the engine restarts in about 3 minutes. Sessions survive.",
+   "label": "blast"
+  },
+  {
+   "id": 1532,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead Updated the export; the measurements are within tolerance (31 checks).",
+   "label": "status"
+  },
+  {
+   "id": 1539,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@user Yes, the export works as described.",
+   "label": "reply"
+  },
+  {
+   "id": 1546,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead The the palette sync run finished: 5 items processed, no errors.",
+   "label": "status"
+  },
+  {
+   "id": 1553,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Still working on the cuff, about 63 minutes in.",
+   "label": "status"
+  },
+  {
+   "id": 1560,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@reviewer Updated the cache warmup; the measurements are within tolerance (50 checks).",
+   "label": "status"
+  },
+  {
+   "id": 1567,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Report: the sleeve has 21 warnings, none blocking.",
+   "label": "status"
+  },
+  {
+   "id": 1574,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b The the lint pass run finished: 67 items processed, no errors.",
+   "label": "status"
+  },
+  {
+   "id": 1581,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead The the sleeve run finished: 62 items processed, no errors.",
+   "label": "status"
+  },
+  {
+   "id": 1588,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b can you check the export?",
+   "label": "action"
+  },
+  {
+   "id": 1595,
+   "author": "builder-b",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b Still working on the palette sync, about 55 minutes in.",
+   "label": "status"
+  },
+  {
+   "id": 1602,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead Updated the cuff; the measurements are within tolerance (21 checks).",
+   "label": "status"
+  },
+  {
+   "id": 1609,
+   "author": "builder-b",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@ops Updated the export; the measurements are within tolerance (8 checks).",
+   "label": "status"
+  },
+  {
+   "id": 1616,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b The result for the cuff is in the shared folder (28 files).",
+   "label": "status"
+  },
+  {
+   "id": 1623,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Relayed from the owner: hold the release.",
+   "label": "relay"
+  },
+  {
+   "id": 1630,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b The the cuff run finished: 15 items processed, no errors.",
+   "label": "status"
+  },
+  {
+   "id": 1637,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@lead Agreed, the shelf model should go first.",
+   "label": "reply"
+  },
+  {
+   "id": 1644,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b Still working on the palette sync, about 45 minutes in.",
+   "label": "status"
+  },
+  {
+   "id": 1651,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@reviewer could you review the lint pass when free?",
+   "label": "action"
+  },
+  {
+   "id": 1658,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Relayed: the owner wants the first layout kept.",
+   "label": "relay"
+  },
+  {
+   "id": 1665,
+   "author": "builder-b",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Report: the lamp mesh has 52 warnings, none blocking.",
+   "label": "status"
+  },
+  {
+   "id": 1672,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead Thanks, noted.",
+   "label": "ack"
+  },
+  {
+   "id": 1679,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead Report: the export has 42 warnings, none blocking.",
+   "label": "status"
+  },
+  {
+   "id": 1686,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@ops Updated the texture bake; the measurements are within tolerance (73 checks).",
+   "label": "status"
+  },
+  {
+   "id": 1693,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b Still working on the cuff, about 29 minutes in.",
+   "label": "status"
+  },
+  {
+   "id": 1700,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead The the export run finished: 18 items processed, no errors.",
+   "label": "status"
+  },
+  {
+   "id": 1707,
+   "author": "builder-b",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a The result for the lamp mesh is in the shared folder (48 files).",
+   "label": "status"
+  },
+  {
+   "id": 1714,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@reviewer could you review the export when free?",
+   "label": "action"
+  },
+  {
+   "id": 1721,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@user No, the export has not been changed.",
+   "label": "reply"
+  },
+  {
+   "id": 1728,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead The result for the cache warmup is in the shared folder (9 files).",
+   "label": "status"
+  },
+  {
+   "id": 1735,
+   "author": "builder-b",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@ops The result for the lamp mesh is in the shared folder (48 files).",
+   "label": "status"
+  },
+  {
+   "id": 1742,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Report: the shelf model has 76 warnings, none blocking.",
+   "label": "status"
+  },
+  {
+   "id": 1749,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Updated the texture bake; the measurements are within tolerance (55 checks).",
+   "label": "status"
+  },
+  {
+   "id": 1756,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b Updated the sleeve; the measurements are within tolerance (12 checks).",
+   "label": "status"
+  },
+  {
+   "id": 1763,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a The result for the nightly build is in the shared folder (72 files).",
+   "label": "status"
+  },
+  {
+   "id": 1770,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@reviewer The the shelf model run finished: 87 items processed, no errors.",
+   "label": "status"
+  },
+  {
+   "id": 1777,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead Ack. Understood, waiting.",
+   "label": "ack"
+  },
+  {
+   "id": 1784,
+   "author": "builder-b",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b please rerun the nightly build.",
+   "label": "action"
+  },
+  {
+   "id": 1791,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead Ack. Understood, waiting.",
+   "label": "ack"
+  },
+  {
+   "id": 1798,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Holding. No readings until you say so.",
+   "label": "control"
+  },
+  {
+   "id": 1805,
+   "author": "lead",
+   "target": null,
+   "reply": false,
+   "body": "Heads-up: the engine restarts in about 3 minutes. Sessions survive.",
+   "label": "blast"
+  },
+  {
+   "id": 1812,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@reviewer Updated the shelf model; the measurements are within tolerance (77 checks).",
+   "label": "status"
+  },
+  {
+   "id": 1819,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead The result for the import verb is in the shared folder (90 files).",
+   "label": "status"
+  },
+  {
+   "id": 1826,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-b Report: the lamp mesh has 63 warnings, none blocking.",
+   "label": "status"
+  },
+  {
+   "id": 1833,
+   "author": "lead",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a The result for the sleeve is in the shared folder (18 files).",
+   "label": "status"
+  },
+  {
+   "id": 1840,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Ack. Got it.",
+   "label": "ack"
+  },
+  {
+   "id": 1847,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@ops Still working on the sleeve, about 23 minutes in.",
+   "label": "status"
+  },
+  {
+   "id": 1854,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@lead Yes, that is correct for the lamp mesh.",
+   "label": "reply"
+  },
+  {
+   "id": 1861,
+   "author": "reviewer",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@lead The result for the door rig is in the shared folder (20 files).",
+   "label": "status"
+  },
+  {
+   "id": 1868,
+   "author": "ops",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Holding, wait for my go.",
+   "label": "control"
+  },
+  {
+   "id": 1875,
+   "author": "builder-a",
+   "target": "builder-a",
+   "reply": false,
+   "body": "@builder-a Holding. No readings until you say so.",
+   "label": "control"
+  },
+  {
+   "id": 1882,
+   "author": "builder-b",
+   "target": "builder-a",
+   "reply": true,
+   "body": "@lead Yes, that is correct for the import verb.",
+   "label": "reply"
+  }
+ ]
+}

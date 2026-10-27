@@ -1,0 +1,72 @@
+{
+  "_comment": [
+    "BRAND IDENTITY (contract §9) — one identity mark per VENDOR, beside the one",
+    "per project. The engine OWNS this data; the design system defines its presentation.",
+    "It is a LOOKUP TABLE, not per-session state: it changes when a brand is added,",
+    "which is roughly never. Served whole at GET /api/brands.",
+    "",
+    "brandHue is the DESIGNED glyph input (integer 0-359);",
+    "brandColor is the literal vendor colour and is for large/About",
+    "surfaces ONLY. They differ on purpose: Codex's and Ollama's real marks are",
+    "achromatic, so deriving a field from brandColor would collapse both to the",
+    "same grey and make them indistinguishable in a list — which is the one job",
+    "the mark has. Hues are ASSIGNED, and >= 40 degrees apart (validated at boot,",
+    "see src/engine/brands.ts): at most ONE achromatic brand (omit brandHue — it",
+    "renders unbranded), ceiling seven chromatic brands plus generic.",
+    "",
+    "brandMark is a KEY in the design-system vocabulary, never an inline SVG: marks are",
+    "drawn at ~20px and at pane size and one asset set must serve both. Assets",
+    "vendor from the vendored aurora/brand-marks/ (96x96 viewBox, currentColor,",
+    "72x72 safe area). There is deliberately NO brandMarkDark — a currentColor",
+    "silhouette inverts for free.",
+    "",
+    "`generic` is MANDATORY: it is what an unknown or class-2 vendor resolves to,",
+    "and a renderer must never be left with nothing to draw."
+  ],
+  "brands": [
+    {
+      "vendor": "claude-code",
+      "label": "Claude Code",
+      "brandHue": 39,
+      "brandColor": "#d97757",
+      "brandMark": "claude",
+      "since": "2026-08-01"
+    },
+    {
+      "vendor": "gemini-cli",
+      "label": "Gemini CLI",
+      "brandHue": 260,
+      "brandColor": "#4285f4",
+      "brandMark": "gemini",
+      "since": "2026-09-17"
+    },
+    {
+      "vendor": "codex-cli",
+      "label": "OpenAI Codex CLI",
+      "brandHue": 164,
+      "brandColor": "#10a37f",
+      "brandMark": "codex",
+      "since": "2026-09-17"
+    },
+    {
+      "vendor": "ollama",
+      "label": "Ollama",
+      "brandHue": 122,
+      "brandColor": "#4a4a4a",
+      "brandMark": "ollama",
+      "since": "2026-09-17"
+    },
+    {
+      "vendor": "cli-manager",
+      "label": "Shell",
+      "brandColor": "#8a8f98",
+      "brandMark": "generic"
+    },
+    {
+      "vendor": "generic",
+      "label": "Unbranded",
+      "brandColor": "#8a8f98",
+      "brandMark": "generic"
+    }
+  ]
+}

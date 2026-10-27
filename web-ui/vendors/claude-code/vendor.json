@@ -1,0 +1,41 @@
+{
+  "id": "claude-code",
+  "label": "Claude Code",
+  "binary": "claude",
+  "mark": "claude",
+  "color": "#D97757",
+  "installUrl": "https://docs.anthropic.com/en/docs/claude-code/setup",
+  "install": {
+    "win32": "npm install -g @anthropic-ai/claude-code",
+    "darwin": "npm install -g @anthropic-ai/claude-code",
+    "linux": "npm install -g @anthropic-ai/claude-code"
+  },
+  "seamVersion": 1,
+  "verifiedWith": "2.1",
+  "resumable": true,
+  "settings": {
+    "model": {
+      "type": "choice",
+      "label": "Default model",
+      "options": [
+        "opus",
+        "sonnet",
+        "haiku"
+      ],
+      "labels": [
+        "Opus",
+        "Sonnet",
+        "Haiku"
+      ],
+      "default": "opus",
+      "other": true
+    },
+    "extraArgs": {
+      "type": "args",
+      "label": "Extra arguments",
+      "hint": "Added to every launch, like --verbose",
+      "default": ""
+    }
+  },
+  "prepare": true
+}

@@ -1,0 +1,214 @@
+/* ===========================================================================
+   hwb-ring.css — DUAL-RING SESSION STATUS
+   Part of the window-chrome bundle. Requires tokens.css.
+
+   Design record: the design record.
+   Engine model:  the design record (the host app).
+
+   The glyph carries TWO INDEPENDENT AXES:
+       outer ring  = what the SESSION is doing   -> FUNCTION color (the seven)
+       center dot  = WHO is sitting on it        -> IDENTITY color (extended)
+
+   The register split that governs the titlebar governs the glyph too, one
+   scale down. Inside a 16px glyph the AREAS invert — the identity mark is
+   smaller than the state mark — so the separation is carried by POSITION
+   instead: state is always the perimeter, identity is always the core. That
+   mapping is fixed and never varies by size, tier or context. It is what
+   makes the pair learnable.
+
+   PUBLIC (stable, §6 of the integration architecture):
+     .ring                          glyph root; usable anywhere, inside .hwb or not
+     data-state                     the six session states
+     data-viewer                    laptop | laptop | phone | console; omit for none
+     data-presence                  active | away | parked
+     --s                            CONSUMER SETS. Rendered size. The only geometry input.
+     .ctx-aggregate / .is-lead      the motion context rule
+
+   INTERNAL: .rg-* element classes. Do not bind to them.
+
+   NO HEX VALUES. Every color is a token.
+   =========================================================================== */
+
+.ring{display:inline-block;width:var(--s,16px);height:var(--s,16px);line-height:0;
+      flex:none;vertical-align:middle}
+.ring svg{display:block;width:100%;height:100%;overflow:visible}
+
+/* ---- ring color by session state — the FUNCTION seven.
+        These are the titlebar's existing state colors, not a parallel set, so
+        a session in alert shows one hue across its ring, its tab and its wash. */
+.ring[data-state="active-idle"]      {--rc:var(--sky)}
+.ring[data-state="active-streaming"] {--rc:var(--sky)}
+.ring[data-state="attention"]        {--rc:var(--coral)}
+.ring[data-state="attention-seen"]   {--rc:var(--coral)}
+.ring[data-state="alert"]            {--rc:var(--magenta)}
+.ring[data-state="restorable"]       {--rc:var(--amber)}
+.ring[data-state="ended"]            {--rc:var(--dim3)}
+
+/* ---- device color — the EXTENDED identity palette.
+        A device dot sits INSIDE a ring, so device hues must avoid every ring
+        hue or the glyph reads as one blurred mark at chip size. Ring hues in
+        play are sky, coral, magenta, amber — which rules out --id-orange
+        (Δ15 from amber) and leaves exactly THREE safe slots. --id-cobalt is a
+        caveated fourth: Δ15 from sky, the most common ring. A fifth device
+        cannot be added by picking another color; it needs a second channel
+        (a glyph inside the dot), legible only at the ≥16px tiers. */
+.ring                        {--vc:var(--dim)}   /* aggregate / unknown viewer */
+.ring[data-viewer="vrpc"]    {--vc:var(--id-violet)}
+.ring[data-viewer="laptop"]  {--vc:var(--id-green)}
+.ring[data-viewer="phone"]   {--vc:var(--id-orchid)}
+.ring[data-viewer="console"] {--vc:var(--id-cobalt)}
+
+.rg-track{fill:none;stroke:var(--rc);stroke-width:2.2;stroke-linecap:butt}
+.rg-sweep{fill:none;stroke:var(--rc);stroke-width:3.2;stroke-linecap:round;opacity:0;
+          transform-origin:12px 12px}
+.rg-halo {fill:none;stroke:var(--rc);stroke-width:2;opacity:0}
+.rg-dot  {fill:var(--vc);stroke:none;
+          transition:fill 400ms var(--metro-ease),opacity 400ms var(--metro-ease)}
+
+/* ---- SILHOUETTE per state.
+        Every state is identifiable with COLOR REMOVED and MOTION OFF. That is
+        the accessibility floor, and it is also what makes the 10px tier
+        survivable — at chip size the shape does more work than the hue. */
+
+/* active-idle · thin continuous ring */
+.ring[data-state="active-idle"] .rg-track{stroke-width:2.2}
+
+/* active-streaming · thick ring + a bright arc travelling round it.
+   Same hue family as idle because it is the same CONDITION — alive and
+   healthy. The difference is work, and work is motion. */
+.ring[data-state="active-streaming"] .rg-track{stroke-width:3.2;opacity:.42}
+.ring[data-state="active-streaming"] .rg-sweep{opacity:1;
+    stroke-dasharray:14 42.6;animation:rg-spin 3.4s linear infinite}
+
+/* attention · thick ring + an expanding halo. The one state that reaches
+   OUTSIDE its own footprint — blocked on a human is the condition the whole
+   system exists to surface. */
+.ring[data-state="attention"] .rg-track{stroke-width:3.2}
+.ring[data-state="attention"] .rg-halo{animation:rg-summon 1.8s var(--metro-ease) infinite}
+
+/* attention-seen (v33) · the SAME halo, FROZEN: a thin ring inside a still outer
+   hairline. Still coral (it still needs you), but nothing moves (you already know).
+   Silhouette with color removed: a DOUBLE ring, which no other state draws. */
+.ring[data-state="attention-seen"] .rg-track{stroke-width:2.2}
+.ring[data-state="attention-seen"] .rg-halo{r:11.6;stroke-width:1.1;opacity:.5;animation:none}
+
+/* alert · the circuit is BROKEN — one large gap, said literally. A single wide
+   gap is unmistakable against restorable's fine dashes even in grayscale at
+   10px, which is the case color cannot cover. */
+.ring[data-state="alert"] .rg-track{stroke-width:3.2;
+    stroke-dasharray:41 15.55;transform:rotate(-58deg);transform-origin:12px 12px;
+    animation:rg-fault 2.8s steps(1,end) infinite}
+
+/* restorable · fine dashes — the outline of a thing that is not running but
+   could be. 9 even dashes on a 56.55 circumference. */
+.ring[data-state="restorable"] .rg-track{stroke-width:2.2;stroke-dasharray:3.14 3.14}
+
+/* ended · thinnest, dimmest, and ALWAYS centerless (enforced in JS — a center
+   dot on an ended session would assert something that cannot be true).
+   A FAILED exit is still history — it does not get to shout — but it is history
+   you may want to look at, so it keeps a trace of the fault hue at low chroma
+   rather than reading identical to a clean exit. */
+.ring[data-state="ended"] .rg-track{stroke-width:1.8}
+.ring[data-state="ended"][data-exit="fail"]{--rc:color-mix(in srgb,var(--magenta) 42%,var(--dim3))}
+
+/* ---- CENTER: presence is an INK level, expressed as a shape.
+        active = filled · away = hollow · parked = absent.
+
+        Hollow is a shape channel at ≥16px and degrades on its own into a
+        half-ink dot at 10px, which is exactly the fallback the model asks for
+        ("presence must survive at every size"). One treatment, no
+        size-conditional rendering code anywhere.
+
+        The 1.1 stroke is load-bearing: at 1.5 the donut antialiases shut by
+        20px and away becomes indistinguishable from active — which would break
+        the design's own claim at the tier the manager list uses. */
+.ring[data-presence="away"] .rg-dot{fill:none;stroke:var(--vc);stroke-width:1.1;opacity:.8}
+.ring[data-presence="parked"] .rg-dot{display:none}
+
+@keyframes rg-spin  {to{transform:rotate(360deg)}}
+@keyframes rg-summon{0%{opacity:.55;stroke-width:2;r:9}
+                     70%{opacity:0;stroke-width:.6;r:12.5}
+                     100%{opacity:0;stroke-width:.6;r:12.5}}
+/* a STUTTER, not a fade. An earlier cut sat at a third brightness for 35% of
+   the cycle and read as DISABLED — the opposite of what alert means. */
+@keyframes rg-fault {0%,78%{opacity:1} 79%,100%{opacity:.55}}
+
+/* ---- MOTION POLICY — the context rule.
+   In an AGGREGATE context (tab strips, manager lists, dashboards) only the
+   single highest-priority glyph animates; everything else holds still.
+
+   This is what prevents the blinking wall, WITHOUT giving up motion where it
+   does the work. The wall is caused by glyph COUNT, not by any one state
+   animating — so N sessions in alert produce exactly ONE animating glyph.
+   Consumers set .ctx-aggregate on the container and .is-lead on exactly one
+   child (hwbRingApplyContext does both). */
+.ctx-aggregate .ring:not(.is-lead) .rg-sweep{animation:none;opacity:.75}
+.ctx-aggregate .ring:not(.is-lead) .rg-track{animation:none;opacity:1}
+.ctx-aggregate .ring:not(.is-lead) .rg-halo {animation:none;opacity:0}
+.ctx-aggregate .ring:not(.is-lead)[data-state="active-streaming"] .rg-track{opacity:.42}
+.ctx-aggregate .ring:not(.is-lead)[data-state="attention-seen"] .rg-halo{opacity:.5}   /* v33: static, so it may stay */
+
+/* Nothing is lost with motion off — the silhouette vocabulary above carries
+   every state unaided. That is why the reduced-motion path is a simplification
+   rather than a degradation. */
+@media (prefers-reduced-motion:reduce){
+  .rg-sweep,.rg-track,.rg-halo{animation:none!important}
+  .ring[data-state="active-streaming"] .rg-track{opacity:1}
+  .ring[data-state="active-streaming"] .rg-sweep{opacity:.9}
+  .ring[data-state="attention"] .rg-halo{opacity:.3}
+}
+
+
+/* ===========================================================================
+   v21 — brand plate (treatment 16), workroom plate (WR1-B), ended dimming,
+   background work (AB·B). Ruled 2026-09-18/19; record in
+   styleguide/mockups/the design decisions page.html.
+   Inputs on the glyph (or an ancestor): --brand-src (the brand's designed hue
+   from /api/brands). Everything painted is derived; no hex.
+   =========================================================================== */
+/* v34: the brand plate follows the mode it sits in (--lt: 0 dark | 1 light, inherited from
+   html[data-mode] or a tab's own data-mode, hwb-chrome.css): a light plate with a deeper mark in light. */
+.ring{--b-field:oklch(from var(--brand-src,var(--dim)) calc(.295 + var(--lt,0) * .625) clamp(0,calc(c * .55),.075) h);
+      --b-edge: oklch(from var(--brand-src,var(--dim)) calc(.450 + var(--lt,0) * .320) clamp(0,calc(c * .75),.110) h);
+      --b-ink:  oklch(from var(--brand-src,var(--dim)) calc(.800 - var(--lt,0) * .380) clamp(0,calc(c * .80),.130) h)}
+.ring.has-plate .rg-scale{transform:scale(.80);transform-origin:12px 12px}
+.ring.is-workroom .rg-scale{transform:translate(0,2px) scale(.80)}
+.rg-plate{fill:var(--b-field);stroke:var(--b-edge);stroke-width:.9}
+.rg-logo {fill:var(--b-ink)}
+/* WR1-B manila — a paper color, lighter and ~50° from Claude's hue, so never a brand */
+.rg-wbody{fill:var(--wr-manila);stroke:var(--wr-manila-edge);stroke-width:.9}
+.rg-wear {fill:var(--wr-manila-ear)}
+.rg-keyline{fill:none;stroke:oklch(.26 .03 70);stroke-width:4.4}
+
+/* ended dimming: history reads as history */
+.ring.has-plate[data-state="ended"] .rg-track{stroke:var(--dim2);stroke-width:2.2}
+.ring.has-plate[data-state="ended"][data-exit="fail"] .rg-track{stroke:color-mix(in srgb,var(--magenta) 55%,var(--dim2))}
+.ring.has-plate[data-state="ended"] .rg-logo{opacity:.4}
+.ring.has-plate[data-state="ended"] .rg-plate{opacity:.55}
+/* B5 (v23) — primary agent: the plate's OUTER edge, solid, old gold. Outer + solid +
+   old gold vs restorable's inner, dashed, bright amber: three separations, not one. */
+.ring.has-plate.is-primary .rg-plate{stroke:var(--lead-gold);stroke-width:1.7}
+/* PLATE-ONLY (v25) — never started: no ring at all, the plate in the ended dimming.
+   fill-opacity (not opacity) on the plate so a B5 gold edge keeps full strength —
+   a never-started LEAD is still the lead. */
+.ring.is-plate-only .rg-scale{display:none}
+.ring.is-plate-only .rg-plate{fill-opacity:.55}
+.ring.is-plate-only .rg-logo{opacity:.4}
+
+/* AB·B segment relay — background work: five dim segments, one lit at a time.
+   Same hue as idle/streaming: it is the same condition (alive, healthy). */
+.ring[data-state="active-background"]{--rc:var(--sky)}
+.ring[data-state="active-background"] .rg-track{stroke-width:3.2;opacity:.26;stroke-linecap:butt;stroke-dasharray:7.6 3.71}
+.ring[data-state="active-background"] .rg-sweep{opacity:1;stroke-width:3.2;stroke-linecap:butt;stroke-dasharray:7.6 48.95;
+    animation:rg-relay-pos 4s steps(5,jump-end) infinite,rg-relay-ink 4s linear infinite}
+@keyframes rg-relay-pos{from{stroke-dashoffset:0}to{stroke-dashoffset:-56.55}}
+@keyframes rg-relay-ink{0%,20%,40%,60%,80%,100%{opacity:.10}7%,27%,47%,67%,87%{opacity:.95}}
+.ctx-aggregate .ring:not(.is-lead)[data-state="active-background"] .rg-track{opacity:.62}
+.ctx-aggregate .ring:not(.is-lead)[data-state="active-background"] .rg-sweep{opacity:0;animation:none}
+@media (prefers-reduced-motion:reduce){
+  .ring[data-state="active-background"] .rg-track{opacity:.62}
+  .ring[data-state="active-background"] .rg-sweep{opacity:0}
+}
+/* an ended WORKROOM reads as history too: the folder steps back like a brand plate */
+.ring.is-workroom[data-state="ended"] .rg-wbody,.ring.is-workroom[data-state="ended"] .rg-wear{opacity:.55}
+.ring.is-workroom[data-state="ended"] .rg-track{stroke:var(--dim2)}

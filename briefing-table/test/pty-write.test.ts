@@ -1,0 +1,22 @@
+/** The pty-write funnel (T1): every engine write is recorded with its origin; text is recorded only on a test engine. */
+let passed = 0;
+let failed = 0;
+const ok = (c: unknown, m: string): void => { if (c) { passed++; console.log(`  ok ${m}`); } else { failed++; console.log(`  X  ${m}`); } };
+const pw = await import('../src/engine/pty-write.ts');
+const got: string[] = [];
+const pty = { write: (d: string) => void got.push(d) };
+pw.resetTrace();
+pw.engineWrite('p1', pty, 'hello', 'room-typer');
+pw.engineWrite('p1', pty, '\r', 'room-typer');
+pw.engineWrite('p2', pty, 'x', 'person');
+ok(got.join('|') === 'hello|\r|x', 'the bytes still reach the pty unchanged');
+ok(pw.writes().length === 3 && pw.writes({ paneid: 'p1' }).length === 2 && pw.writes({ origin: 'person' }).length === 1, 'recorded per pane and origin');
+ok(pw.writes().every((r) => r.text === undefined && /^[0-9a-f]{64}$/.test(r.sha256) && r.bytes > 0), 'no text recorded unless the test flag is set');
+process.env.HARBOR_WB_PTY_TRACE_TEXT = '1';
+pw.engineWrite('p3', pty, 'secret peer words', 'room-typer');
+ok(pw.writes({ paneid: 'p3' })[0].text === 'secret peer words', 'with HARBOR_WB_PTY_TRACE_TEXT=1 the text is recorded (test engines only)');
+delete process.env.HARBOR_WB_PTY_TRACE_TEXT;
+for (let i = 0; i < 2100; i++) pw.engineWrite('p4', pty, 'a', 'launch');
+ok(pw.writes().length <= 2000, 'the ring is bounded');
+console.log(`\nPASS ${passed} FAIL ${failed}`);
+process.exit(failed ? 1 : 0);

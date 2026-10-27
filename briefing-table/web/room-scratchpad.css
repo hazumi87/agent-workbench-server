@@ -1,0 +1,86 @@
+/* THE SCRATCHPAD IN THE PREVIEW COLUMN [scratchpad] (web/room-scratchpad-view.mjs; the design system BUILD-HANDOFF 1.C, V2.1) */
+.sp { display: flex; flex-direction: column; gap: 10px; padding: 2px 0 0; min-width: 0; margin-bottom: -14px; min-height: calc(100% + 14px); box-sizing: border-box; } /* runs through the column's bottom padding so the pager can sit flush on the edge */
+.sp-top { display: flex; align-items: center; gap: 8px; }
+.sp-seg { display: inline-flex; padding: 2px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); }
+.sp-segb { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border: 0; border-radius: 6px; background: none; color: var(--dim); font: 600 12.5px var(--font); cursor: pointer; }
+.sp-segb[aria-pressed="true"] { background: var(--surface3, var(--surface)); color: var(--text); box-shadow: 0 0 0 1px var(--border2); }
+.sp-segb:focus-visible, .sp-add:focus-visible, .sp-tile:focus-visible, .sp-note:focus-visible, .sp-more:focus-visible, .sp-act:focus-visible, .sp-pg:focus-visible, .sp-big:focus-visible, .sp-link:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.sp-segn { font: 700 10.5px var(--mono); color: var(--ink); background: var(--teal); border-radius: 8px; padding: 0 5px; line-height: 15px; }
+.sp-add { margin-left: auto; height: 28px; padding: 0 12px; border: 1px solid var(--border2); border-radius: 6px; background: none; color: var(--text); font: 600 12.5px var(--font); cursor: pointer; }
+.sp-add:hover { background: var(--cap-hover); }
+.sp-gh { margin: 6px 0 0; font: 700 .64rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--dim2, var(--dim)); }
+/* REFLOW, DON'T JUST SCALE (Owner 2026-10-07; the design system numbers): three columns while the preview column is 344px or wider, two when narrower: a tile is
+   never under 100px (about 109 at 370 in three, 142 at 320 in two); never more than three; gap 8; the tiles stay square. The query is on the
+   COLUMN (container), not the window, so the drawer and the phone layer follow the same rule. */
+.rm-pv { container-type: inline-size; container-name: pvcol; }
+.sp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+@container pvcol (min-width: 343px) { .sp-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.sp-tile { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 0; border: 0; background: none; color: var(--text); text-align: left; cursor: pointer; }
+.sp-th { position: relative; display: block; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); }
+.sp-th img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.sp-th.is-file, .sp-big.is-file { display: grid; place-items: center; }
+.sp-ext { font: 700 13px var(--mono); color: var(--dim); letter-spacing: .06em; }
+.sp-tile:hover .sp-th { border-color: var(--dim2); }
+.sp-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 0 2px var(--surface); }
+.sp-nm { font: 12px var(--font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-mt { font: 11px var(--mono); color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-cards { display: flex; flex-direction: column; gap: 8px; }
+.sp-note { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface2); color: var(--text); text-align: left; cursor: pointer; min-width: 0; }
+.sp-note:hover { border-color: var(--dim2); }
+.sp-nh { display: flex; align-items: center; gap: 6px; font: 11.5px var(--mono); color: var(--dim); }
+.sp-nh .sp-dot { position: static; flex: none; box-shadow: none; }
+.sp-nt { font-size: 13px; line-height: 1.45; white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.sp-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.sp-tag { padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border2); background: var(--surface); font: 11px var(--font); color: var(--dim); }
+.sp-more { align-self: flex-start; height: 30px; padding: 0 12px; border: 1px solid var(--border2); border-radius: 6px; background: none; color: var(--sky); font: 600 12.5px var(--font); cursor: pointer; }
+.sp-empty { margin: 14px 2px; font-size: 13px; color: var(--dim); }
+/* one item */
+.sp-big { display: block; width: 100%; padding: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface2); cursor: zoom-in; }
+.sp-big img { display: block; width: 100%; max-height: 320px; object-fit: contain; background: var(--surface2); }
+.sp-big.is-file { height: 160px; cursor: default; }
+.sp-iname { font: 600 14px var(--font); overflow-wrap: anywhere; }
+.sp-imeta { font: 11.5px var(--mono); color: var(--dim); overflow-wrap: anywhere; }
+.sp-ntext { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13.5px; line-height: 1.5; }
+.sp-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.sp-act { height: 32px; padding: 0 14px; border: 1px solid var(--border2); border-radius: 6px; background: none; color: var(--text); font: 600 12.5px var(--font); cursor: pointer; }
+.sp-act:hover { background: var(--cap-hover); }
+.sp-act.pri { border-color: var(--room-accent, var(--teal)); background: color-mix(in srgb, var(--room-accent, var(--teal)) 18%, transparent); color: var(--text); }
+.sp-from { display: flex; flex-direction: column; gap: 4px; padding-top: 8px; border-top: 1px solid var(--border); }
+.sp-link { align-self: flex-start; padding: 0; border: 0; background: none; color: var(--sky); font: 500 12.5px var(--font); cursor: pointer; }
+.sp-link:hover { text-decoration: underline; }
+.sp-pager { display: flex; align-items: center; justify-content: center; gap: 14px; margin: auto -14px 0; padding: 8px 14px 10px; border-top: 1px solid var(--border); position: sticky; bottom: -14px; background: var(--surface); } /* pinned to the bottom of the column / layer, so ‹ › stay put through items of different heights */
+.sp-pg { width: 32px; height: 28px; border: 1px solid var(--border2); border-radius: 6px; background: none; color: var(--text); font-size: 16px; cursor: pointer; }
+.sp-pg:disabled { opacity: .35; cursor: default; }
+.sp-pn { font: 12px var(--mono); color: var(--dim); }
+@media (max-width: 600px) {
+  .sp-segb { height: 36px; } .sp-add { height: 36px; } .sp-act { height: 44px; } .sp-pg { width: 44px; height: 44px; } .sp-more { height: 44px; }
+  .sp-note { min-height: 44px; }
+}
+
+/* the phone's agents sheet: the two lines at the top, 52px rows [scratchpad] */
+.ph-pad { list-style: none; margin: 0; padding: 0; }
+.ph-padrow { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 0 16px; border: 0; border-top: 1px solid var(--border); background: none; color: var(--text); font: 15px var(--font); text-align: left; cursor: pointer; }
+.ph-pad li:first-child .ph-padrow { border-top: 0; }
+.ph-padrow:active { background: var(--cap-hover); }
+.ph-padrow:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+.ph-padrow .pk { flex: 1 1 auto; min-width: 0; }
+.ph-padrow .pn { flex: none; font: 500 12.5px var(--mono); color: var(--dim); white-space: nowrap; }
+.ph-padrow[data-new="1"] .pn { color: var(--teal); }
+.ph-padrow[data-new="1"] .pn::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--teal); vertical-align: 1px; }
+.ph-padrow .pc { flex: none; color: var(--dim2, var(--dim)); }
+
+/* the asset's ⋯ menu: rename, move, remove (only on an engine that has them) */
+.sp-namerow { display: flex; align-items: flex-start; gap: 8px; }
+.sp-namerow .sp-iname { flex: 1 1 auto; min-width: 0; }
+.sp-dotswrap { position: relative; flex: none; }
+.sp-dots { width: 32px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: none; color: var(--dim); font-size: 18px; line-height: 1; cursor: pointer; }
+.sp-dots:hover { background: var(--cap-hover); color: var(--text); }
+.sp-dots:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.sp-menu { position: absolute; z-index: 5; top: calc(100% + 4px); left: 0; min-width: 210px; display: flex; flex-direction: column; gap: 2px; padding: 6px; border-radius: 8px; background: var(--surface3, var(--surface2)); border: 1px solid var(--border2); box-shadow: 0 14px 30px -8px rgba(0, 0, 0, .5); }
+.sp-menu[hidden] { display: none; }
+.sp-mi { display: block; width: 100%; min-height: 34px; padding: 0 10px; border: 0; border-radius: 6px; background: none; color: var(--text); font: 13px var(--font); text-align: left; cursor: pointer; }
+.sp-mi:hover { background: var(--cap-hover); }
+.sp-mi:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+.sp-menumsg { margin: 2px 6px 4px; font-size: 12px; color: var(--dim); overflow-wrap: anywhere; }
+.sp-input { box-sizing: border-box; width: 100%; height: 34px; padding: 0 10px; border: 1px solid var(--border2); border-radius: 6px; background: var(--surface2); color: var(--text); font: 13px var(--font); }
+@media (max-width: 600px) { .sp-dots { width: 44px; height: 44px; } .sp-mi { min-height: 44px; } .sp-input { height: 44px; font-size: 16px; } }

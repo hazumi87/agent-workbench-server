@@ -1,0 +1,111 @@
+/* Local-first screens share the app's Material roles; no remote fonts or assets. */
+.lf-host { color: var(--md-sys-color-on-surface); font: 400 14px/1.5 var(--font); }
+#firstRunStage { position: fixed; inset: 40px 0 0; z-index: 100; overflow-y: auto; background: var(--md-sys-color-surface); }
+#firstRunStage[hidden] { display: none; }
+.lf-host [hidden] { display: none !important; }
+.lf-host h1 { margin: 0; font: 400 30px/1.25 var(--font); letter-spacing: -.4px; }
+.lf-host h2 { margin: 0 0 12px; font: 500 20px/1.35 var(--font); }
+.lf-host h3 { margin: 0 0 10px; font: 500 16px/1.4 var(--font); }
+.lf-host p { margin: 8px 0; }
+.lf-secondary, .lf-helper { color: var(--md-sys-color-on-surface-variant); }
+.lf-heading { margin-bottom: 28px; }
+.lf-heading p { max-width: 600px; margin-top: 12px; }
+.lf-page { max-width: 780px; margin: 0 auto; padding: 36px 32px; }
+.lf-setup { min-height: 100%; box-sizing: border-box; display: grid; place-items: center; padding: 40px; background: var(--md-sys-color-surface); }
+.lf-setup-surface { width: min(100%, 656px); }
+.lf-product-mark { height: 64px; width: 64px; display: grid; place-items: center; margin-bottom: 28px; border-radius: 22px; background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
+.lf-product-mark .ms { font-size: 32px; }
+.lf-setup .lf-heading { margin-bottom: 32px; }
+.lf-path { display: block; width: 100%; box-sizing: border-box; min-height: 52px; border: 1px solid var(--md-sys-color-outline); border-radius: 12px; padding: 12px 16px; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); font: 400 14px/1.5 var(--font); }
+.lf-path:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 2px; }
+.lf-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
+.lf-setup .lf-helper { margin: 20px 0 24px; max-width: 610px; }
+.lf-setup .lf-helper p + p { margin-top: 12px; }
+.lf-button { display: inline-flex; min-height: 40px; box-sizing: border-box; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 24px; padding: 0 16px; background: transparent; color: var(--md-sys-color-primary); font: 500 14px/20px var(--font); cursor: pointer; }
+.lf-button.filled { padding: 0 24px; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.lf-button.tonal { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.lf-button.icon { padding: 0; width: 40px; }
+.lf-button:hover { box-shadow: inset 0 0 0 100px color-mix(in srgb, currentColor 8%, transparent); }
+.lf-button:focus-visible, .lf-choice:focus-within, .lf-place:focus-within, .lf-host summary:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 3px; }
+.lf-button:disabled { cursor: default; background: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent); color: color-mix(in srgb, var(--md-sys-color-on-surface) 38%, var(--md-sys-color-surface)); box-shadow: none; }
+.lf-checks { display: grid; gap: 8px; margin-top: 16px; }
+.lf-message { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; background: var(--md-sys-color-surface-container); color: var(--md-sys-color-on-surface-variant); }
+.lf-message .ms { font-size: 20px; }
+.lf-message.error { background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error-container); }
+.lf-message.warning { border: 1px solid var(--md-sys-color-outline-variant); }
+.lf-card { background: var(--md-sys-color-surface-container-low); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 20px; padding: 24px; margin-bottom: 20px; }
+.lf-old { margin-bottom: 24px; }
+.lf-old h2 { font-size: 18px; }
+.lf-choice { display: flex; gap: 12px; padding: 10px 0; cursor: pointer; border-radius: 8px; }
+.lf-choice span span, .lf-place span span { display: block; font-size: 13px; margin-top: 4px; }
+.lf-host input[type=radio], .lf-host input[type=checkbox] { accent-color: var(--md-sys-color-primary); height: 18px; width: 18px; flex: none; }
+.lf-host .lf-operation { min-height: 24px; color: var(--md-sys-color-on-surface-variant); margin-top: 12px; }
+.lf-candidate { border-top: 1px solid var(--md-sys-color-outline-variant); padding-top: 20px; margin-top: 20px; }
+.lf-candidate .lf-message { margin-top: 12px; }
+.lf-fullpath { overflow-wrap: anywhere; }
+.lf-previous { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 8px 0; }
+.lf-previous .lf-fullpath { min-width: 0; }
+.lf-toggle { display: flex; align-items: center; gap: 12px; margin: 12px 0 20px; font-weight: 500; cursor: pointer; }
+.lf-lastcopy { color: var(--md-sys-color-on-surface-variant); }
+.lf-export { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--md-sys-color-outline-variant); display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.lf-export progress { flex: 1; min-width: 120px; height: 6px; accent-color: var(--md-sys-color-primary); }
+.lf-empty { min-height: 430px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 36px; gap: 12px; }
+.lf-empty > .lf-glyph { padding: 22px; border-radius: 28px; background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); margin-bottom: 12px; }
+.lf-empty > .lf-glyph .ms { font-size: 40px; }
+.lf-empty .lf-heading { margin: 0; }
+.lf-empty .lf-heading p { max-width: 500px; }
+.lf-empty > .lf-button { margin-top: 8px; }
+.lf-empty details { max-width: 560px; text-align: left; margin-top: 12px; }
+.lf-detail { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.5 monospace; }
+.lf-shade { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; background: #0007; padding: 24px; }
+.lf-dialog { width: min(100%, 520px); max-height: calc(100vh - 80px); overflow-y: auto; box-sizing: border-box; padding: 28px; border-radius: 28px; background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface); box-shadow: 0 16px 48px #0004; }
+.lf-dialog > .lf-actions { justify-content: flex-end; margin-top: 24px; }
+.lf-place { display: flex; align-items: center; gap: 16px; margin-top: 12px; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 16px; padding: 16px; cursor: pointer; }
+.lf-place:has(input:checked) { border-color: var(--md-sys-color-primary); background: var(--md-sys-color-secondary-container); }
+.lf-place .lf-glyph { color: var(--md-sys-color-primary); }
+.lf-location { display: inline-flex; flex: none; align-items: center; gap: 4px; border-radius: 8px; padding: 4px 8px; color: var(--md-sys-color-on-surface-variant); background: var(--md-sys-color-surface-container-high); font: 500 12px/16px var(--font); }
+.lf-location .ms { font-size: 16px; color: inherit; }
+.lf-room-row { display: flex; gap: 12px; align-items: center; padding: 20px; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+.lf-room-row strong { flex: 1; }
+.lf-room-row > .lf-glyph { color: var(--md-sys-color-primary); }
+.lf-segments { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 20px; }
+.lf-segments .lf-button[aria-pressed=true] { color: var(--md-sys-color-on-secondary-container); background: var(--md-sys-color-secondary-container); }
+.lf-attachments { display: flex; gap: 8px; margin-top: 16px; }
+.lf-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 700px) { .lf-page { padding: 24px 16px; } .lf-setup { padding: 24px; place-items: start center; } .lf-host h1 { font-size: 26px; } .lf-card { padding: 18px; } .lf-previous { align-items: flex-start; } }
+/* The existing Scratchpad variant still fits the single 1280×900 setup screen. */
+.lf-setup:has(.lf-old) { padding: 24px 40px; }
+.lf-setup:has(.lf-old) .lf-product-mark { width: 40px; height: 40px; border-radius: 14px; margin-bottom: 12px; }
+.lf-setup:has(.lf-old) .lf-heading { margin-bottom: 18px; }
+.lf-setup:has(.lf-old) .lf-old { padding: 16px 20px; margin-bottom: 16px; }
+.lf-setup:has(.lf-old) .lf-choice { padding: 6px 0; }
+.lf-setup:has(.lf-old) .lf-helper { margin: 12px 0; }
+.lf-setup:has(.lf-old) .lf-helper p + p { margin-top: 8px; }
+.lf-setup:has(.lf-old) .lf-actions { margin-top: 12px; }
+.wr-cib:disabled, .wr-noteattach:disabled { cursor: default; opacity: .38; }
+
+/* Match the normal app field surface; the lowest M3 role is pure black in dark. */
+.lf-uninstall > .lf-message { margin-bottom: 8px; }
+
+.lf-waiting { margin-top: 12px; }
+
+/* Workrooms owns this stable, scrollable sibling of its changing room body. */
+.lf-agent-wizard { border-bottom: 1px solid var(--md-sys-color-outline-variant); background: var(--md-sys-color-surface); }
+.lf-agent-wizard[hidden] { display: none; }
+
+.lf-agent-wizard .lf-page { padding: 20px 16px; }
+.lf-agent-row { display: flex; align-items: center; gap: 12px; min-height: 70px; padding: 8px 12px; margin: 8px 0; border-radius: 16px; background: var(--md-sys-color-surface-container-low); }
+.lf-agent-copy { flex: 1; min-width: 0; }
+.lf-agent-title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.lf-agent-row .lf-choice { align-items: center; padding: 0; }
+.lf-agent-row p { margin: 4px 0; }
+.lf-installer-terminal { height: 320px; max-width: 748px; margin: 0 auto 20px; padding: 8px; background: #000; overflow: hidden; }
+@media (max-width: 700px) { .lf-agent-row { flex-wrap: wrap; } .lf-agent-row > .lf-button { margin-left: 30px; } }
+
+/* Wizard actions retain comfortable pointer and touch targets. */
+.lf-agent-wizard .lf-button { min-height: 44px; min-width: 44px; }
+
+/* Keep the question above the actions and each button label on one line. */
+.lf-agent-wizard .lf-skip-question { display: block; }
+.lf-agent-wizard .lf-actions > .lf-button { white-space: nowrap; }
+.lf-message.refreshed { background:var(--md-sys-color-tertiary-container); color:var(--md-sys-color-on-tertiary-container); }

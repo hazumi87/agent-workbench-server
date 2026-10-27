@@ -1,0 +1,93 @@
+/* The Image Viewer page, after the design's styleguide/mockups/workbench-image-markup (aurora <commit>).
+   App colours are the M3 roles the host sets with its theme message; the fallbacks below are the light and dark
+   schemes from the seed #428DF0. The marks keep FIXED tones in both themes (primary tone 40 for the line and the
+   chip, 99 for the outline, 100 for the letter, tertiary tone 40 for an agent's marks) so a mark reads the same
+   on the same picture. Nothing here is positioned by an inline style: the page sets left/top/width/height from
+   script (the module CSP blocks style attributes). */
+:root {
+  color-scheme: light dark;
+  --md-sys-color-primary: #275fa7; --md-sys-color-on-primary: #f8f8ff;
+  --md-sys-color-secondary-container: #cffbe2; --md-sys-color-on-secondary-container: #3b624f;
+  --md-sys-color-surface: #f9f9ff; --md-sys-color-surface-container-low: #f0f3ff; --md-sys-color-surface-container-highest: #d6e3ff;
+  --md-sys-color-on-surface: #1b3355; --md-sys-color-on-surface-variant: #496085;
+  --md-sys-color-outline: #657ba2; --md-sys-color-outline-variant: #9cb3dc;
+  --mk-line: #265ea7; --mk-chip: #265ea7; --mk-on: #ffffff; --mk-out: #fdfbff; --mk-agent: #006d43;
+  --shape-m: 12px; --shape-s: 8px; --shape-full: 999px;
+  --font: 'Roboto Flex', system-ui, 'Segoe UI Variable', 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --md-sys-color-primary: #b1cdff; --md-sys-color-on-primary: #224474;
+    --md-sys-color-secondary-container: #152a20; --md-sys-color-on-secondary-container: #91a99b;
+    --md-sys-color-surface: #070e1b; --md-sys-color-surface-container-low: #091423; --md-sys-color-surface-container-highest: #16263e;
+    --md-sys-color-on-surface: #dae6ff; --md-sys-color-on-surface-variant: #9cacca;
+    --md-sys-color-outline: #667692; --md-sys-color-outline-variant: #394863;
+  }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--md-sys-color-surface-container-low); color: var(--md-sys-color-on-surface); font: 400 13px/18px var(--font); }
+button { font: inherit; color: inherit; cursor: pointer; }
+.wait, .err { margin: 12px; color: var(--md-sys-color-on-surface-variant); }
+.err { color: var(--md-sys-color-on-surface); }
+svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+.vw { display: flex; flex-direction: column; height: 100%; min-height: 0; outline: none; }
+.vw:focus-visible { box-shadow: inset 0 0 0 2px var(--md-sys-color-primary); }
+.vh { flex: none; display: flex; align-items: center; gap: 2px; min-height: 48px; padding: 2px 4px; }
+.vh .t { flex: 1; min-width: 0; font: 600 13px var(--font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
+.vh .t small { font-weight: 400; color: var(--md-sys-color-on-surface-variant); }
+.ib { width: 44px; height: 44px; border: 0; border-radius: var(--shape-full); background: transparent; color: var(--md-sys-color-on-surface-variant);
+  display: inline-flex; align-items: center; justify-content: center; flex: none; padding: 0; }
+.ib:hover:not(:disabled) { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+.ib:disabled { opacity: .38; cursor: default; }
+.ib:focus-visible, .tg button:focus-visible, .zb button:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 1px; }
+.vt { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 0 8px 8px; } /* wraps in a narrow column instead of overflowing */
+.vt .sp { flex: 1; }
+.tg { display: inline-flex; border: 1px solid var(--md-sys-color-outline); border-radius: var(--shape-full); overflow: hidden; }
+.tg button { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 44px; min-width: 44px; padding: 0 12px; border: 0; background: transparent; font: 500 12.5px var(--font); }
+.tg button svg.i { width: 16px; height: 16px; }
+.tg button + button { border-left: 1px solid var(--md-sys-color-outline); }
+.tg button[aria-pressed="true"] { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.tg button:disabled { opacity: .38; cursor: default; }
+
+.stagep { position: relative; flex: 1; min-height: 0; margin: 0 8px; border-radius: var(--shape-m); background: var(--md-sys-color-surface-container-highest);
+  overflow: hidden; touch-action: none; user-select: none; }
+.stagep.t-pin, .stagep.t-box { cursor: crosshair; }
+.stagep img.pic { position: absolute; display: block; max-width: none; pointer-events: none; image-rendering: auto; }
+.stagep svg.mk { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.mk .o { stroke: var(--mk-out); stroke-width: 5; fill: none; vector-effect: non-scaling-stroke; }
+.mk .l { stroke: var(--mk-line); stroke-width: 2; fill: none; vector-effect: non-scaling-stroke; }
+.mk .d { stroke-dasharray: 6 4; }
+.mk .hit { fill: transparent; stroke: transparent; stroke-width: 14; vector-effect: non-scaling-stroke; }
+.chipm { position: absolute; min-width: 22px; height: 22px; padding: 0 6px; border-radius: var(--shape-full); background: var(--mk-chip); color: var(--mk-on);
+  font: 700 12px/22px var(--font); text-align: center; box-shadow: 0 0 0 1.5px var(--mk-out), 0 1px 3px rgba(0, 0, 0, .35); pointer-events: none; white-space: nowrap; }
+.chipm.sel { box-shadow: 0 0 0 1.5px var(--mk-out), 0 0 0 4px var(--mk-chip); }
+/* the pin: a teardrop whose tip is the spot, the letter in its head */
+.pinm { position: absolute; width: 26px; height: 26px; margin: -31px 0 0 -13px; border-radius: 50% 50% 50% 4px; transform: rotate(-45deg); background: var(--mk-chip);
+  box-shadow: 0 0 0 1.5px var(--mk-out), 0 2px 4px rgba(0, 0, 0, .35); display: grid; place-items: center; pointer-events: none; }
+.pinm b { transform: rotate(45deg); font: 700 11.5px var(--font); color: var(--mk-on); white-space: nowrap; }
+.pinm.wide { width: 30px; height: 30px; margin: -35px 0 0 -15px; }
+.pinm.sel { box-shadow: 0 0 0 1.5px var(--mk-out), 0 0 0 4px var(--mk-chip), 0 2px 4px rgba(0, 0, 0, .35); }
+.pinm.agent, .chipm.agent { background: var(--mk-agent); }
+/* corner handles: 12 px to see, 44 px to hit */
+.hd { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; display: grid; place-items: center; cursor: nwse-resize; pointer-events: none; }
+.hd::after { content: ''; width: 12px; height: 12px; border-radius: 3px; background: var(--mk-out); box-shadow: 0 0 0 2px var(--mk-line); }
+
+.zb { position: absolute; right: 8px; bottom: 8px; display: flex; align-items: center; gap: 4px; }
+.zb button, .zb span { height: 28px; padding: 0 10px; border: 0; border-radius: var(--shape-full); background: color-mix(in srgb, var(--md-sys-color-surface) 88%, transparent);
+  font: 500 12px var(--font); box-shadow: 0 1px 2px rgba(0, 0, 0, .2); }
+.zb span { font-size: 11.5px; line-height: 28px; color: var(--md-sys-color-on-surface-variant); }
+.zb button { height: 44px; min-width: 44px; } /* a target: 44 px at least (the design's floor); the % readout is text, not a target */
+.vf { flex: none; display: flex; align-items: center; gap: 6px; padding: 6px 12px 10px; font-size: 11.5px; color: var(--md-sys-color-on-surface-variant); }
+.vf .k { font: 500 11px var(--font); padding: 0 5px; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 4px; }
+.vnote { flex: none; display: flex; align-items: center; gap: 8px; margin: 8px; padding: 8px 10px; border-radius: var(--shape-s);
+  background: var(--md-sys-color-surface-container-highest); font-size: 12.5px; line-height: 17px; }
+.vnote.warn { background: color-mix(in srgb, var(--md-sys-color-primary) 14%, var(--md-sys-color-surface-container-highest)); }
+/* touch screens: every target 48 px (the design's phone floor) */
+@media (pointer: coarse) {
+  .vh { min-height: 52px; }
+  .ib { width: 48px; height: 48px; }
+  .tg button { height: 48px; min-width: 48px; }
+  .zb button { height: 48px; min-width: 48px; }
+}

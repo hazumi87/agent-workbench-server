@@ -1,0 +1,195 @@
+/* AGENT CHAT [agent chat] Owner 2026-10-05: the Chat view of an agent session
+   (web/agent-chat.mjs), and the Chat | CLI tabs in the session bar.
+
+   The look IS the room line's. room.css owns the whole room page (body grid,
+   panels) and cannot be loaded into the solo window, so the bubble, composer
+   and attach rules it uses are restated here under .ac, value for value.
+   web/room-bubbles.css (the glass) is loaded as is. Anything that changes in
+   room.css for these classes changes here too. */
+
+/* ---- the window: Chat shows, the terminal is only HIDDEN (never detached) ---- */
+.pane.view-chat > .pane-body { display: none; }
+.ac { position: relative; flex: 1 1 auto; min-height: 0; min-width: 0; display: flex; background: var(--ink); color: var(--text); --room-accent: var(--teal); }
+.ac[hidden] { display: none; }
+.ac-main { flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; flex-direction: column; position: relative; }
+.ac-bar { display: flex; align-items: center; padding: 4px 12px 0; flex: 0 0 auto; }
+.ac-bar-sp { flex: 1; }
+.ac-padbtn, .ac-opencli, .ac-pad-up {
+  font-size: 12px; padding: 4px 11px; cursor: pointer; border-radius: 999px;
+  background: var(--ghost-fill); border: 1px solid var(--border2); color: var(--dim);
+}
+.ac-padbtn:hover, .ac-opencli:hover, .ac-pad-up:hover { color: var(--text); background: var(--surface2); }
+.ac-padbtn[aria-pressed="true"] { color: var(--text); border-color: var(--room-accent); }
+
+/* ---- line (room.css "line") ---- */
+.ac .rm-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding: 8px 16px; }
+.ac .rm-older {
+  display: block; margin: 0 auto 8px; font-size: 12px; padding: 3px 10px; cursor: pointer;
+  background: var(--ghost-fill); border: 1px solid var(--border2); border-radius: 999px; color: var(--dim);
+}
+.ac .rm-older[hidden], .ac .rm-start[hidden] { display: none; }
+/* "New messages ↓" [chat scroll; the design system §1.K]: last child of the scroller, stuck to its bottom edge, centred above the composer: 36px
+   (44px on a phone), radius = half the height, sky 20% over the surface with a sky 60% border; 13px/600 text, a count chip (sky on
+   ink) and a ↓; it fades and rises 8px on entry */
+.ac .ac-newer {
+  position: sticky; bottom: 8px; display: flex; align-items: center; gap: 8px; width: max-content; margin: 4px auto 0; height: 36px; padding: 0 14px 0 16px;
+  border: 1px solid color-mix(in srgb, var(--sky) 60%, transparent); border-radius: 18px; background: color-mix(in srgb, var(--sky) 20%, var(--surface));
+  color: var(--text); font: 600 13px var(--font); cursor: pointer; z-index: 3; box-shadow: 0 4px 14px -4px rgba(0, 0, 0, .6);
+  animation: ac-newer-in .2s ease-out;
+}
+.ac .ac-newer .nc { min-width: 18px; padding: 0 5px; border-radius: 9px; background: var(--sky); color: var(--ink); font: 700 11px/18px var(--mono); text-align: center; }
+.ac .ac-newer .ar { color: var(--sky); font-size: 15px; line-height: 1; }
+.ac .ac-newer[hidden] { display: none; }
+.ac .ac-newer:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 2px; }
+@keyframes ac-newer-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .ac .ac-newer { animation: none; } }
+@media (max-width: 600px) { .ac .ac-newer { height: 44px; border-radius: 22px; } }
+.ac .rm-start { text-align: center; font-size: 12px; color: var(--dim); margin: 0 0 8px; }
+.ac .rm-entries { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.ac .rm-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ac-notice { margin: 24px auto; max-width: 420px; text-align: center; color: var(--dim); font-size: 13px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.ac-notice[hidden] { display: none; }
+.ac-notice p { margin: 0; }
+.ac-err { margin: 0; padding: 4px 16px; font-size: 12px; color: var(--coral); }
+.ac-err[hidden] { display: none; }
+
+.ac .entry {
+  --pc-ink: oklch(from var(--pc, #5a6672) .82 clamp(.02, calc(c * .6), .13) h);
+  --pc-wash: oklch(from var(--pc, #5a6672) .25 clamp(0, calc(c * .35), .045) h);
+  --pc-edge: oklch(from var(--pc, #5a6672) .34 clamp(0, calc(c * .4), .06) h);
+}
+.ac .entry { display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 8px; align-items: start; max-width: 84%; min-width: 0; }
+.ac .entry:not(.same):not([data-side]) { margin-top: 10px; }
+.ac .entry.by-agent { align-self: flex-start; }
+.ac .entry.by-user { align-self: flex-end; grid-template-columns: minmax(0, 1fr) 28px; }
+.ac .entry.by-user > .entry-glyph { grid-column: 2; grid-row: 1; }
+.ac .entry.by-user > .entry-bubble { grid-column: 1; grid-row: 1; }
+.ac .entry-glyph { width: 28px; height: 28px; display: grid; place-items: center; }
+.ac .entry.same > .entry-glyph { visibility: hidden; }
+.ac .entry-bubble { min-width: 0; padding: 7px 11px 8px; border-radius: 12px; line-height: 1.42; }
+.ac .entry.by-agent .entry-bubble { background: var(--pc-wash, var(--surface)); border: 1px solid var(--pc-edge, var(--border)); }
+.ac .entry.by-user .entry-bubble { background: var(--surface3, var(--surface2)); border: 1px solid var(--border2); }
+.ac .entry.by-agent.same .entry-bubble { border-top-left-radius: 4px; }
+.ac .entry.by-user.same .entry-bubble { border-top-right-radius: 4px; }
+.ac .entry-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; margin-bottom: 1px; font-size: 12px; color: var(--dim); }
+.ac .entry-author { font: 600 13px var(--mono); color: var(--pc-ink, var(--text)); }
+.ac .entry.same .entry-author { display: none; }
+.ac .entry-ts { margin-left: auto; padding-left: 10px; font: 400 11px var(--mono); color: var(--dim2, var(--dim)); }
+.ac .entry-body { white-space: pre-wrap; overflow-wrap: anywhere; }
+.ac .entry-body a { color: var(--sky); }
+.ac .entry-reads { display: flex; flex-wrap: wrap; gap: 2px 12px; margin-top: 3px; font-size: 11px; color: var(--dim); }
+.ac .entry > .entry-reads { grid-column: 2; }
+.ac .entry.by-user > .entry-reads { grid-column: 1; justify-content: flex-end; }
+.ac .entry.by-room { display: block; align-self: center; max-width: 92%; text-align: center; font-size: 12px; color: var(--dim); }
+.ac .entry.by-room:not([data-side]) { margin: 10px 0 6px; }
+.ac .entry.by-room .entry-body { color: var(--dim); }
+/* a tool burst: one compact grey line on the agent's side, no bubble */
+.ac .entry.by-room.ac-tool { align-self: flex-start; text-align: left; margin: 2px 0 2px 36px; font: 11.5px var(--mono); }
+.ac .you { width: 28px; height: 28px; border-radius: 7px; overflow: hidden; flex: none; border: 1px solid var(--border2); background: var(--surface3, var(--surface2)); display: grid; place-items: center; font: 700 13px var(--display); color: var(--text); box-sizing: border-box; }
+.ac .you img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ac .you .you-person { width: 62%; height: 62%; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+/* your message until the transcript echoes it */
+.ac .entry.ac-pending .entry-bubble { opacity: .78; }
+.ac .ac-state[data-state="failed"] { color: var(--coral); cursor: pointer; }
+.ac .ac-state[data-state="held"] { color: var(--amber); }
+.ac-code { margin: 6px 0 2px; padding: 8px 10px; border-radius: 8px; background: var(--ink); border: 1px solid var(--border2); font: 12.5px/1.45 var(--mono); overflow-x: auto; white-space: pre; }
+.ac-code code { font: inherit; }
+.ac-files { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.ac-wb { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.ac-wb-chip { font: inherit; font-size: 12px; padding: 2px 9px; border: 1px solid var(--accent, var(--border2)); border-radius: 999px; background: none; color: var(--text); cursor: pointer; min-height: 28px; }
+.ac-wb-dead { font-size: 12px; color: var(--dim); }
+.ac-voice { width: 14px; height: 14px; color: var(--dim); align-self: center; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ac-voice-word { font-size: 11px; color: var(--dim); }
+.ac-test { font: 600 10px var(--mono, monospace); text-transform: uppercase; letter-spacing: .05em; color: var(--amber, #d9a441); border: 1px solid currentColor; border-radius: 999px; padding: 0 6px; line-height: 15px; align-self: center; }
+@media (pointer: coarse) { .ac-wb-chip { min-height: 40px; } }
+.ac-file { font-size: 12px; padding: 2px 9px; border: 1px solid var(--border2); border-radius: 999px; color: var(--text); text-decoration: none; }
+
+/* ---- composer (room.css .rm-compose / .rm-send, room-attach.css .rm-attach) ---- */
+.ac .rm-compose { display: flex; flex-wrap: wrap; gap: 12px; padding: 9px 16px 10px; border-top: 1px solid var(--border2); align-items: flex-end; position: relative; z-index: 2; background: color-mix(in srgb, var(--surface) 92%, transparent); }
+.ac .rm-inputwrap { position: relative; flex: 1 1 0; min-width: 0; }
+.ac .rm-inputwrap textarea {
+  display: block; width: 100%; resize: none; min-height: 40px; max-height: 30vh; padding: 8px 10px;
+  background: var(--surface2); border: 1px solid transparent; border-radius: 8px; line-height: 22px; overflow-y: auto;
+  color: var(--text); font: inherit; font-size: 16px; line-height: 22px;
+  box-shadow: 0 0 0 1px var(--ink), 0 0 0 3px color-mix(in srgb, var(--room-accent) 75%, transparent);
+}
+.ac .rm-inputwrap textarea:focus-visible { outline: none; box-shadow: 0 0 0 1px var(--ink), 0 0 0 3px var(--room-accent); }
+.ac .rm-send {
+  flex: 0 0 40px; width: 40px; height: 40px; min-height: 40px; padding: 0; border-radius: 8px;
+  border: 1px solid var(--room-accent); color: var(--room-accent); background: var(--ghost-fill); cursor: pointer;
+  font-size: 20px; line-height: 1; display: inline-flex; align-items: center; justify-content: center;
+}
+.ac .rm-send:disabled { border-color: var(--border2); color: var(--dim2, var(--dim)); cursor: default; }
+.ac .rm-attach {
+  flex: 0 0 40px; width: 40px; height: 40px; padding: 0; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--border2); background: none; color: var(--dim);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.ac .rm-attach:hover { background: var(--cap-hover); color: var(--text); }
+.ac .rm-attach svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.ac-tray { flex: 1 0 100%; display: flex; flex-wrap: wrap; gap: 6px; }
+.ac-tray[hidden] { display: none; }
+.ac-chip { display: inline-flex; align-items: center; gap: 6px; max-width: 220px; padding: 2px 4px 2px 10px; font-size: 12px; border: 1px solid var(--border2); border-radius: 999px; background: var(--surface2); }
+.ac-chip.is-err { border-color: var(--coral); }
+.ac-chip-n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ac-chip-s { color: var(--dim); font-size: 11px; }
+.ac-chip.is-err .ac-chip-s { color: var(--coral); }
+.ac-chip-x { border: 0; background: none; color: var(--dim); cursor: pointer; width: 22px; height: 22px; border-radius: 50%; }
+
+/* ---- the Scratchpad: the right column (370px) on a PC, the whole screen on a phone ---- */
+.ac-padcol { flex: 0 0 370px; width: 370px; display: flex; flex-direction: column; min-height: 0; border-left: 1px solid var(--border2); background: var(--surface); }
+.ac-padcol[hidden] { display: none; }
+.ac-pad-h { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.ac-pad-sp { flex: 1; }
+.ac-pad-x { border: 0; background: none; color: var(--dim); font-size: 22px; cursor: pointer; width: 32px; height: 32px; }
+.ac-pad-note { margin: 0; padding: 10px 12px; font-size: 12px; color: var(--dim); }
+.ac-pad-note:empty { display: none; }
+.ac-pad-list { list-style: none; margin: 0; padding: 4px 6px; overflow-y: auto; flex: 1 1 auto; }
+.ac-pad-list li { display: flex; flex-direction: column; gap: 1px; padding: 7px 8px; border-radius: 8px; }
+.ac-pad-list li:hover { background: var(--surface2); }
+.ac-pad-file { color: var(--text); text-decoration: none; overflow-wrap: anywhere; font-size: 13px; }
+.ac-pad-list small { color: var(--dim); font-size: 11px; }
+
+@media (max-width: 600px) {
+  .ac .rm-scroll { padding: 8px 12px; }
+  .ac .rm-attach, .ac .rm-send { flex-basis: 44px; width: 44px; height: 44px; min-height: 44px; }
+  .ac .rm-compose { gap: 8px; padding: 8px 12px max(10px, env(safe-area-inset-bottom)); }
+  .ac-padbtn, .ac-pad-up { min-height: 36px; padding: 0 14px; }
+  /* the Scratchpad is a full screen here */
+  .ac-padcol { position: absolute; inset: 0; width: auto; flex: none; z-index: 20; border-left: 0; }
+  .ac.pad-open .ac-main { visibility: hidden; }
+}
+
+/* ==== THE VIEW TABS in the session bar (Chat | CLI) ====
+   A segmented control in the bundle's own tokens, sitting right after the title. Phone: the same control, 36px tall hit targets. */
+.hwb-sbar .sb-view {
+  position: relative; z-index: 1; display: inline-flex; flex: none; margin: 0 6px 0 10px; padding: 2px;
+  border-radius: calc(var(--corner, 8px) + 2px); background: color-mix(in srgb, var(--sb-text, var(--text)) 8%, transparent);
+}
+.hwb-sbar .sb-view button {
+  border: 0; background: none; cursor: pointer; font: 600 .72rem var(--font);
+  padding: 0 11px; height: 26px; border-radius: var(--corner, 8px);
+  color: color-mix(in srgb, var(--sb-text, var(--text)) 65%, transparent);
+}
+.hwb-sbar .sb-view button:hover { color: var(--sb-text, var(--text)); }
+.hwb-sbar .sb-view button.is-on { background: color-mix(in srgb, var(--sb-text, var(--text)) 18%, transparent); color: var(--sb-text, var(--text)); }
+@media (max-width: 600px) {
+  .hwb-sbar .sb-view button { height: 32px; padding: 0 12px; }
+  /* the 390px bar has no room for the tabs AND the 64px brand watermark; the ring still carries the brand */
+  .hwb-sbar:has(.sb-view) .sb-wm { display: none; }
+  /* ...nor for the session name beside the project: the project name stays, clipped before it can reach the tabs */
+  .hwb-sbar:has(.sb-view) .sb-sess { display: none; }
+  .hwb-sbar:has(.sb-view) .sb-title { overflow: hidden; flex: 0 1 auto; }
+}
+
+/* ---- Send's context menu [enter pref] Owner 2026-10-05: the room's .rsm-menu look, restated (room.css is not loaded here) ---- */
+.rsm-menu { position: fixed; z-index: 80; min-width: 200px; padding: 4px; background: var(--surface3, var(--surface2)); border: 1px solid var(--border2); border-radius: 8px; box-shadow: 0 14px 30px -8px rgba(0, 0, 0, .7); }
+.rsm-mi { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 34px; padding: 0 10px; border-radius: 6px; font: inherit; font-size: 13px; text-align: left; color: var(--text); background: none; border: 0; cursor: pointer; }
+.rsm-mi:hover, .rsm-mi:focus-visible { background: color-mix(in srgb, var(--text) 8%, transparent); }
+.rsm-mi:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+.enter-box { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border: 1px solid var(--border2); border-radius: 3px; font-size: 12px; line-height: 1; color: var(--room-accent, var(--teal)); flex: none; }
+@media (max-width: 600px) { .rsm-mi { min-height: 44px; font-size: 15px; } }
+/* [chat sender] a message the engine typed for another agent or a room: theirs, set apart from yours and the agent's */
+.ac .entry.ac-peer .entry-bubble { background: transparent; border: 1px dashed var(--pc-edge, var(--border)); }
+.ac .ac-peer-glyph { display: inline-flex; align-items: center; justify-content: center; font: 600 13px var(--mono); color: var(--muted, var(--text)); }
+.ac .ac-peer-via { font-size: 12px; color: var(--muted, var(--text)); margin-left: 6px; }

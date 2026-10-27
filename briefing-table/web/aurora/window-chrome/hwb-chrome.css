@@ -1,0 +1,769 @@
+/* ============================================================================
+   AURORA — Window chrome  (.hwb-*)   v2 · 2026-08-07
+   Companion spec: cli-window-chrome-v2.md      Requires: /aurora/tokens.css v13
+
+   DROP-IN. Nothing here needs re-deriving. Link tokens.css, link this, then set
+   TWO things per window and CSS does the rest:
+
+       root.style.setProperty('--base', '#428DF0');   // the user's color
+       root.dataset.state = 'streaming';              // engine state
+
+   ROOT ELEMENT: <div class="hwb"> — carries --base, data-state, data-exit and
+   the state classes below. Everything is scoped to it.
+   IT MUST WRAP THE CONTENT AREA TOO, not just the bar: --d-termbg and
+   --d-ghost are declared on the root, so the terminal has to be a
+   DESCENDANT of .hwb or it silently falls back to transparent.
+
+   CLASSES THE HOST TOGGLES ON THE ROOT
+     .is-tabbed          this window holds tabs (tier 1 becomes the tab row)
+     .is-unfocused       the OS window is not active   (see hwb:active)
+     .is-lead            this window owns the loud channel (amplitude only)
+     .is-motion-paused   kill every animation (debug / user preference)
+     .st-<state>         mirrors data-state; drives seam + wash escalation
+
+   STATE VALUES: streaming | watching | waiting | disconnected | idle | ended
+   (v1 engine ships streaming|question|idle|disconnected; question -> waiting,
+    watching arrives in v2.)
+
+   THE TWO RULES THAT WILL BITE IF IGNORED
+     1. transform is forbidden on the caption cluster and on ANYTHING whose rect
+        the host measures — it moves an element visually without moving its
+        layout rect, leaving a stale hit-test. The activity pip is exempt
+        (non-interactive, never measured), which is why the spinner may rotate.
+     2. The caption cluster must stay position:absolute. Making it relative puts
+        it back into flex flow, where it eats 138px AND pushes the 154px reserve
+        to its left — a whole tab-width of dead space. (Yes, this happened.)
+   ============================================================================ */
+/* v32: tab + bar watermarks use the art's line styles and backlight (hwb-watermark.css) */
+@import url("hwb-watermark.css");
+
+
+.hwb{
+  --base:#428DF0;                                                        /* THE ONLY INPUT */
+
+  --d-barwash:  oklch(from var(--base) .28 clamp(0,calc(c * .35),.060) h); /* tier-1 bar, active */
+  --d-barwash-i:oklch(from var(--base) .225 clamp(0,calc(c * .28),.046) h); /* tier-1 bar, UNFOCUSED */
+  --d-title-i:  oklch(from var(--base) .72  clamp(0,calc(c * .55),.105) h); /* title, UNFOCUSED */
+  --d-title:    oklch(from var(--base) .78 clamp(0,calc(c * .80),.160) h); /* title text */
+  --d-seam:     oklch(from var(--base) .52 clamp(0,calc(c * .70),.130) h); /* 3px seam at rest */
+  --d-hi:       oklch(from var(--base) .62 clamp(0,calc(c * .90),.150) h); /* highlight / selection */
+  --d-termbg:   oklch(from var(--base) .16 clamp(0,calc(c * .15),.028) h); /* terminal background */
+  --d-ghost:    oklch(from var(--base) .26 clamp(0,calc(c * .40),.050) h); /* ghosted project logo */
+
+  --d-termfg:#d7dee6;   /* NOT DERIVED — see §5. Tinting every line of text fights
+                           the syntax colors and costs contrast all day. */
+
+  /* motion timings (component-local, not tokens.css) */
+  --hwb-breathe-t:3.2s;      /* streaming — liveness. HALF the speed of waiting (2x
+                                its 1.6s): working is not asking for anything. The pip
+                                and the wash share this one duration so they stay in
+                                phase instead of drifting against each other. */
+  --hwb-work-dip:.03;        /* streaming wash: a LIGHTNESS dip only — no hue shift */
+  --hwb-spin-t:3.4s;         /* watcher-wait — slow, LINEAR: a machine polling */
+  /* Tab corners follow the WINDOWS convention, not the design system's --corner. The design system's
+     shell radius is Zune-sharp 2px and is shared by cards, panes, modals and
+     toasts across every consumer — this is chrome that has to sit convincingly
+     inside Edge-shaped furniture, the same argument that makes
+     --cap-close-hover a platform constant rather than a palette choice. Scoped
+     to the tab so nothing else inherits it. */
+  --hwb-tab-r:8px;
+  --hwb-pulse-t:1.6s;        /* waiting   — demand (= --jp-pulse-t) */
+  --hwb-fault-t:2.8s;        /* disconnected — fault */
+  --hwb-summon-spread:9px;   /* lead amplitude; non-lead reduced below */
+  --hwb-wash-amp:26%;        /* how far the bar travels toward the alert hue */
+}
+@keyframes hwb-breathe{ 0%,100%{opacity:1;} 50%{opacity:.55;} }
+@keyframes hwb-spin{ to{ transform:rotate(360deg); } }
+@keyframes hwb-summon{
+  0%  {box-shadow:0 0 0 0 color-mix(in srgb,var(--act-attention) 55%,transparent);}
+  70% {box-shadow:0 0 0 var(--hwb-summon-spread) color-mix(in srgb,var(--act-attention) 0%,transparent);}
+  100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--act-attention) 0%,transparent);}
+}
+@keyframes hwb-fault{                    /* double-blink then a long hold */
+  0%,46%{opacity:1;} 53%{opacity:.25;} 60%{opacity:1;}
+  67%{opacity:.25;} 74%,100%{opacity:1;}
+}
+.hwb-pip.st-streaming{animation:hwb-breathe var(--hwb-breathe-t) var(--metro-ease) infinite;}
+.hwb-pip.st-waiting{animation:hwb-summon var(--hwb-pulse-t) var(--metro-ease) infinite;}
+.hwb-pip.st-disconnected{animation:hwb-fault var(--hwb-fault-t) steps(1,end) infinite;}
+.hwb:not(.is-lead) .hwb-pip.st-waiting{--hwb-summon-spread:5px;opacity:.85;}
+.hwb-tabs{display:none;align-items:flex-end;gap:3px;min-width:0;flex:0 1 auto;overflow:hidden;
+  height:100%;padding-top:4px;}
+.hwb.is-tabbed .hwb-tabs{display:flex;}
+.hwb.is-tabbed .hwb-title{display:none;}
+.hwb.is-tabbed{--hwb-bar-h:36px;}
+.hwb.is-tabbed .hwb-dead{flex:0 0 154px;min-width:154px;}
+.hwb.is-tabbed .hwb-tabs{flex:1 1 0;min-width:0;}
+.hwb-tab{height:30px;margin-bottom:2px;display:flex;align-items:center;gap:6px;padding:0 8px;min-width:0;
+  /* tabs FILL the strip at every count — no upper cap, so "spread across the
+     available space" is literally true whether there are two tabs or ten.
+     (Edge caps at ~240px and leaves dead space; say the word and it comes back.) */
+  flex:1 1 0;min-width:96px;max-width:240px;border-radius:var(--hwb-tab-r) var(--hwb-tab-r) 0 0;
+  /* the ACTIVE tab wears the focused wash, the others the UNFOCUSED one — the
+     same lightness split that separates a focused window from an unfocused one.
+     This is what keeps two tabs sharing a base color tellable apart. */
+  /* D1 FIX (hwh 2026-08-08). var() substitutes at COMPUTED-VALUE time, so a
+     chip that only inherits --d-* gets the ROOT's already-resolved wash and its
+     own --base does nothing. Worse, .hwb.is-tabbed neutralises --d-barwash only,
+     so the ACTIVE tab went neutral while inactive tabs stayed tinted — inverted.
+     Re-declaring the block here is what makes the derivation PER-TAB. */
+  --d-barwash:  oklch(from var(--base) .28  clamp(0,calc(c * .35),.060) h);
+  --d-barwash-i:oklch(from var(--base) .225 clamp(0,calc(c * .28),.046) h);
+  --d-title:    oklch(from var(--base) .78  clamp(0,calc(c * .80),.160) h);
+  --d-title-i:  oklch(from var(--base) .72  clamp(0,calc(c * .55),.105) h);
+  --d-seam:     oklch(from var(--base) .52  clamp(0,calc(c * .70),.130) h);
+  --tab-bg:var(--d-barwash-i);
+  background:var(--tab-bg);position:relative;
+  cursor:default;transition:background .14s var(--metro-ease);}
+.hwb-tab.is-active{--tab-bg:var(--d-barwash);}
+.hwb-tab.is-active{height:32px;margin-bottom:0;
+  box-shadow:inset 0 2px 0 var(--d-seam),
+             inset  1px 0 0 var(--d-seam),
+             inset -1px 0 0 var(--d-seam);}
+@keyframes hwb-tab-demand{
+  0%,100%{background:var(--tab-bg);}
+  50%    {background:color-mix(in srgb,var(--act-attention) 34%,var(--tab-bg));}
+}
+@keyframes hwb-tab-fault{
+  0%,46%{background:var(--tab-bg);} 53%{background:color-mix(in srgb,var(--act-severed) 34%,var(--tab-bg));}
+  60%{background:var(--tab-bg);} 67%{background:color-mix(in srgb,var(--act-severed) 34%,var(--tab-bg));}
+  74%,100%{background:var(--tab-bg);}
+}
+.hwb-tab.st-waiting     {animation:hwb-tab-demand var(--hwb-pulse-t) var(--metro-ease) infinite;}
+.hwb-tab.st-disconnected{animation:hwb-tab-fault  var(--hwb-fault-t) steps(1,end) infinite;}
+.hwb.is-motion-paused .hwb-tab{animation:none !important;}
+@media (prefers-reduced-motion:reduce){ .hwb-tab{animation:none !important;} }
+.hwb-tab.is-hub{--tab-bg:color-mix(in srgb,var(--text) 7%,transparent);
+  flex:0 0 auto;min-width:0;max-width:none;padding:0 10px;margin-right:6px;}
+.hwb-tab.is-hub::after{background:var(--border2);opacity:1;}
+.hwb-tab.is-hub .tlogo{color:var(--dim);width:15px;height:15px;}
+.hwb-tab.is-hub .tname{display:none;}
+/* ---- OVERFLOW ----------------------------------------------------
+   Chevrons overlay the scroller's ENDS instead of sitting beside it, so they
+   take no flex width and the 154px reserve / caption geometry are untouched by
+   overflow. The scrim makes tabs appear to slide UNDER the control rather than
+   be covered by it — which is what tells you there is more, not just that
+   something is on top. */
+.hwb-scrollwrap{position:relative;flex:1 1 0;min-width:0;height:100%;display:flex;align-items:flex-end;}
+.hwb-scroll{display:flex;align-items:flex-end;gap:3px;flex:1 1 0;min-width:0;height:100%;
+  padding-top:4px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;
+  scroll-behavior:smooth;overscroll-behavior-x:contain;}
+.hwb-scroll::-webkit-scrollbar{display:none;}
+@media (prefers-reduced-motion:reduce){ .hwb-scroll{scroll-behavior:auto;} }
+
+.hwb-chev{position:absolute;bottom:2px;z-index:3;width:20px;height:30px;
+  display:none;align-items:center;justify-content:center;border:0;padding:0;cursor:pointer;
+  color:var(--dim);background:none;transition:color .12s var(--metro-ease);}
+.hwb-chev.at-start{left:0;}
+.hwb-chev.at-end{right:0;}
+.hwb-scrollwrap.can-start .hwb-chev.at-start,
+.hwb-scrollwrap.can-end   .hwb-chev.at-end{display:flex;}
+.hwb-chev:hover{color:var(--text);}
+.hwb-chev svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round;position:relative;z-index:1;}
+/* the scrim rides on the button, sized past it, so the fade is continuous */
+.hwb-chev::before{content:"";position:absolute;top:0;bottom:0;width:34px;pointer-events:none;}
+.hwb-chev.at-start::before{left:0;background:linear-gradient(to right,
+  var(--d-barwash) 40%,transparent);}
+.hwb-chev.at-end::before{right:0;background:linear-gradient(to left,
+  var(--d-barwash) 40%,transparent);}
+
+.hwb-newtab{flex:0 0 auto;width:28px;height:28px;margin:0 0 2px 4px;
+  display:flex;align-items:center;justify-content:center;border:0;padding:0;
+  border-radius:var(--hwb-tab-r) var(--hwb-tab-r) 0 0;background:none;
+  color:var(--dim);font-size:17px;line-height:1;cursor:pointer;
+  transition:.12s var(--metro-ease);}
+.hwb-newtab:hover{background:color-mix(in srgb,var(--text) 12%,transparent);color:var(--text);}
+.hwb-tab.is-hub .tcount{flex:0 0 auto;font-family:var(--mono);font-size:.62rem;font-weight:500;
+  color:var(--dim);background:color-mix(in srgb,var(--text) 13%,transparent);
+  border-radius:8px;padding:1px 6px;margin-left:2px;}
+.hwb-tab .tlogo{width:20px;height:20px;flex:0 0 auto;color:var(--d-title);opacity:.75;}
+.hwb-tab.is-active .tlogo{opacity:1;}
+.hwb-tab .tlogo svg{width:100%;height:100%;display:block;fill:currentColor;}
+/* flex:1 1 auto is load-bearing, not tidiness: without it .tname is content-width,
+   so on a SHORT title the close × hugs the name and the chip's slack sits AFTER it.
+   Edge pins × to the chip's right edge at every title length. Growing the NAME
+   rather than pushing the × with margin-left:auto also makes the slack part of the
+   tab's click target, which is what a user expects to hit. */
+.hwb-tab .tname{font-size:.72rem;font-weight:500;color:var(--dim);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto;}
+.hwb-tab.is-active .tname{color:var(--d-title);}
+.hwb-tab .tclose{display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+  width:17px;height:17px;border:0;padding:0;border-radius:4px;background:none;
+  color:var(--dim2);font-size:13px;line-height:1;cursor:pointer;
+  transition:.12s var(--metro-ease);}
+.hwb-tab .tclose:hover{background:color-mix(in srgb,var(--text) 16%,transparent);color:var(--text);}
+.hwb-tab.is-active .tclose{color:var(--dim);}
+.hwb-tab.is-hub .tclose{display:none;}
+/* ---- TAB NOTICES — .hwb-notes / .hwb-note ------------------------
+   A NOTICE IS NOT AN ASK, AND THE CSS IS WHAT GUARANTEES IT.
+
+   `.hwb-tab.st-waiting` demand-flashes because an agent is BLOCKED ON YOU and
+   nothing proceeds until you answer. A stale credential and "3 fields are
+   waiting" are neither urgent nor answerable-by-looking. If either borrowed the
+   demand treatment, the flash would stop meaning "someone is waiting for you"
+   and start meaning "something is off somewhere" — which is how both signals
+   die. Three mechanical guarantees, not three conventions:
+
+     1. NO MOTION. `animation:none` is declared with !important on .hwb-note and
+        is asserted by the harness. A notice cannot be made to flash by a
+        consumer stylesheet, a state class, or a future edit to this file.
+     2. NO CORAL. --coral IS the demand hue (--act-attention). It is not
+        reachable from any notice variant below, so a notice cannot be painted
+        to look like a demand even by mistake. Also asserted.
+     3. SQUARE, NOT ROUND. State marks in this system are circles — the pip, the
+        ring, the ring's center dot. Notices are rounded rectangles at every
+        size, right down to the 7px collapsed form. Shape, before color and
+        before text, says which of the two registers you are looking at.
+
+   POSITION carries the same split one level up: the state glyph is LEADING
+   (before the logo), notices are TRAILING (beside the close). Same move the
+   ring makes inside its own 16px — state on the perimeter, identity at the
+   core — one scale out.
+
+   A NOTICE IS NEVER CLEARED BY BEING SEEN. There is no :hover, :focus or
+   .is-read rule anywhere in this block and there must never be one. The
+   credential note is a projection of the tool's own state; it goes away when
+   the tool renews, not when the user glances at the tab.
+
+   ONE COMPONENT, TWO VARIANTS — not two components. A 96px chip has room for
+   one more slot, not two, and both signals answer the same user question:
+   "is this session carrying something I should know about?" So they share a
+   rail, and when both are present the rail resolves it the way this system
+   already resolves N-signals-one-surface everywhere else (hwbAggregate,
+   .ctx-aggregate): the LEAD renders in full, the rest collapse to dots. */
+.hwb-notes{display:flex;align-items:center;gap:3px;flex:0 0 auto;margin-left:2px;}
+.hwb-note{
+  --note-fill:var(--dim2); --note-ink:var(--ink);
+  flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
+  height:14px;padding:0 5px;border-radius:3px;   /* 3px: a rounded RECTANGLE. Not the tab's
+                                                    8px, not a 7px pill — a pill is a circle
+                                                    at its ends, which is the one shape a
+                                                    notice may not borrow. */
+  font-family:var(--mono);font-size:.58rem;font-weight:600;line-height:1;
+  letter-spacing:.02em;white-space:nowrap;
+  background:var(--note-fill);color:var(--note-ink);
+  /* GUARANTEE 1. Do not remove; tools/verify-window-chrome.cjs fails without it. */
+  animation:none !important;transition:none;
+}
+/* GUARANTEE 2 — the notice palette is a three-step ramp, and --coral is not on
+   it. amber already means "caution / a deadline is coming" in this system (the
+   ring's `restorable`); magenta already means "this is broken" (--act-severed).
+   An expired credential is a fault, not a question.
+
+   ONLY THE FAULT GETS A SOLID FILL. The first cut painted `warn` as solid amber
+   and it came out the single brightest thing on the titlebar — louder than the
+   coral demand sitting two tabs away. That is the load-bearing rule broken by
+   LUMINANCE rather than by motion, which is the version of the mistake no
+   "don't animate it" gate would ever have caught. A four-hour deadline is a
+   tinted pill; a dead credential is a solid one. Loudness tracks severity, and
+   nothing in this rail outranks a demand. */
+.hwb-note.n-warn {--note-fill:color-mix(in srgb,var(--amber) 22%,var(--tab-bg));--note-ink:var(--amber);}
+.hwb-note.n-cold {--note-fill:var(--magenta);--note-ink:#fff;}
+/* the collapsed dot has no text to carry the hue, so it takes the solid form at
+   both levels — a 7px tinted square would read as a smudge, not a signal */
+.hwb-note.n-warn.is-dot{--note-fill:var(--amber);}
+/* Items waiting is not a fault, so it does not get a fault's solid fill: a
+   neutral surface with --teal numerals. --teal is the one function color no
+   session state uses, and the neutral ground keeps the count from outranking a
+   real fault sitting beside it. The fill is mixed into --tab-bg rather than
+   into `transparent` ON PURPOSE — a translucent pill sitting on a tab that is
+   running hwb-tab-demand would flash with the background underneath it, which
+   is exactly the borrowed urgency this block exists to prevent. */
+.hwb-note.n-items{--note-fill:color-mix(in srgb,var(--text) 14%,var(--tab-bg));--note-ink:var(--teal);
+  font-weight:700;}
+/* kind:'ok' RENDERS NOTHING. A badge that says "nothing is wrong" is not a
+   notice, it is clutter on a 96px chip — and on a strip of ten tabs it is ten
+   pieces of clutter. The engine may publish it; the rail drops it. Enforced
+   here as well as in hwbTabNotices() so a hand-built chip cannot reintroduce it. */
+.hwb-note.n-ok{display:none;}
+
+/* COLLAPSED FORM — a 7px square. Keeps color and presence, drops the text.
+   The mark is mandatory; the text is opportunistic. */
+.hwb-note.is-dot{width:7px;height:7px;min-width:7px;padding:0;border-radius:2px;}
+.hwb-note.is-dot .nt{display:none;}
+
+/* WIDTH TIERS — the tab measures ITSELF. The alternative is a host obligation
+   to call something on resize, and upkeep a consumer can forget is not upkeep
+   (same argument as hwbUpdateOverflow's ResizeObserver). Scoped with :not(.is-hub)
+   because inline-size containment computes width without the contents, and the
+   hub tab is flex:0 0 auto — it would collapse to nothing. Session tabs are
+   flex:1 1 0, so their width never came from their contents in the first place. */
+.hwb-tab:not(.is-hub){container-type:inline-size;container-name:hwbtab;}
+/* THRESHOLDS ARE CONTENT-BOX WIDTHS, NOT TAB WIDTHS — a size container is
+   queried against its CONTENT box, and .hwb-tab carries 8px of padding a side.
+   154 and 108 here mean a 170px and a 124px TAB. Written out because the first
+   cut used the tab numbers and every tier fired 16px early, which looked like a
+   design that was simply too eager rather than like an off-by-padding. */
+/* under a 170px tab the countdown goes first — a name you can read beats a
+   number you could have hovered for. With five tabs in a 1000px window this is
+   the ordinary case, and it is the right one: at that width the countdown and a
+   readable session name cannot both be true. */
+@container hwbtab (max-width:154px){
+  .hwb-note.n-warn,.hwb-note.n-cold{width:7px;height:7px;min-width:7px;padding:0;border-radius:2px;}
+  .hwb-note.n-warn .nt,.hwb-note.n-cold .nt{display:none;}
+}
+/* under a 124px tab everything collapses; a count is only ~10px wide but by
+   here the name has run out too */
+@container hwbtab (max-width:108px){
+  .hwb-note{width:7px;height:7px;min-width:7px;padding:0;border-radius:2px;}
+  .hwb-note .nt{display:none;}
+}
+
+/* ---- THE TAB'S STATE GLYPH IS THE RING ---------------------------
+   Ruling: the pip and the ring converge, and the ring wins. Reasoning in
+   CHANGELOG v20 §D. .hwb-pip is RETAINED and still works — pass glyph:'pip' to
+   hwbRenderTabs — but it is deprecated and the tab strip no longer uses it. */
+.hwb-tab .ring{--s:12px;flex:0 0 auto;opacity:.85;}
+.hwb-tab.is-active .ring{opacity:1;}
+/* MOTION CONTEXT — the tab strip is an AGGREGATE surface, so it obeys the same
+   rule the ring already ships for manager lists: exactly one glyph animates.
+   This is not tidiness. Five waiting tabs used to demand-flash five times over,
+   and a demand that is always on the screen somewhere is a demand nobody reads.
+   Scarcity is what keeps the treatment worth something.
+   `.is-lead` lands on ONE .hwb-tab and its ring; hwbRenderTabs sets both. */
+.hwb-tabs.ctx-aggregate .hwb-tab:not(.is-lead){animation:none !important;}
+.hwb.is-tabbed{--d-barwash:color-mix(in srgb,var(--text) 6%,var(--nav));}
+.hwb.is-tabbed .hwb-titletext{color:var(--text);}
+.hwb.is-tabbed .hwb-seam{background:var(--border);}
+.hwb.is-tabbed .hwb-bar,.hwb.is-tabbed .hwb-seam{animation:none;}
+.hwb.is-tabbed .hwb-seam{display:none;}
+.hwb.is-tabbed .hwb-bar::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;
+  background:var(--rail,var(--border));z-index:0;}
+.hwb.is-tabbed .hwb-tabs{position:relative;z-index:1;}
+.hwb.is-tabbed .hwb-caps{z-index:2;}
+/* A tabbed window's BAR is a container (neutral, §6) but its BODY is not — there
+   is exactly one active tab and the body below shows exactly that session. So the
+   terminal ground and the ghost watermark derive from the active tab, while the bar
+   stays neutral. No new API: --rail-base already means "the active tab's base" and
+   the consumer already sets it. Without this, a tabbed window's watermark never
+   appears at all — the root is neutral, so --d-ghost resolves to gray.
+   (Raised by the desktop host 2026-08-08T02:55Z with a side-by-side.) */
+.hwb.is-tabbed{
+  --rail:      oklch(from var(--rail-base,var(--dim2)) .52 clamp(0,calc(c * .70),.130) h);
+  --d-termbg:  oklch(from var(--rail-base,var(--dim2)) .16 clamp(0,calc(c * .15),.028) h);
+  --d-ghost:   oklch(from var(--rail-base,var(--dim2)) .26 clamp(0,calc(c * .40),.050) h);
+}
+@keyframes hwb-seam-demand{
+  0%,100%{opacity:.72;box-shadow:none;}
+  50%    {opacity:1;box-shadow:0 0 12px -2px var(--act-attention);}
+}
+@keyframes hwb-seam-fault{
+  0%,46%{opacity:1;} 53%{opacity:.3;} 60%{opacity:1;} 67%{opacity:.3;} 74%,100%{opacity:1;}
+}
+@keyframes hwb-wash-work{
+  0%,100%{background:var(--d-barwash);}
+  50%    {background:oklch(from var(--d-barwash) calc(l - var(--hwb-work-dip)) c h);}
+}
+@keyframes hwb-wash-demand{
+  0%,100%{background:var(--d-barwash);}
+  50%    {background:color-mix(in srgb,var(--act-attention) var(--hwb-wash-amp),var(--d-barwash));}
+}
+@keyframes hwb-wash-fault{
+  0%,46%{background:var(--d-barwash);}
+  53%   {background:color-mix(in srgb,var(--act-severed) var(--hwb-wash-amp),var(--d-barwash));}
+  60%   {background:var(--d-barwash);}
+  67%   {background:color-mix(in srgb,var(--act-severed) var(--hwb-wash-amp),var(--d-barwash));}
+  74%,100%{background:var(--d-barwash);}
+}
+.hwb.st-streaming    .hwb-bar {animation:hwb-wash-work   var(--hwb-breathe-t) var(--metro-ease) infinite;}
+.hwb.st-waiting      .hwb-seam{animation:hwb-seam-demand var(--hwb-pulse-t) var(--metro-ease) infinite;}
+.hwb.st-disconnected .hwb-seam{animation:hwb-seam-fault  var(--hwb-fault-t) steps(1,end) infinite;}
+.hwb.st-waiting      .hwb-bar {animation:hwb-wash-demand var(--hwb-pulse-t) var(--metro-ease) infinite;}
+.hwb.st-disconnected .hwb-bar {animation:hwb-wash-fault  var(--hwb-fault-t) steps(1,end) infinite;}
+.hwb.is-motion-paused .hwb-pip,.hwb.is-motion-paused .hwb-pip::before,
+.hwb.is-motion-paused .hwb-seam,.hwb.is-motion-paused .hwb-bar{animation:none !important;}
+@media (prefers-reduced-motion:reduce){
+  .hwb-pip,.hwb-pip::before,.hwb-seam,.hwb-bar{animation:none !important;}
+}
+.hwb{--hwb-bar-h:32px;--hwb-caps-w:138px;position:relative;font-family:var(--font);user-select:none;}
+.hwb-bar{position:relative;height:var(--hwb-bar-h);display:flex;align-items:center;
+  background:var(--d-barwash);}
+.hwb.is-unfocused{--d-barwash:var(--d-barwash-i);}
+.hwb.is-unfocused .hwb-titletext{color:var(--d-title-i);}
+.hwb-lead{flex:0 0 10px;}
+.hwb-gutter{flex:0 0 10px;}
+.hwb-act{flex:0 0 20px;height:100%;display:flex;align-items:center;justify-content:center;}
+.hwb-pip{width:10px;height:10px;border-radius:50%;background:var(--act-streaming);flex:0 0 auto;position:relative;}
+.hwb-pip.st-waiting{background:var(--act-attention);}
+.hwb-pip.st-waiting-seen{background:transparent;box-shadow:inset 0 0 0 2px var(--act-attention);}   /* v33: hollow coral, static */
+.hwb-pip.st-waiting::after{content:"";position:absolute;inset:-4px;border-radius:50%;
+  border:2px solid color-mix(in srgb,var(--act-attention) 55%,transparent);}
+.hwb-pip.st-disconnected{background:conic-gradient(from 35deg,var(--act-severed) 0 268deg,transparent 268deg);
+  -webkit-mask:radial-gradient(circle,transparent 0 2.6px,#000 3.1px);mask:radial-gradient(circle,transparent 0 2.6px,#000 3.1px);}
+.hwb-pip.st-watching{background:transparent;opacity:.9;
+  box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--act-watch) 26%,transparent);}
+.hwb-pip.st-watching::before{content:"";position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 0deg,var(--act-watch) 0 95deg,transparent 95deg);   /* the ARC */
+  -webkit-mask:radial-gradient(circle at 50% 50%,transparent 0 2.6px,#000 3.1px);
+          mask:radial-gradient(circle at 50% 50%,transparent 0 2.6px,#000 3.1px);
+  animation:hwb-spin var(--hwb-spin-t) linear infinite;}
+.hwb-pip.st-idle{width:8px;height:2px;border-radius:1px;background:var(--act-idle);}
+.hwb-pip.st-ended{width:9px;height:9px;border-radius:0;background:transparent;box-shadow:inset 0 0 0 2px var(--act-ended);}
+/* v26 deprecated-pip fallback only (the ring is the glyph): restorable = the ended square, dashed amber */
+.hwb-pip.st-restorable{width:9px;height:9px;border-radius:0;background:transparent;outline:1.5px dashed var(--amber);outline-offset:-2px;}
+.hwb-title{flex:0 1 auto;min-width:0;display:flex;align-items:center;}
+.hwb-titletext{font-size:.78rem;font-weight:500;color:var(--d-title);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;}
+.hwb-chip{flex:0 0 auto;margin-left:8px;font-family:var(--display);font-size:.6rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:var(--corner);white-space:nowrap;
+  display:none;}
+.hwb-chip.attention{background:var(--act-attention);color:var(--ink);}
+.hwb-chip.severed{background:transparent;color:var(--act-severed);box-shadow:inset 0 0 0 1px var(--act-severed);}
+.hwb-chip.ended{background:color-mix(in srgb,var(--act-ended) 22%,transparent);color:var(--act-ended);}
+.hwb.st-waiting .hwb-chip.attention,
+.hwb.st-disconnected .hwb-chip.severed,
+.hwb.st-ended .hwb-chip.ended{display:inline-block;}
+.hwb.st-ended .hwb-bar{background:oklch(from var(--base) .20 clamp(0,calc(c * .03),.006) h);}
+.hwb.st-ended .hwb-titletext{color:var(--dim);}
+/* D4 FIX: the exit verdict is real pty data; read it. */
+.hwb.st-ended .hwb-seam{background:color-mix(in srgb,var(--act-ended-ok) 40%,var(--border));}
+.hwb.st-ended[data-exit="fail"] .hwb-seam{background:color-mix(in srgb,var(--act-ended-fail) 40%,var(--border));}
+.hwb-dead{flex:1 1 auto;min-width:60px;}
+.hwb-caps{position:absolute;top:0;right:0;width:var(--hwb-caps-w);height:var(--hwb-bar-h);display:flex;}
+.hwb-cap{width:46px;height:100%;border:0;background:transparent;display:flex;align-items:center;
+  justify-content:center;color:var(--dim);cursor:default;}
+.hwb-cap svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:1.1;}
+.hwb-seam{height:3px;background:var(--d-seam);}
+.hwb.st-waiting .hwb-seam{height:5px;background:var(--act-attention);}
+.hwb.st-disconnected .hwb-seam{height:5px;background:var(--act-severed);}
+
+/* v35: scoped to the window. Unscoped, it hijacked any consumer's .ghost (the host app's account page
+   `button.ghost`, a Workbench card's ⋯) the moment the bundle was loaded beside it. */
+.hwb .ghost{position:absolute;right:4%;top:50%;transform:translateY(-50%);width:46%;max-width:330px;
+  pointer-events:none;z-index:0;}
+.hwb .ghost svg{width:100%;height:auto;display:block;}
+.hwb .ghost.derived path{fill:var(--d-ghost);}
+.hwb .ghost.whitealpha path{fill:#fff;opacity:.055;}
+
+/* ============================================================================
+   D2 FIX — CAPTION CELL STATES. Absent from the first bundle: it was extracted
+   from the identity lab, which never styled them. These are the contract the
+   host paints against. NO transition, ever — the system's caption hover is
+   instant and a fade reads as lag beside a real Explorer window.
+   :hover is a fallback for hosts where min/close are client area; the MAXIMIZE
+   cell can ONLY be painted via .is-hover, because the OS overlay eats its mouse.
+   ============================================================================ */
+.hwb-cap{transition:none;}
+.hwb-cap:hover,.hwb-cap.is-hover{background:var(--cap-hover);color:var(--text);}
+.hwb-cap.is-pressed{background:var(--cap-press);color:var(--text);}
+.hwb-cap.close:hover,.hwb-cap.close.is-hover{background:var(--cap-close-hover);color:var(--text);}
+.hwb-cap.close.is-pressed{background:color-mix(in srgb,var(--cap-close-hover) 90%,transparent);
+  color:color-mix(in srgb,var(--text) 70%,transparent);}
+.hwb.is-unfocused .hwb-capglyph{color:var(--dim2);}
+
+/* ============================================================================
+   D3 FIX — the blocked count was written into .hwb-agg inside .hwb-title, which
+   is display:none while tabbed, so the number vanished exactly when tabs made
+   it most useful. It is now a standalone chip in the bar, valid in both modes.
+   NOTE it is the ALERT count (coral); the hub chip's number is INVENTORY
+   (neutral). Never style them alike.
+   ============================================================================ */
+.hwb-agg{display:none;flex:0 0 auto;margin-left:6px;font-family:var(--display);
+  font-size:.6rem;font-weight:700;letter-spacing:.04em;padding:1px 6px;
+  border-radius:var(--corner);background:var(--act-attention);color:var(--ink);}
+.hwb-agg:not(:empty){display:inline-block;}
+
+/* ============================================================================
+   HOST-SUPPLIED, documented because tabs now live in tier 1 and this is
+   load-bearing: without it the OS treats a tab click as a caption drag and
+   EVERY TAB IS DEAD. Put it on the chips, NOT on .hwb-tabs — the empty strip
+   space should still drag the window, which is also how Edge behaves.
+       .hwb-cap,.hwb-tab,.hwb-newtab,.hwb-roomback{ app-region:no-drag; }
+       .hwb-bar{ app-region:drag; }
+   ============================================================================ */
+
+/* ============================================================================
+   v21 — THE SIGNED-OFF CHROME (2026-09-19). Record of every ruling:
+   styleguide/mockups/the design decisions page.html · reference implementation:
+   styleguide/mockups/cli-window-combined-v4.html.
+   This layer sits LAST so each rule below visibly overrides the v20 rule it
+   replaces; nothing above was edited, so the history stays readable.
+   ============================================================================ */
+
+/* ---- sizes: tab row 40, caption buttons 46×40 (the caps follow --hwb-bar-h) */
+.hwb.is-tabbed{--hwb-bar-h:40px;}
+/* The design system's square tabs — the 8px Windows radius is retired */
+.hwb{--hwb-tab-r:0px;}
+.hwb.is-tabbed .hwb-tabs{padding-top:0;}
+.hwb-scroll{padding-top:3px;gap:1px;}
+
+/* ---- tabs: 150–240, S9 LIFT + S10 JOIN, NO accent strokes ---------------- */
+.hwb-tab:not(.is-hub){min-width:150px;height:36px;margin-bottom:1px;gap:9px;padding:0 6px 0 6px;overflow:hidden;
+  /* an unselected tab sits on its OWN project's dark tone */
+  --d-barwash-i:oklch(from var(--base) .200 clamp(0,calc(c * .22),.038) h);
+  --p-top:oklch(from var(--base) .390 clamp(0,calc(c * .45),.080) h);
+  --p-mid:oklch(from var(--base) .320 clamp(0,calc(c * .40),.070) h);
+  --p-ink:oklch(from var(--base) .820 clamp(0,calc(c * .60),.110) h);}
+/* S9 lift: the selected tab is lighter; S10 join: it is 1px taller and runs
+   straight into the session bar below — no seam, no stroke of any kind
+   ("accent strokes read as AI-designed", owner ruling 2026-09-18). */
+.hwb-tab.is-active:not(.is-hub){--tab-bg:var(--p-mid);height:37px;margin-bottom:0;box-shadow:none;
+  background-image:linear-gradient(180deg,var(--p-top) 0,var(--p-mid) 37px);}
+.hwb.is-tabbed .hwb-bar::after{display:none;}
+.hwb-tab .tname{position:relative;z-index:1;font-size:.8rem;color:var(--tab-name-i);
+  text-shadow:0 0 3px var(--tab-bg),0 0 6px var(--tab-bg);}
+.hwb-tab.is-active .tname{color:var(--tab-text);}
+
+/* ---- the status glyph: 28px on EVERY tab (one size; U1 retired) ---------- */
+.hwb-tab .ring{--s:28px;position:relative;z-index:1;opacity:.9;}
+.hwb-tab.is-active .ring{opacity:1;}
+
+/* ---- the tab watermark: the project mark, UNSELECTED tabs only ----------
+   72px, top −16px (a fixed offset, locked 2026-09-18), 28px in from the right,
+   no fade, 14%. The label runs over it; the halo on .tname keeps it legible.
+   The selected tab carries none — the session bar names its project. */
+.hwb-tab:not(.is-hub) .tlogo{position:absolute;z-index:0;right:28px;top:-16px;width:72px;height:72px;
+  color:var(--p-ink);opacity:.14;pointer-events:none;}
+.hwb-tab.is-active:not(.is-hub) .tlogo{display:none;}
+/* v21.1: fill set on the <svg> too, so marks drawn with <use>, ellipse, polyline or line
+   inherit the tint instead of painting black */
+.hwb-tab:not(.is-hub) .tlogo svg{fill:currentColor;}
+.hwb-tab:not(.is-hub) .tlogo:not(.wm-line-outline):not(.wm-line-blueprint) svg :is(path,circle,rect,polygon,ellipse,polyline,line,use){fill:currentColor;}
+/* v32: the backlight takes the tab's own hue, exactly the pane's --wm-glow recipe */
+.hwb-tab{--wm-glow:oklch(from var(--base) .600 clamp(0,calc(c * .90),.140) h);}
+
+/* ---- per-tab buttons: refresh + close, always on the selected tab --------- */
+.hwb-tab .trefresh,.hwb-tab .tclose{position:relative;z-index:1;width:24px;height:24px;border-radius:var(--corner);
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto;border:0;padding:0;background:none;
+  color:var(--tab-dim);cursor:pointer;opacity:0;transition:none;}
+.hwb-tab.is-active .trefresh,.hwb-tab.is-active .tclose,
+.hwb-tab:hover .trefresh,.hwb-tab:hover .tclose,
+.hwb-tab .trefresh:focus-visible,.hwb-tab .tclose:focus-visible{opacity:1;}
+.hwb-tab .trefresh:hover,.hwb-tab .tclose:hover{background:color-mix(in srgb,var(--tab-text) 12%,transparent);color:var(--tab-text);}
+.hwb-tab .trefresh svg,.hwb-tab .tclose svg{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.hwb-tab .trefresh svg{width:14px;height:14px} .hwb-tab .tclose svg{width:10px;height:10px}
+.hwb-tab .hwb-notes{position:relative;z-index:1;}
+
+/* ---- 1d: CLOSE-OR-END POPOVER at the tab's ✕ ----------------------------
+   No × in the session bar. The tab's ✕ opens this popover directly under it:
+   End session FIRST (~44px straight down from the ✕), then a 3s countdown shown
+   as a number and a draining line. Timeout, Escape or a click anywhere else
+   closes the view and KEEPS the session; End session ends it, no second
+   confirm. End session never takes focus, so Enter can never end a session. */
+.hwb-closepop{position:fixed;z-index:1000;width:236px;padding:8px 8px 0;font:400 .74rem/1.4 var(--font);color:var(--dim);
+  background:var(--surface3);border:1px solid var(--border2);border-radius:var(--corner);
+  box-shadow:0 8px 24px color-mix(in srgb,black 55%,transparent);user-select:none;}
+.hwb-closepop .cp-end{display:block;width:100%;font:600 .8rem var(--font);color:var(--text);background:var(--magenta);
+  border:0;border-radius:var(--corner);padding:8px 10px;cursor:pointer;}
+.hwb-closepop .cp-end:hover{filter:brightness(1.1);}
+.hwb-closepop .cp-msg{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:8px;}
+.hwb-closepop .cp-msg b{color:var(--text);font-weight:600;}
+.hwb-closepop .cp-secs{font:600 .8rem var(--mono);color:var(--text);}
+.hwb-closepop .cp-hint{font-size:.66rem;color:var(--dim2);margin:6px 0 8px;}
+.hwb-closepop .cp-meter{height:3px;margin:0 -8px;background:var(--dim2);transform-origin:left;
+  animation:hwb-cp-drain var(--hwb-cp-t,3s) linear forwards;}
+@keyframes hwb-cp-drain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@media (prefers-reduced-motion:reduce){ .hwb-closepop .cp-meter{animation:none;} }
+
+/* ---- SESSION BAR — the 40px row under the tabs --------------------------
+   Left to right: project mark 28px · project name · session title · … · brand
+   watermark (in color, on the gray end) · messages · handoff · links.
+   No close (1d). Color: the ACTIVE tab's project (--pc, else --rail-base);
+   the horizontal fade is centered on the SELECTED tab (--bar-wash-x /
+   --bar-wash-core, set by hwbPositionBarWash) over a two-shade vertical wash
+   that continues the selected tab's own. */
+.hwb-sbar,.hwb-barwash{
+  --sb-base:var(--pc,var(--rail-base,var(--base)));
+  --sb-mid:oklch(from var(--sb-base) .320 clamp(0,calc(c * .40),.070) h);
+  --sb-bot:oklch(from var(--sb-base) .225 clamp(0,calc(c * .30),.050) h);
+  --sb-ink:oklch(from var(--sb-base) .820 clamp(0,calc(c * .60),.110) h);
+  --wm-glow:oklch(from var(--sb-base) .600 clamp(0,calc(c * .90),.140) h);
+  background:
+    linear-gradient(90deg,
+      var(--sb-side,var(--surface2)) calc(var(--bar-wash-x,105px) - var(--bar-wash-core,105px) - 50%),
+      transparent     calc(var(--bar-wash-x,105px) - var(--bar-wash-core,105px)),
+      transparent     calc(var(--bar-wash-x,105px) + var(--bar-wash-core,105px)),
+      var(--sb-side,var(--surface2)) calc(var(--bar-wash-x,105px) + var(--bar-wash-core,105px) + 50%)),
+    linear-gradient(180deg,var(--sb-mid),var(--sb-bot));}
+.hwb-sbar{position:relative;display:flex;align-items:center;gap:4px;height:40px;padding:0 8px 0 12px;overflow:hidden;
+  font-family:var(--font);user-select:none;}
+/* v32: .hwb-barwash = the session bar's wash on any title bar (a room page header). Set --pc to
+   the identity color, and --bar-wash-x / --bar-wash-core to the tab's center and half-width
+   (hwbPositionBarWash) so it fans out from the tab; unset, it centers at 105px like the bar. */
+/* v30 (owner ruling 2026-09-27): the project mark sits BEHIND the title at the unselected-tab
+   watermark's ruled scale (72px, top -16px, 14%), anchored left where the 28px mark was;
+   the title runs over it with a halo, as tab labels do. Small line-art marks read poorly
+   at 28px; at 72px they read. */
+.hwb-sbar .sb-mark{position:absolute;z-index:0;left:6px;top:-16px;width:72px;height:72px;flex:none;margin:0;opacity:.14;pointer-events:none;color:var(--sb-ink);}
+.hwb-sbar .sb-mark svg{width:100%;height:100%;display:block;}
+.hwb-sbar .sb-mark svg{fill:currentColor;}
+.hwb-sbar .sb-mark:not(.wm-line-outline):not(.wm-line-blueprint) svg :is(path,circle,rect,polygon,ellipse,polyline,line,use){fill:currentColor;}
+.hwb-sbar .sb-title{position:relative;z-index:1;padding-left:6px;text-shadow:0 0 3px var(--sb-mid),0 0 6px var(--sb-mid);display:flex;align-items:baseline;gap:10px;min-width:0;
+  font-size:.8rem;white-space:nowrap;color:var(--sb-text,var(--text));}
+.hwb-sbar .sb-proj{font-weight:600;flex:none;}
+.hwb-sbar .sb-sess{color:color-mix(in srgb,var(--sb-text,var(--text)) 70%,transparent);overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.hwb-sbar .sb-sp{flex:1;}
+.hwb-sbar .sb-wm{position:absolute;right:130px;top:50%;width:64px;height:64px;transform:translateY(-50%);
+  opacity:.55;pointer-events:none;
+  --b-seam:oklch(from var(--brand-src,var(--dim)) .560 clamp(0,calc(c * .80),.130) h);color:var(--b-seam);}
+.hwb-sbar .sb-wm svg{width:100%;height:100%;display:block;}
+.hwb-sbar .sb-wm svg :is(path){fill:currentColor;}
+.hwb-sbar .sb-ib{position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;
+  width:32px;height:32px;border:0;padding:0;border-radius:var(--corner);background:none;color:var(--dim);cursor:pointer;}
+.hwb-sbar .sb-ib:hover{background:var(--cap-hover);color:var(--text);}
+.hwb-sbar .sb-ib svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.hwb-sbar .sb-ib.is-empty{color:var(--dim3);}
+.hwb-sbar .sb-cnt{position:absolute;top:2px;right:0;min-width:15px;height:15px;padding:0 4px;border-radius:8px;
+  background:var(--sky);color:var(--ink);font:700 .6rem/15px var(--font);text-align:center;}
+
+/* P3 — new-workroom glyph (v22). Outlined, ink-colored, sized by the context
+   (1em), so it sits in a tab row, a .btn or a hub list without new tokens. */
+.hwb-ico-newroom{width:1em;height:1em;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.125em}
+.hwb-newroom{display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:0 6px;color:var(--dim);font:inherit;cursor:pointer;border-radius:var(--corner)}
+.hwb-newroom:hover{color:var(--text);background:var(--cap-hover)}
+.hwb-newroom:focus-visible{outline:2px solid var(--teal);outline-offset:1px}
+
+/* ============================================================================
+   v24 — LEVEL 2: inside a workroom (ruled row, workroom-nav-v2):
+     ‹ back · F1 folder chat · lead (B5) · agents · A2 add
+   Rendered by hwbRenderTabs(root, { …, room }). Colors are the manila tokens.
+   ============================================================================ */
+/* ‹ back — its own control on the bare row, never a tab; a hairline divides it */
+.hwb-roomback{flex:0 0 auto;align-self:center;display:inline-flex;align-items:center;justify-content:center;width:32px;height:30px;margin:0 4px 0 6px;
+  border:0;border-radius:var(--corner);background:none;color:var(--dim);cursor:pointer;}
+.hwb-roomback:hover{background:var(--cap-hover);color:var(--text);}
+.hwb-roomback:focus-visible{outline:2px solid var(--teal);outline-offset:1px;}
+.hwb-roomback svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.hwb-roomdiv{flex:0 0 1px;width:1px;align-self:center;height:22px;background:var(--border2);margin-right:4px;}
+/* F1 — the folder-chat tab is manila itself: a vertical wash, a step darker when
+   unselected; no ring, no plate, no watermark, no refresh/close. */
+.hwb-tab.is-room{--base:var(--wr-manila);--tab-bg:var(--wr-tab-bot);
+  background:linear-gradient(180deg,var(--wr-tab-top),var(--wr-tab-bot) 36px);}
+.hwb-tab.is-room.is-active{--tab-bg:var(--wr-tab-on-bot);
+  background:linear-gradient(180deg,var(--wr-tab-on-top),var(--wr-tab-on-bot) 37px);}
+.hwb-tab.is-room .tname{font-weight:600;color:var(--wr-tab-ink);text-shadow:none;}
+.hwb-tab.is-room.is-active .tname{color:var(--wr-tab-ink-on);}
+.hwb-tab.is-room .tlogo,.hwb-tab.is-room .trefresh,.hwb-tab.is-room .tclose{display:none;}
+.hwb-fglyph{width:28px;height:28px;flex:none;position:relative;z-index:1;}
+.hwb-fglyph svg{width:100%;height:100%;display:block;overflow:visible;}
+.hwb-fglyph .fb{fill:var(--wr-manila);stroke:var(--wr-manila-edge);stroke-width:.9;}
+.hwb-fglyph .fe{fill:var(--wr-manila-ear);}
+/* A2 — add an agent: an EMPTY dashed seat with a +. Dashed + plateless + tab-less,
+   so it can never be read as a member (and differs from P3's folder +). */
+.hwb-roomadd svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-linecap:round;}
+.hwb-roomadd circle{stroke-width:1.6;stroke-dasharray:3 2.6;}
+.hwb-roomadd path{stroke-width:1.8;}
+
+/* ============================================================================
+   v27 — MCP indicator in the session bar (hwb-mcp.js). "title ──── [MCP · …]"
+   Ruled 2026-09-25: M1 wire + C2 strip. Colors are the --mcp-* aliases.
+   ============================================================================ */
+.hwb-mcp .s-out,.hwb-mcp-pop .s-out{--c:var(--mcp-out)} .hwb-mcp .s-ok,.hwb-mcp-pop .s-ok{--c:var(--mcp-ok)}
+.hwb-mcp .s-warn,.hwb-mcp-pop .s-warn{--c:var(--mcp-warn)} .hwb-mcp .s-err,.hwb-mcp-pop .s-err{--c:var(--mcp-err)}
+.hwb-mcp .s-none,.hwb-mcp-pop .s-none{--c:var(--mcp-none)}
+/* it takes the bar's spacer and stops before the brand watermark (~130–194px from the right) */
+.hwb-sbar .hwb-mcp{position:relative;z-index:1;flex:1 1 auto;min-width:0;height:100%;display:flex;align-items:center;margin:0 104px 0 14px;overflow:hidden;}
+/* the WIRE: a clipped 7px track, so motion starts and stops exactly at its ends; the line is its center row */
+.hwb-mcp .mw{position:relative;flex:1 0 28px;min-width:28px;height:7px;overflow:hidden;}  /* the wire takes only the LEFTOVER: chips get their natural width first */
+.hwb-mcp .mw::before{content:"";position:absolute;left:0;right:0;top:3px;height:1px;background:var(--border2);transition:background .3s;}
+.hwb-mcp.is-idle .mw::before{background:transparent;}
+.hwb-mcp .mp{position:absolute;top:2px;height:3px;width:34px;border-radius:2px;pointer-events:none;box-shadow:0 0 5px -1px var(--c);}
+.hwb-mcp .mp.out{background:linear-gradient(90deg,transparent,var(--c) 70%,var(--c));animation:hwb-mp-out .75s linear forwards;}
+.hwb-mcp .mp.back{background:linear-gradient(90deg,var(--c),var(--c) 30%,transparent);animation:hwb-mp-back .75s linear forwards;}
+@keyframes hwb-mp-out{from{left:-34px}to{left:100%}}
+@keyframes hwb-mp-back{from{left:100%}to{left:-34px}}
+/* long call: the ruled AB·B segment relay, on the wire */
+.hwb-mcp .mw-relay{position:absolute;left:0;right:0;top:2px;height:3px;display:none;gap:6px;}
+.hwb-mcp.is-long .mw-relay{display:flex;}
+.hwb-mcp .mw-relay i{flex:1;height:3px;border-radius:2px;background:color-mix(in srgb,var(--mcp-out) 22%,transparent);animation:hwb-mw-relay 1.5s steps(1) infinite;}
+.hwb-mcp .mw-relay i:nth-child(2){animation-delay:.3s} .hwb-mcp .mw-relay i:nth-child(3){animation-delay:.6s}
+.hwb-mcp .mw-relay i:nth-child(4){animation-delay:.9s} .hwb-mcp .mw-relay i:nth-child(5){animation-delay:1.2s}
+@keyframes hwb-mw-relay{0%{background:var(--mcp-out)}20%,100%{background:color-mix(in srgb,var(--mcp-out) 22%,transparent)}}
+/* the STRIP: the wire continues behind the gaps; opaque chips cover it */
+.hwb-mcp .mc{position:relative;display:flex;align-items:center;gap:6px;flex:0 1 auto;min-width:0;overflow:hidden;}
+.hwb-mcp .mc::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;margin-top:-.5px;background:var(--border2);}
+.hwb-mcp.is-idle .mc::before{display:none;}
+/* a chip: odd height so its center row is the wire's; opaque ground */
+.hwb-mcp .mchip{position:relative;flex:0 1 auto;min-width:0;max-width:360px;overflow:hidden;display:inline-flex;align-items:center;gap:6px;height:23px;padding:0 9px;
+  border:1px solid var(--c,var(--border2));border-radius:var(--corner);background:color-mix(in srgb,var(--c,var(--border2)) 12%,var(--surface));
+  font:400 12px var(--font);color:var(--text);white-space:nowrap;transition:border-color .3s,background .3s,opacity .4s,color .3s;}
+.hwb-mcp .mchip[hidden]{display:none;}
+.hwb-mcp .mchip .lbl{color:var(--dim);font:500 10px var(--mono);letter-spacing:.04em;}
+.hwb-mcp .mchip .srv{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;}
+.hwb-mcp .mchip > *{flex:none;} .hwb-mcp .mchip .vb{flex:0 1 auto;min-width:0;} .hwb-mcp .mchip .srv{flex:0 1 auto;}  /* a tight bar ellipsises the verb, then the server */
+.hwb-mcp .mchip.is-compact,.hwb-mcp .mmore{flex:none;}
+.hwb-mcp .mc.is-measuring .mchip{flex:none;}
+.hwb-mcp .mchip .vb,.hwb-mcp .mchip .t{color:var(--dim);font:400 11px var(--mono);overflow:hidden;text-overflow:ellipsis;}
+.hwb-mcp .mchip .sub{color:var(--dim);font-size:11px;}
+.hwb-mcp .mchip .res{font-weight:600;font-size:11px;color:var(--c);}
+.hwb-mcp .mchip.is-compact .lbl,.hwb-mcp .mchip.is-compact .vb{display:none;}      /* older calls: server + result */
+.hwb-mcp .mchip.is-settled{--c:var(--border2);color:var(--dim);} .hwb-mcp .mchip.is-settled .srv{font-weight:500;}
+.hwb-mcp .mchip.is-gone{opacity:0;}
+.hwb-mcp .mmore{cursor:default;color:var(--dim);padding:0 7px;font:600 12px var(--font);}
+.hwb-mcp .mmore.s-err,.hwb-mcp .mmore.s-warn,.hwb-mcp .mmore.s-out{color:var(--text);}  /* +N = the LOUDEST hidden call: a failure never hides */
+.hwb-mcp .mmore:not(.s-err):not(.s-warn):not(.s-out):not(.s-ok):not(.s-none){--c:var(--border2);}
+.hwb-mcp .mmore:focus-visible{outline:2px solid var(--teal);outline-offset:1px;}
+/* the +N list (fixed, outside the bar, which clips) */
+.hwb-mcp-pop{position:fixed;z-index:1000;min-width:280px;max-width:520px;padding:6px;background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--corner);box-shadow:0 12px 28px -8px rgba(0,0,0,.7);font:400 12px var(--font);color:var(--text);}
+.hwb-mcp-pop .mrow{display:grid;grid-template-columns:8px auto 1fr auto auto auto;align-items:center;gap:8px;padding:5px 6px;border-radius:var(--corner);white-space:nowrap;}
+.hwb-mcp-pop .mrow .dot{width:8px;height:8px;border-radius:2px;background:var(--c);}
+.hwb-mcp-pop .mrow .srv{font-weight:600;} .hwb-mcp-pop .mrow .vb,.hwb-mcp-pop .mrow .t{color:var(--dim);font:400 11px var(--mono);}
+.hwb-mcp-pop .mrow .who{color:var(--dim);font-size:11px;} .hwb-mcp-pop .mrow .res{font-weight:600;font-size:11px;color:var(--c);}
+/* phones: never (the pty is the phone's view); reduced motion: color only */
+@media (max-width:600px){.hwb-sbar .hwb-mcp{display:none;}}
+@media (prefers-reduced-motion:reduce){.hwb-mcp .mp{display:none;} .hwb-mcp .mw-relay i{animation:none;}}
+
+/* ============================================================================
+   v31 — SELECTION WITHOUT BARS (owner ruling 2026-09-28: no colored left/top accent bars,
+   tool-wide). One shared class so rooms, the CLI Manager and the Assemble modal
+   stop copying the retired spine: a LIFTED row with a hairline all round.
+     .hwb-lift                    any selectable row/card
+     .is-sel / [aria-selected=true] / [aria-pressed=true]   selected
+     --lift-bg / --lift-edge      optional identity override (e.g. a room's tint);
+                                  defaults are neutral: --surface3 / --border2
+   ============================================================================ */
+.hwb-lift{border:1px solid transparent;border-radius:8px;transition:background .13s,border-color .13s;}
+.hwb-lift:hover:not(.is-sel):not([aria-selected="true"]):not([aria-pressed="true"]){background:var(--surface2);}
+.hwb-lift:is(.is-sel,[aria-selected="true"],[aria-pressed="true"]){background:var(--lift-bg,var(--surface3));border-color:var(--lift-edge,var(--border2));}
+.hwb-lift:focus-visible{outline:2px solid var(--teal);outline-offset:-2px;}
+
+/* v33: blocked on you, SEEN — a static coral hairline all round, no demand flash.
+   Last in the file and :not(.is-hub) so it beats the active tab's box-shadow:none. */
+.hwb-tab.st-waiting-seen:not(.is-hub){box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--act-attention) 60%,transparent);}
+
+/* ==== v34 — LIGHT MODE, DECIDED PER TAB (owner ruling 2026-10-05) =====================
+   A tab's mode is its room's own Dark/Light override (hwbRenderTabs tabs[].mode →
+   data-mode on the tab), else the shell's (html[data-mode], set by the host's
+   palette). The session bar takes the SELECTED tab's mode (hwbRenderSessionBar
+   s.mode) so the S10 join holds either way. Tabs and the bar carry their OWN ink,
+   never the page's --text, so a dark tab in a light strip (or the reverse) reads on
+   its own. Same oklch recipes; only L (and a little chroma) moves.
+   --lt (0 dark | 1 light) is inherited, so anything inside a tab (its ring plate)
+   follows the tab, not the page. Consumers that set no data-mode see no change. */
+html[data-mode=light],.hwb-tab[data-mode=light],.hwb-sbar[data-mode=light],.hwb-barwash[data-mode=light]{--lt:1;}
+html[data-mode=dark],.hwb-tab[data-mode=dark],.hwb-sbar[data-mode=dark],.hwb-barwash[data-mode=dark]{--lt:0;}
+/* tab inks: the page's by default (unchanged for a tab in its shell's mode) … */
+.hwb-tab{--tab-text:var(--text);--tab-name-i:color-mix(in srgb,var(--tab-text) 58%,transparent);--tab-dim:var(--dim);}
+/* … explicit for a DARK tab (it may sit in a light shell) */
+.hwb-tab[data-mode=dark]{--tab-text:oklch(from var(--base) .93 clamp(0,calc(c * .08),.015) h);
+  --tab-dim:oklch(from var(--base) .72 clamp(0,calc(c * .10),.020) h);}
+/* LIGHT tabs: S9 holds (the selected tab is the lightest; the others a deeper wash);
+   --p-mid = the light bar's --sb-mid, so S10 stays seamless. */
+:is(html[data-mode=light] .hwb-tab:not([data-mode=dark]),.hwb-tab[data-mode=light]):not(.is-hub){
+  --d-barwash:  oklch(from var(--base) .930 clamp(0,calc(c * .30),.040) h);
+  --d-barwash-i:oklch(from var(--base) .885 clamp(0,calc(c * .22),.038) h);
+  --d-title:    oklch(from var(--base) .420 clamp(.02,calc(c * .80),.160) h);
+  --d-title-i:  oklch(from var(--base) .480 clamp(0,calc(c * .55),.105) h);
+  --d-seam:     oklch(from var(--base) .620 clamp(0,calc(c * .70),.130) h);
+  --p-top:      oklch(from var(--base) .965 clamp(0,calc(c * .30),.045) h);
+  --p-mid:      oklch(from var(--base) .930 clamp(0,calc(c * .30),.040) h);
+  --p-ink:      oklch(from var(--base) .450 clamp(0,calc(c * .60),.110) h);
+  --wm-glow:    oklch(from var(--base) .800 clamp(0,calc(c * .70),.120) h);
+  --tab-text:   oklch(from var(--base) .250 clamp(0,calc(c * .15),.030) h);
+  --tab-name-i: color-mix(in srgb,var(--tab-text) 72%,transparent);   /* ~5:1 on .885; 58% was ~3.5:1 */
+  --tab-dim:    oklch(from var(--base) .470 clamp(0,calc(c * .15),.030) h);}
+/* the session bar */
+:is(html[data-mode=light] :is(.hwb-sbar,.hwb-barwash):not([data-mode=dark]),.hwb-sbar[data-mode=light],.hwb-barwash[data-mode=light]){
+  --sb-mid:oklch(from var(--sb-base) .930 clamp(0,calc(c * .30),.040) h);
+  --sb-bot:oklch(from var(--sb-base) .960 clamp(0,calc(c * .20),.030) h);
+  --sb-ink:oklch(from var(--sb-base) .420 clamp(0,calc(c * .80),.160) h);
+  --wm-glow:oklch(from var(--sb-base) .800 clamp(0,calc(c * .70),.120) h);
+  --sb-text:oklch(from var(--sb-base) .250 clamp(0,calc(c * .15),.030) h);}
+/* a bar in the OTHER mode than its shell: its own text, and its side fade in its own mode */
+.hwb-sbar[data-mode=dark],.hwb-barwash[data-mode=dark]{--sb-text:oklch(from var(--sb-base) .93 clamp(0,calc(c * .08),.015) h);
+  --sb-side:oklch(from var(--sb-base) .215 clamp(0,calc(c * .10),.015) h);}
+.hwb-sbar[data-mode=light],.hwb-barwash[data-mode=light]{--sb-side:oklch(from var(--sb-base) .940 clamp(0,calc(c * .06),.010) h);}
+.hwb-sbar[data-mode] .sb-ib{color:color-mix(in srgb,var(--sb-text) 72%,transparent);}
+/* ==== /v34 ==== */

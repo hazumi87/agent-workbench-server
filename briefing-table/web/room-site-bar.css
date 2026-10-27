@@ -1,0 +1,41 @@
+/* THE PREVIEW / PUBLIC BAR [basic] (web/room-site-bar.mjs; the design system Basic design pass). Two separate things: "Open preview" (a link button for the
+   private copy) and the PUBLIC group (label, switch, address, Copy, time), told apart by a 1px divider. On a phone it REFLOWS into two rows: the
+   preview on the first, the Public group on the second with the time under the address. */
+.site-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 6px 14px; border-bottom: 1px solid var(--border); background: var(--surface); font-size: 13px; color: var(--dim); }
+.site-bar[hidden] { display: none; }
+.site-bar .sb-open { display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 6px; border: 1px solid color-mix(in srgb, var(--room-accent, var(--teal)) 60%, transparent); color: var(--room-accent, var(--teal)); font-weight: 600; text-decoration: none; }
+.site-bar a.sb-open:hover { background: color-mix(in srgb, var(--room-accent, var(--teal)) 12%, transparent); }
+.site-bar .sb-open.is-off { color: var(--dim2, var(--dim)); border-color: var(--border); font-weight: 500; }
+.site-bar .sb-div { align-self: stretch; width: 1px; margin: 3px 0; background: var(--border); }
+.site-bar .sb-pub { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-width: 0; }
+.site-bar .sb-lbl { color: var(--text); font-weight: 600; }
+.site-bar .sb-off { color: var(--dim); }
+.site-bar .sb-addr { color: var(--room-accent, var(--teal)); text-decoration: none; font-family: var(--mono); font-size: 12px; max-width: 30ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.site-bar a.sb-addr:hover { text-decoration: underline; }
+.site-bar .sb-when { font-size: 12px; color: var(--dim); }
+.site-bar .sb-switch { display: inline-flex; align-items: center; min-height: 28px; padding: 0; border: 0; background: none; cursor: pointer; }
+.site-bar .sb-knob { position: relative; width: 34px; height: 18px; border-radius: 9px; background: var(--surface3, var(--border)); border: 1px solid var(--border); box-sizing: border-box; transition: background .15s; }
+.site-bar .sb-knob::after { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--dim); transition: transform .15s, background .15s; }
+.site-bar .sb-switch[data-on="1"] .sb-knob { background: color-mix(in srgb, var(--room-accent, var(--teal)) 45%, var(--surface3, var(--border))); }
+.site-bar .sb-switch[data-on="1"] .sb-knob::after { transform: translateX(16px); background: var(--room-accent, var(--teal)); }
+.site-bar .sb-switch:focus-visible, .site-bar .sb-btn:focus-visible, .site-bar a:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 2px; }
+.site-bar .sb-btn { min-height: 28px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2, var(--surface)); color: var(--text); font: inherit; font-size: 12.5px; cursor: pointer; }
+.site-bar .sb-asked { font-size: 12px; color: var(--dim); }
+/* behind: the amber state, words first, then the button outlined in amber */
+.site-bar .sb-behind { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-left: auto; }
+.site-bar .sb-behind-t { color: var(--amber); font-size: 12.5px; }
+.site-bar .sb-now { border-color: var(--amber); color: var(--amber); font-weight: 600; background: none; }
+.site-bar .sb-err { font-size: 12px; color: var(--dim2, var(--dim)); }
+@media (max-width: 600px) {
+  .site-bar { padding: 8px 12px; gap: 8px; }
+  .site-bar .sb-open { flex: 1 1 100%; justify-content: center; min-height: 40px; }
+  .site-bar .sb-div { flex: 1 1 100%; width: auto; height: 1px; margin: 0; align-self: auto; }
+  .site-bar .sb-pub { flex: 1 1 100%; display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; align-items: center; column-gap: 10px; row-gap: 2px; }
+  .site-bar .sb-pub .sb-off, .site-bar .sb-pub .sb-asked { grid-column: 3 / -1; }
+  .site-bar .sb-addr { grid-column: 3; max-width: none; }
+  .site-bar .sb-copy { grid-column: 4; grid-row: 1; min-height: 40px; }
+  .site-bar .sb-when { grid-column: 3 / 5; grid-row: 2; }
+  .site-bar .sb-switch { min-height: 40px; }
+  .site-bar .sb-behind { flex: 1 1 100%; margin-left: 0; justify-content: space-between; }
+  .site-bar .sb-now { min-height: 40px; }
+}

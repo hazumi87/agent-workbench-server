@@ -1,0 +1,14 @@
+{
+  "id": "cli-manager",
+  "name": "CLI Manager",
+  "version": "0.7.0",
+  "description": "The Terminals tab: a grid of terminal panes; a hidden one keeps running.",
+  "class": "cli-manager",
+  "icon": "dashboard",
+  "main": "index.js",
+  "core": true,
+  "permissions": [
+    "ui.tab",
+    "sessions.read"
+  ]
+}

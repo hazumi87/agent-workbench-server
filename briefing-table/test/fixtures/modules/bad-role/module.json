@@ -1,0 +1,1 @@
+{ "id": "bad-role", "name": "Bad role", "version": "0.1.0", "class": "tool", "provides": ["role.tool"], "role": "editor", "contexts": ["dashboard"], "actions": "actions.json" }

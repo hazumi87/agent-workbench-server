@@ -1,0 +1,105 @@
+/* LINE LINKS INTO A TOOL VIEW [rooms/tool-links] (the design system; web/room-tool-links.mjs).
+   Tokens only. The chip for one link, the list for two or more, the LARGE
+   modal (room-cells openLarge) and the preview column's Expand. */
+
+/* ---- the chip ---- */
+.tl-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+.tl-chip {
+  display: inline-flex; align-items: center; gap: 6px; height: 28px; max-width: 100%; padding: 0 9px 0 7px;
+  border-radius: 6px; border: 1px solid var(--border2); background: color-mix(in srgb, var(--ink) 55%, transparent);
+  font: inherit; font-size: 12.5px; color: var(--text); cursor: pointer; min-width: 0;
+}
+.tl-chip .tl-lab { min-width: 0; max-width: 28ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tl-chip:hover:not([aria-disabled="true"]) { border-color: var(--room-accent, var(--teal)); }
+.tl-chip:focus-visible, .tl-more:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.tl-ic { flex: none; display: inline-grid; place-items: center; width: 14px; height: 14px; color: var(--room-accent, var(--teal)); }
+.tl-ic svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---- unavailable: the same thing, disabled; never hidden ---- */
+.tl-chip[aria-disabled="true"], .tl-row[aria-disabled="true"] { opacity: .55; cursor: default; }
+.tl-chip[aria-disabled="true"] .tl-ic, .tl-list.is-off .tl-ic, .tl-row[aria-disabled="true"] .tl-ic { color: var(--dim3); }
+
+/* ---- the list (2+ links) ---- */
+.tl-list {
+  margin-top: 7px; border-radius: 8px; border: 1px solid var(--border2); background: color-mix(in srgb, var(--ink) 55%, transparent);
+  overflow: hidden; min-width: 0;
+}
+.tl-cap { display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px; font-size: 11px; color: var(--dim); border-bottom: 1px solid var(--border); min-width: 0; }
+.tl-capt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tl-row {
+  display: flex; align-items: center; gap: 10px; width: 100%; height: 48px; padding: 0 8px; margin: 0; border: 0; border-radius: 0;
+  background: none; font: inherit; text-align: left; color: var(--text); cursor: pointer; min-width: 0;
+}
+.tl-row + .tl-row, .tl-cap + .tl-row, .tl-row + .tl-more { border-top: 1px solid var(--border); }
+.tl-row:hover:not([aria-disabled="true"]) { background: color-mix(in srgb, var(--text) 6%, transparent); }
+.tl-row:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+.tl-row[hidden] { display: none; }
+.tl-th {
+  flex: none; width: 36px; height: 36px; border-radius: 4px; border: 1px solid var(--border2); overflow: hidden; box-sizing: border-box;
+}
+.tl-th[hidden] { display: none; }
+.tl-th img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.tl-th.tl-sk { background: var(--surface3); }
+.tl-n { flex: none; font: 400 12px var(--mono); color: var(--dim); }
+.tl-n[hidden] { display: none; }
+.tl-row .tl-lab { flex: 1 1 auto; min-width: 0; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tl-st { flex: none; display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font-size: 12px; max-width: 45%; min-width: 0; }
+.tl-st:empty { display: none; }
+.tl-st.tl-sk { display: inline-block; width: 40px; height: 8px; border-radius: 4px; background: var(--surface3); }
+.tl-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.tl-st.s-waiting { color: var(--amber); }
+.tl-st.s-waiting .tl-dot { background: var(--amber); }
+.tl-st.s-replied { color: var(--dim); }
+.tl-st.s-replied .tl-dot { background: var(--dim2); }
+.tl-st.s-resolved { color: var(--lime); }
+.tl-st.s-resolved .tl-dot { background: var(--lime); }
+.tl-st.tl-note { font-style: italic; font-size: 11.5px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+/* STALE: superseded = still clickable, the thumb at 50%, the label dim; gone = the same, disabled */
+.tl-row.is-stale .tl-th img { opacity: .5; }
+.tl-row.is-stale .tl-lab { color: var(--dim); }
+.tl-row.is-stale[aria-disabled="true"] { opacity: 1; }
+.tl-more {
+  display: block; width: 100%; height: 36px; padding: 0 8px; border: 0; background: none; text-align: left;
+  font: inherit; font-size: 12.5px; color: var(--sky); cursor: pointer;
+}
+
+/* ---- the preview column's Expand: a 32px ghost icon button, left of ✕ ---- */
+.pv-ex {
+  flex: none; width: 32px; height: 32px; border-radius: var(--corner); border: 0; background: none; color: var(--dim);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
+}
+.pv-ex[hidden] { display: none; }
+.pv-ex svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.pv-ex:hover { background: var(--cap-hover); color: var(--text); }
+.pv-ex:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+
+/* ---- LARGE: the .modal-card frame over the scrim ---- */
+.tl-lg-scrim {
+  position: fixed; inset: 0; z-index: 75; display: grid; place-items: center; padding: 16px;
+  background: var(--scrim); backdrop-filter: blur(var(--scrim-blur)); -webkit-backdrop-filter: blur(var(--scrim-blur));
+}
+.modal-card.tl-lg {
+  display: flex; flex-direction: column; width: min(1100px, 92vw); height: min(760px, 88vh); min-height: 0;
+  background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; overflow: hidden;
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, .8); color: var(--text);
+}
+.tl-lg-h { display: flex; align-items: center; gap: 8px; height: 48px; flex: none; padding: 0 6px 0 14px; border-bottom: 1px solid var(--border); }
+.tl-lg-h .ic { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--room-accent, var(--teal)); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tl-lg-t { flex: 1; min-width: 0; font: 600 13px var(--font); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tl-lg-x { margin-left: auto; }
+.tl-lg-b { position: relative; flex: 1 1 auto; min-height: 0; inset: auto; }
+.tl-lg-b iframe { display: block; width: 100%; height: 100%; border: 0; background: var(--surface); }
+
+
+/* ---- phone: 40px chips, 56px rows, 40px thumbs; no Expand (the preview is a full-screen layer) ---- */
+@media (max-width: 600px) {
+  .tl-chip { height: 40px; }
+  .tl-row { height: 56px; }
+  .tl-th { width: 40px; height: 40px; }
+  .tl-more { height: 44px; }
+  .pv-ex { display: none; }
+}
+@media (pointer: coarse) {
+  .tl-chip { height: 40px; }
+  .tl-row { height: 56px; }
+}

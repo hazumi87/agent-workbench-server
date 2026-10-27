@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- global color palette, first paint (hub V2): see web/palette-boot.js -->
+  <script src="/palette-boot.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Workbench — account</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<style>
+  /* SELF-CONTAINED, for the same reason login.html is: this page must render
+     while `must_change_password` is set, and in that state every route except
+     a tiny allow-list answers 403. A stylesheet fetch would be one of them, and
+     the change form would arrive unstyled at the exact moment it matters most.
+     The values are the design system, inlined rather than linked. */
+  :root {
+    color-scheme: dark;
+    --ink: #0d0f12;
+    --paper: #e8eaed;
+    --teal: #2dd4bf;
+    --coral: #f87171;
+    --line: rgba(255,255,255,.12);
+  }
+  body {
+    margin: 0; min-height: 100svh;
+    background: var(--ink); color: var(--paper);
+    font-family: "Selawik", system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 1.25rem; box-sizing: border-box;
+  }
+  main { width: min(38rem, 100%); margin: 0 auto; }
+  h1 { font-size: 1.2rem; margin: 0 0 .25rem; }
+  h2 { font-size: .95rem; margin: 0 0 .75rem; font-weight: 600; }
+  .who { font-size: .8rem; opacity: .6; margin: 0 0 1.5rem; }
+  section {
+    border: 1px solid var(--line); border-radius: 12px;
+    background: rgba(255,255,255,.03); padding: 1.1rem; margin-bottom: 1.1rem;
+  }
+  label { display: block; font-size: .8rem; opacity: .8; margin: .8rem 0 .35rem; }
+  /* 16px so iOS does not zoom on focus; 44px so a thumb can hit it. */
+  input[type="text"], input[type="password"] {
+    width: 100%; box-sizing: border-box; padding: .6rem .7rem;
+    font-size: 16px; min-height: 44px;
+    border-radius: 8px; border: 1px solid rgba(255,255,255,.18);
+    background: rgba(0,0,0,.35); color: inherit;
+  }
+  button {
+    min-height: 44px; padding: .55rem 1rem; font-size: .9rem; font-weight: 600;
+    border: 0; border-radius: 8px; cursor: pointer;
+    background: var(--teal); color: #06231f;
+  }
+  button.ghost { background: transparent; color: var(--paper); border: 1px solid var(--line); }
+  button.danger { background: transparent; color: var(--coral); border: 1px solid rgba(248,113,113,.4); }
+  .actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1rem; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li {
+    display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+    padding: .6rem 0; border-top: 1px solid var(--line);
+  }
+  li:first-child { border-top: 0; }
+  /* flex-basis 0, never auto: a long label must ellipsise rather than push the
+     revoke button off the card (CLAUDE.md, 2026-09-04). */
+  .grow { flex: 1 1 0; min-width: 8rem; overflow: hidden; }
+  .name { font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .meta { font-size: .72rem; opacity: .55; }
+  .msg { margin: .9rem 0 0; font-size: .82rem; padding: .55rem .7rem; border-radius: 8px; }
+  .msg[hidden] { display: none; }
+  .msg.bad { background: rgba(248,113,113,.14); border: 1px solid rgba(248,113,113,.4); }
+  .msg.good { background: rgba(45,212,191,.12); border: 1px solid rgba(45,212,191,.4); }
+  .once {
+    font-family: ui-monospace, "Cascadia Mono", monospace; font-size: .8rem;
+    word-break: break-all; user-select: all;
+  }
+  /* the minted token's row: value + a copy button (Owner 2026-10-03) */
+  .oncerow { display: flex; align-items: flex-start; gap: .5rem; margin-top: .35rem; }
+  .oncerow .once { flex: 1 1 auto; min-width: 0; }
+  .copytok {
+    flex: none; width: 32px; height: 32px; padding: 0; display: grid; place-items: center;
+    border-radius: 6px; border: 1px solid rgba(45,212,191,.4); background: transparent; color: inherit; cursor: pointer;
+  }
+  .copytok svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .copied { font-size: .72rem; opacity: .75; margin-top: .3rem; }
+  @media (max-width: 600px) { .copytok { width: 44px; height: 44px; } }
+  .gated { opacity: .35; pointer-events: none; }
+  @media (max-width: 600px) {
+    .actions button { flex: 1 1 auto; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Account</h1>
+  <p class="who" id="who">…</p>
+
+  <div class="msg bad" id="forced" hidden>
+    You are signed in with a temporary password. Set your own below — every other
+    part of the engine is refused until you do.
+  </div>
+
+  <section>
+    <h2>Change password</h2>
+    <p class="meta" id="policy"></p>
+    <label for="current">Current password</label>
+    <input id="current" type="password" autocomplete="current-password">
+    <label for="next">New password</label>
+    <input id="next" type="password" autocomplete="new-password">
+    <div class="actions"><button id="save">Set password</button></div>
+    <div class="msg" id="pwmsg" hidden></div>
+  </section>
+
+  <section id="sec-passkeys">
+    <h2>Passkeys</h2>
+    <p class="meta">A passkey (Face ID, a fingerprint or a screen lock), on this device. The
+      key is made inside the machine and never leaves it, so it cannot be
+      phished or copied out of a stolen database. Your password stays as the
+      fallback, and it is what lets you enroll one.</p>
+    <div class="actions">
+      <button id="addpasskey">Add a passkey on this device</button>
+    </div>
+    <!-- Inside the native CLI Manager window this page is a WebView2 tab, and
+         Windows refuses the Hello ceremony there ("your device can't be used
+         with this site", Owner 2026-09-15). Say so and hand over the URL. -->
+    <div class="msg" id="pkembedded" hidden>A passkey cannot be created inside this window.
+      Open this page in your browser itself and enroll there:
+      <code id="pkurl"></code> <button id="pkcopy" type="button">Copy link</button></div>
+    <div class="msg" id="pkmsg" hidden></div>
+    <ul id="passkeys"></ul>
+  </section>
+
+  <!-- R6a: shown only when the engine has a realm issuer configured. The link
+       button is a plain form POST: the engine answers with the redirect to the
+       realm, and the realm sends you back here. -->
+  <section id="sec-realm" hidden>
+    <h2>Realm account</h2>
+    <p class="meta">Link your realm account to this engine account, then you can
+      sign in with it. Linking needs both: you are signed in here now, and you
+      sign in at the realm next. Realm sign-ins last 8 hours. Your engine
+      password keeps working.</p>
+    <p class="meta" id="realmstate"></p>
+    <div class="actions">
+      <form method="POST" action="/account/realm/link" id="realmlinkform">
+        <button type="submit" id="realmlink">Link my realm account</button>
+      </form>
+      <form method="POST" action="/account/realm/unlink" id="realmunlinkform">
+        <button type="submit" class="danger" id="realmunlink">Unlink</button>
+      </form>
+    </div>
+    <div class="msg" id="realmmsg" hidden></div>
+  </section>
+
+  <section id="sec-devices">
+    <h2>Remembered devices</h2>
+    <ul id="devices"></ul>
+  </section>
+
+  <section id="sec-tokens">
+    <h2>API tokens</h2>
+    <p class="meta">A token belongs to <em>you</em>. An agent holding it sees exactly what you see.</p>
+    <label for="tlabel">Label</label>
+    <input id="tlabel" type="text" placeholder="laptop exe, dispatch, …">
+    <div class="actions">
+      <button id="mint">Mint token</button>
+      <button class="ghost" id="signout">Sign out</button>
+    </div>
+    <div class="msg good" id="minted" hidden></div>
+    <ul id="tokens"></ul>
+  </section>
+</main>
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const fmt = (ms) => (ms ? new Date(ms).toLocaleString() : 'never');
+
+function say(el, text, kind) {
+  el.textContent = text;
+  el.className = `msg ${kind}`;
+  el.hidden = false;
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, {
+    ...opts,
+    headers: { 'content-type': 'application/json', ...(opts.headers || {}) },
+  });
+  let body = {};
+  try {
+    body = await res.json();
+  } catch {
+    /* an empty or non-JSON answer is still a status we can report */
+  }
+  if (!res.ok) {
+    throw new Error(body.error || `request failed (${res.status})`);
+  }
+  return body;
+}
+
+/* WEBAUTHN, BY HAND — the enrolment half. See the twin block in login.html
+   for why there is no library and no shared module: the API speaks
+   ArrayBuffers and our JSON speaks base64url, and converting between them is
+   the entire browser-side job. */
+const b64uToBuf = (str) => {
+  const pad = str.replace(/-/g, '+').replace(/_/g, '/');
+  const bin = atob(pad + '='.repeat((4 - (pad.length % 4)) % 4));
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i += 1) { out[i] = bin.charCodeAt(i); }
+  return out.buffer;
+};
+const bufToB64u = (buf) =>
+  btoa(String.fromCharCode(...new Uint8Array(buf)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+let state = null;
+
+async function load() {
+  state = await api('/account');
+  $('who').textContent =
+    `${state.username}${state.isAdmin ? ' · admin' : ''} — signed in via ${state.via}` +
+    (state.evidence ? ` (evidence: ${state.evidence})` : '');
+  $('policy').textContent = state.policy || '';
+  $('forced').hidden = !state.mustChangePassword;
+  /* While a change is forced every other route 403s, so the device and token
+     sections would render empty lists and a Mint button that cannot work.
+     Grey them rather than hide them: the person should see what is waiting. */
+  $('sec-devices').classList.toggle('gated', state.mustChangePassword);
+  $('sec-tokens').classList.toggle('gated', state.mustChangePassword);
+  /* Enrolment is REFUSED by the engine while a change is forced, not merely
+     discouraged — a passkey minted with a temporary code would outlive the
+     code by years. Greyed for the same reason as the others: show what is
+     waiting rather than hide it. */
+  $('sec-passkeys').classList.toggle('gated', state.mustChangePassword);
+  renderPasskeys();
+  renderDevices();
+  renderTokens();
+  renderRealm();
+}
+
+function renderRealm() {
+  const r = state.realm || { configured: false };
+  $('sec-realm').hidden = !r.configured;
+  if (!r.configured) { return; }
+  $('sec-realm').classList.toggle('gated', state.mustChangePassword);
+  $('realmstate').textContent = r.link
+    ? `Linked ${fmt(r.link.linkedAt)} (realm id ${r.link.sub}).`
+    : 'Not linked.';
+  $('realmlinkform').hidden = !!r.link;
+  $('realmunlinkform').hidden = !r.link;
+  const why = {
+    linked: ['Your realm account is linked.', 'good'],
+    'unlinked-ok': ['Your realm account is unlinked.', 'good'],
+    taken: ['That realm account is already linked to another engine account.', 'bad'],
+    already: ['This engine account already has a realm account linked. Unlink it first.', 'bad'],
+    signin: ['The link has to finish in the same engine sign-in that started it. Try again.', 'bad'],
+    unreachable: ['The realm cannot be reached right now.', 'bad'],
+    refused: ['The realm sign-in was not accepted.', 'bad'],
+    cancelled: ['The realm sign-in was cancelled.', 'bad'],
+  }[new URLSearchParams(location.search).get('realm')];
+  if (why) { say($('realmmsg'), why[0], why[1]); }
+}
+
+function renderPasskeys() {
+  const ul = $('passkeys');
+  ul.innerHTML = '';
+  const live = (state.passkeys || []).filter((p) => !p.revokedAt);
+  if (live.length === 0) {
+    ul.innerHTML =
+      '<li><span class="meta">None yet. Add one here, then use it to sign in ' +
+      'on this device.</span></li>';
+    return;
+  }
+  /* The device link is PROVENANCE, not a dependency: forgetting the device
+     does not revoke the passkey (they are separate credentials), so a passkey
+     whose device row is gone still says where it came from. */
+  const deviceName = new Map((state.devices || []).map((d) => [d.id, d.label || 'a device']));
+  for (const p of live) {
+    const li = document.createElement('li');
+    const box = document.createElement('div');
+    box.className = 'grow';
+    const name = document.createElement('div');
+    name.className = 'name';
+    name.textContent = p.label || 'Unlabeled passkey';
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const bits = [`added ${fmt(p.createdAt)}`, `last used ${fmt(p.lastUsedAt)}`];
+    if (p.deviceId) {
+      bits.push(`enrolled from ${deviceName.get(p.deviceId) || 'a forgotten device'}`);
+    }
+    meta.textContent = bits.join(' · ');
+    box.append(name, meta);
+    const btn = document.createElement('button');
+    btn.className = 'danger';
+    btn.textContent = 'Remove';
+    btn.onclick = async () => {
+      try {
+        await api(`/account/passkey/${encodeURIComponent(p.id)}/revoke`, { method: 'POST' });
+        await load();
+      } catch (err) {
+        say($('pkmsg'), err.message, 'bad');
+      }
+    };
+    li.append(box, btn);
+    ul.append(li);
+  }
+}
+
+function renderDevices() {
+  const ul = $('devices');
+  ul.innerHTML = '';
+  const live = state.devices.filter((d) => !d.revokedAt);
+  if (live.length === 0) {
+    ul.innerHTML = '<li><span class="meta">None. Tick “Remember this device” when you sign in.</span></li>';
+    return;
+  }
+  for (const d of live) {
+    const li = document.createElement('li');
+    const box = document.createElement('div');
+    box.className = 'grow';
+    const name = document.createElement('div');
+    name.className = 'name';
+    name.textContent = d.label || 'Unlabeled device';
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.textContent =
+      `${d.tailnetNode || d.tailnetIp || 'no tailnet evidence'} · last used ${fmt(d.lastUsedAt)}` +
+      (d.lastEvidence ? ` · ${d.lastEvidence}` : '');
+    box.append(name, meta);
+    const btn = document.createElement('button');
+    btn.className = 'danger';
+    btn.textContent = 'Forget';
+    btn.onclick = async () => {
+      try {
+        await api(`/account/device/${encodeURIComponent(d.id)}/revoke`, { method: 'POST' });
+        await load();
+      } catch (err) {
+        say($('pwmsg'), err.message, 'bad');
+      }
+    };
+    li.append(box, btn);
+    ul.append(li);
+  }
+}
+
+function renderTokens() {
+  const ul = $('tokens');
+  ul.innerHTML = '';
+  for (const t of state.tokens.filter((x) => !x.revokedAt)) {
+    const li = document.createElement('li');
+    const box = document.createElement('div');
+    box.className = 'grow';
+    const name = document.createElement('div');
+    name.className = 'name';
+    name.textContent = t.label || 'Unlabeled token';
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.textContent = `created ${fmt(t.createdAt)} · last used ${fmt(t.lastUsedAt)}`;
+    box.append(name, meta);
+    const btn = document.createElement('button');
+    btn.className = 'danger';
+    btn.textContent = 'Revoke';
+    btn.onclick = async () => {
+      try {
+        await api(`/account/token/${encodeURIComponent(t.id)}/revoke`, { method: 'POST' });
+        await load();
+      } catch (err) {
+        say($('pwmsg'), err.message, 'bad');
+      }
+    };
+    li.append(box, btn);
+    ul.append(li);
+  }
+}
+
+/* Every await inside a click handler gets a local catch. An unhandled rejection
+   in an event handler goes nowhere and the button reads as doing nothing —
+   the 2026-09-02 logo-save bug, twice over. */
+$('save').onclick = async () => {
+  try {
+    await api('/account/password', {
+      method: 'POST',
+      body: JSON.stringify({ current: $('current').value, next: $('next').value }),
+    });
+    $('current').value = '';
+    $('next').value = '';
+    say($('pwmsg'), 'Password set. Every other session has been signed out.', 'good');
+    await load();
+  } catch (err) {
+    say($('pwmsg'), err.message, 'bad');
+  }
+};
+
+if (window.parent !== window) {
+  $('pkembedded').hidden = false;
+  $('pkurl').textContent = location.href;
+  $('pkcopy').onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(location.href);
+      $('pkcopy').textContent = 'Copied';
+    } catch {
+      $('pkcopy').textContent = 'Select and copy the link above';
+    }
+  };
+}
+$('addpasskey').onclick = async () => {
+  const btn = $('addpasskey');
+  btn.disabled = true;
+  try {
+    if (typeof window.PublicKeyCredential !== 'function') {
+      throw new Error('This browser has no passkey support.');
+    }
+    const offer = await api('/account/passkey/options', { method: 'POST', body: '{}' });
+    const opts = offer.options;
+    opts.challenge = b64uToBuf(opts.challenge);
+    opts.user.id = b64uToBuf(opts.user.id);
+    for (const c of opts.excludeCredentials || []) { c.id = b64uToBuf(c.id); }
+    const cred = await navigator.credentials.create({ publicKey: opts });
+    if (!cred) { throw new Error('No passkey was created.'); }
+    await api('/account/passkey/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        ticket: offer.ticket,
+        response: {
+          id: cred.id,
+          rawId: bufToB64u(cred.rawId),
+          type: cred.type,
+          clientExtensionResults: cred.getClientExtensionResults(),
+          response: {
+            clientDataJSON: bufToB64u(cred.response.clientDataJSON),
+            attestationObject: bufToB64u(cred.response.attestationObject),
+            transports: cred.response.getTransports ? cred.response.getTransports() : [],
+          },
+        },
+      }),
+    });
+    say($('pkmsg'), 'Passkey added. Use it on the sign-in page next time.', 'good');
+    await load();
+  } catch (err) {
+    if (err && (err.name === 'NotAllowedError' || err.name === 'AbortError')) {
+      say($('pkmsg'), 'Passkey enrollment was canceled.', 'bad');
+    } else {
+      say($('pkmsg'), err.message || String(err), 'bad');
+    }
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+$('mint').onclick = async () => {
+  try {
+    const t = await api('/account/token', {
+      method: 'POST',
+      body: JSON.stringify({ label: $('tlabel').value }),
+    });
+    $('tlabel').value = '';
+    const box = $('minted');
+    box.innerHTML = '';
+    const head = document.createElement('div');
+    head.textContent = 'Copy this now — it is never shown again:';
+    const val = document.createElement('div');
+    val.className = 'once';
+    val.textContent = t.token;
+    /* COPY (Owner 2026-10-03): the value is already in memory, so the write
+       happens inside the click (iOS keeps the user activation); a textarea
+       fallback covers an insecure context, where navigator.clipboard is absent. */
+    const copy = document.createElement('button');
+    copy.type = 'button';
+    copy.className = 'copytok';
+    copy.title = 'Copy token';
+    copy.setAttribute('aria-label', 'Copy token');
+    copy.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>';
+    const note = document.createElement('div');
+    note.className = 'copied';
+    note.setAttribute('role', 'status');
+    copy.onclick = () => {
+      const done = (ok) => { note.textContent = ok ? 'Copied to the clipboard.' : 'Could not copy. Select the text and copy it.'; };
+      const fallback = () => {
+        const ta = document.createElement('textarea');
+        ta.value = t.token;
+        ta.setAttribute('readonly', '');
+        ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+        document.body.append(ta);
+        ta.select();
+        let ok = false;
+        try { ok = document.execCommand('copy'); } catch { ok = false; }
+        ta.remove();
+        done(ok);
+      };
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(t.token).then(() => done(true), fallback);
+      } else {
+        fallback();
+      }
+    };
+    const row = document.createElement('div');
+    row.className = 'oncerow';
+    row.append(val, copy);
+    box.append(head, row, note);
+    box.className = 'msg good';
+    box.hidden = false;
+    await load();
+  } catch (err) {
+    say($('pwmsg'), err.message, 'bad');
+  }
+};
+
+$('signout').onclick = async () => {
+  try {
+    await api('/logout', { method: 'POST' });
+    location.href = '/login';
+  } catch (err) {
+    say($('pwmsg'), err.message, 'bad');
+  }
+};
+
+load().catch((err) => say($('pwmsg'), err.message, 'bad'));
+</script>
+</body>
+</html>

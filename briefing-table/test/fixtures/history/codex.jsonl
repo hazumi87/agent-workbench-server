@@ -1,0 +1,11 @@
+{"type": "session_meta", "timestamp": "2026-10-10T02:00:00Z", "payload": {"id": "session-fixture", "cwd": "/workspace/project", "base_instructions": "PRIVATE SYSTEM TEXT"}}
+{"type": "response_item", "timestamp": "2026-10-10T02:00:00Z", "payload": {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "Build a blue homepage. API_KEY=sk-abcdefghijklmno"}]}}
+{"type": "event_msg", "timestamp": "2026-10-10T02:00:00Z", "payload": {"type": "user_message", "message": "DUPLICATE EVENT MUST NOT APPEAR"}}
+{"type": "response_item", "timestamp": "2026-10-10T02:00:00Z", "payload": {"type": "reasoning", "summary": [{"text": "PRIVATE REASONING"}]}}
+{"type": "response_item", "timestamp": "2026-10-10T02:00:00Z", "payload": {"type": "custom_tool_call", "name": "apply_patch", "call_id": "patch-1", "input": "*** Begin Patch\n*** Add File: src/home.js\n+PRIVATE FILE CONTENT\n*** End Patch"}}
+{"type": "response_item", "timestamp": "2026-10-10T02:00:00Z", "payload": {"type": "custom_tool_call_output", "call_id": "patch-1", "output": "SECRET TOOL RESULT"}}
+{"type": "response_item", "timestamp": "2026-10-10T02:00:00Z", "payload": {"type": "function_call", "name": "update_plan", "call_id": "plan-1", "arguments": "{\"plan\": [{\"step\": \"Build homepage\", \"status\": \"completed\"}, {\"step\": \"Verify mobile layout\", \"status\": \"in_progress\"}]}"}}
+{"type": "response_item", "timestamp": "2026-10-10T02:00:00Z", "payload": {"type": "function_call_output", "call_id": "plan-1", "output": "PRIVATE RESULT"}}
+{"type": "response_item", "timestamp": "2026-10-10T02:00:00Z", "payload": {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "Please make the header green instead."}]}}
+{"type": "response_item", "timestamp": "2026-10-10T02:00:00Z", "payload": {"type": "function_call", "name": "Bash", "call_id": "test-1", "arguments": "{\"command\": \"echo SECRET SHELL ARGUMENT\"}"}}
+{"type": "response_item", "timestamp": "2026-10-10T02:00:00Z", "payload": {"type": "message", "role": "assistant", "phase": "final", "content": [{"type": "output_text", "text": "Header changed; verification is pending."}]}}

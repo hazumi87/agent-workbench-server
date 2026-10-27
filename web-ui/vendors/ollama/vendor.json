@@ -1,0 +1,38 @@
+{
+  "id": "ollama",
+  "label": "Ollama",
+  "binary": "ollama",
+  "mark": "generic",
+  "color": "#6B6B6B",
+  "installUrl": "https://ollama.com/download",
+  "install": {
+    "win32": "winget install Ollama.Ollama",
+    "darwin": "brew install ollama",
+    "linux": "curl -fsSL https://ollama.com/install.sh | sh"
+  },
+  "seamVersion": 1,
+  "verifiedWith": "0.5",
+  "resumable": false,
+  "settings": {
+    "model": {
+      "type": "choice",
+      "label": "Default model",
+      "options": [
+        "llama3.2",
+        "qwen2.5-coder"
+      ],
+      "labels": [
+        "Llama 3.2",
+        "Qwen 2.5 Coder"
+      ],
+      "default": "llama3.2",
+      "other": true
+    },
+    "extraArgs": {
+      "type": "args",
+      "label": "Extra arguments",
+      "hint": "Added to every launch, like --verbose",
+      "default": ""
+    }
+  }
+}

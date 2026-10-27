@@ -1,0 +1,712 @@
+/* Solo window (CLI Manager phase) — one CLI, edge to edge, the pane head as the
+   working titlebar. Consumes the pinned the design system tokens; the pane styling mirrors
+   workbench.css (same class vocabulary) minus the multi-pane grid. */
+
+* { box-sizing: border-box; }
+
+/* ---- mobile-web base: KB design-notes-id ---------------------------------
+   The installation's iOS Safari pattern. Owner found this the hard way here: his
+   iPhone laid the page out WIDER than the screen and a pinch-zoom-out revealed
+   the rest before snapping back — because the viewport meta lacked
+   `maximum-scale=1.0`, without which "newer iOS Safari ignores user-scalable=no
+   on its own" (that doc, verbatim). CSS hints are NOT enough on their own; the
+   pattern is viewport meta + this CSS + the JS gesture blockers in solo.js, and
+   all three have to be present. */
+html, body {
+  overscroll-behavior: none;      /* no pull-to-refresh, no swipe-back */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%; /* Safari must not inflate text into overflow */
+}
+/* iOS auto-zooms any focused input under 16px, and that zoom is what leaves the
+   layout viewport wider than the screen afterwards. */
+input, textarea, select { font-size: 16px; }
+/* Terminals are for reading and copying, so selection stays ON there even
+   though the pattern turns it off for chrome. */
+.pane-term, .pane-term * { -webkit-user-select: text; user-select: text; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+.pane {
+  /* The app's root box. `--app-w` is set only when the browser lays the page out
+     wider than the screen (see web/screen-clamp.mjs); everything else — head,
+     terminal, keypad — is inside this box, so pinning it here is the single
+     lever that puts the whole interface back on the glass. */
+  width: var(--app-w, auto);
+  --fn: var(--teal);
+  --pane-accent: var(--fn);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--ink);
+  /* (The 2px identity stripe that sat here is gone: v21 has NO accent strokes
+     anywhere — "accent strokes read as AI-designed", Owner 2026-09-18.) */
+}
+
+/* ---- the SESSION BAR (the design system window-chrome v21) ---------------------------
+   The old pane head is gone. Its replacement is the bundle's `.hwb-sbar`,
+   rendered by hwbRenderSessionBar() — project mark · project name · session
+   title … brand watermark · messages / handoff / links — and it is drawn in
+   exactly ONE place:
+     - inside the window-host SHELL the shell draws it, under the tab row, for
+       the selected tab (this page only reports the data: {hwbBar});
+     - opened on its own in a browser tab, THIS page draws it, as #sbar.
+   Every colour, size and icon is the bundle's; nothing here restyles it. The
+   only additions are the session's status ring, prepended because a lone page
+   has no tab to carry it (sized by the bundle's own 28px tab rule), and the
+   neutral --base the bar's colour chain falls back to when a recipe has no
+   colour (the shell provides one on its root; a lone page must too). */
+.pane > .hwb-sbar { flex: 0 0 auto; --base: #5a6672; }
+.pane > .hwb-sbar[hidden] { display: none; }
+.hwb-sbar .pane-ring { position: relative; z-index: 1; flex: 0 0 auto; margin-right: 8px; line-height: 0; }
+
+/* Transient controls — shown only while they apply (watching someone else's
+   session; the session has ended and can be relaunched; the dev reload). They
+   used to live in the pane head; the v21 bar holds identity + icons only, so
+   they float over the terminal's top-right corner instead of claiming a row. */
+.pane-float {
+  position: absolute; top: 6px; right: 18px; z-index: 30;
+  display: flex; gap: 6px; align-items: center;
+}
+.pane-float > [hidden] { display: none; }
+.pane-float .pane-btn { background: var(--surface2); border-color: var(--border2); }
+/* Dev-only soft-reload: reloads the app UI while the resident PTY stays alive.
+   Only shown when the engine reports debugUi. */
+.pane-reload {
+  font-size: 13px; line-height: 1; color: var(--dim);
+  background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px;
+  width: 26px; height: 26px; cursor: pointer; flex: 0 0 auto;
+}
+.pane-reload:hover { color: var(--teal); background: var(--surface3); }
+
+.pane-btn {
+  font: inherit; font-size: 13px; line-height: 1;
+  color: var(--dim); background: transparent;
+  border: 1px solid transparent; border-radius: 6px;
+  height: 26px; min-width: 26px; padding: 0 6px; cursor: pointer;
+  flex: 0 0 auto;
+}
+.pane-btn:hover:not(:disabled) { color: var(--text); background: var(--surface3); border-color: var(--border2); }
+.pane-btn:disabled { opacity: .35; cursor: default; }
+
+.pane-body { position: relative; flex: 1 1 auto; min-height: 0; min-width: 0; overflow: hidden; }
+/* Ghosted CLI logo behind the terminal (the design system parity): width = % of pane set
+   inline; mono color + opacity set inline; the SVG fills the box and inherits
+   the mono color via currentColor. */
+.pane-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+.pane-logo svg { width: 100%; height: auto; display: block; fill: currentColor; }
+.pane-term {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  min-height: 0;
+  /* CONTAIN THE TERMINAL so it can never push the page wider than the screen.
+   *
+   * There is one pty and only the CONTROLLER may resize it, so a viewer on a
+   * narrow screen is permanently rendering a terminal sized for someone else's
+   * window — xterm lays out cols x cellWidth regardless of the viewport. Left
+   * unconstrained that width propagated all the way out: Owner's phone clipped
+   * the titlebar and the keypad too, not just the text, which is what told him
+   * the cause was structural rather than the pty alone. It was the pty, but the
+   * pty was pushing the chrome.
+   *
+   * min-width:0 is the load-bearing half — a flex item refuses to go below its
+   * content without it, so overflow alone would not have held. */
+  min-width: 0;
+  overflow: hidden;
+}
+/* THE RIGHT-EDGE GUTTER (Owner, 2026-09-04). FitAddon reserves EXACTLY the
+ * scrollbar's own width, so the last column always ends flush against the bar —
+ * 0-8px, wherever floor() happens to land. Nothing is clipped, but Owner read it
+ * as clipped, and his diagnosis was the right one: with zero space, a token the
+ * pty wrapped mid-way ("2" on one line, "s" on the next) reads as a character
+ * lost behind the bar rather than a wrap.
+ *
+ * padding-right ALONE buys nothing — measured. xterm's overlay bar lives inside
+ * the padding box, so padding moves the bar and the text together. The pair is
+ * the lever: the padding takes width away from the TEXT (FitAddon subtracts it),
+ * the translate puts the BAR back on the pane's edge where it belongs. Costs a
+ * column only when the natural slack was already under 8px, which is exactly
+ * when it is needed. */
+.pane-term .xterm { height: 100%; padding: 4px 8px 4px 6px; }
+.pane-term .xterm-scrollable-element > .scrollbar.vertical { transform: translateX(8px); }
+/* THE DEAD NATIVE SCROLLBAR (2026-09-04). xterm 6 scrolls through its own
+ * `.xterm-scrollable-element` overlay bar; `.xterm-viewport` never scrolls —
+ * proven with 400 lines of scrollback: scrollHeight === clientHeight, and a
+ * wheel-up moved the terminal while viewport.scrollTop stayed 0. But the
+ * vendored xterm.css still carries a legacy `overflow-y: scroll` on it, so
+ * anywhere the OS paints CLASSIC scrollbars (Edge/WebView2 on Windows —
+ * measured gutter 15px) the viewport paints a permanently-full, non-functional
+ * native bar over the right edge of the text, on top of the real one.
+ * Invisible in headless Chromium and on iOS, which both use overlay bars —
+ * which is why this only ever showed up on the desktop app.
+ * Overriding here, not in web/vendor/xterm/xterm.css: that file is PINNED. */
+.pane-term .xterm-viewport { overflow-y: hidden; }
+/* All xterm layers transparent so the element bg (user's pick) fills the whole
+   surface — same treatment (and reasons) as workbench.css. */
+.pane-term .xterm,
+.pane-term .xterm-viewport,
+.pane-term .xterm-screen,
+.pane-term .xterm-rows {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* ✕ choice dialog (End = destructive vs Hide = no-impact, vk hide-verb). */
+.close-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+}
+.close-modal[hidden] { display: none !important; }
+.close-modal-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(380px, 90vw);
+}
+.close-modal-box p { margin: 0 0 6px; color: var(--text); }
+.close-modal-box .pane-btn { padding: 8px 10px; text-align: left; }
+.close-danger { border-color: var(--coral); color: var(--coral); }
+.close-cancel { opacity: 0.7; }
+
+/* Link-sweep modal rows. */
+.links-box { max-width: min(680px, 94vw); }
+.links-list { display: flex; flex-direction: column; gap: 6px; max-height: 55vh; overflow-y: auto; margin-bottom: 10px; }
+.links-row { display: flex; align-items: center; gap: 8px; }
+.links-row .links-url {
+  flex: 1 1 auto; font-family: var(--mono); font-size: 12px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.links-row .pane-btn { border-color: var(--border2); }
+
+/* Agent-submitted URL offer bar (below the head, above the terminal). */
+.url-offers {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--sky, #4aa3e0) 12%, var(--surface2));
+  border-bottom: 1px solid color-mix(in srgb, var(--sky, #4aa3e0) 45%, transparent);
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: 13px;
+}
+.url-offers[hidden] { display: none !important; }
+/* §3.6 held line (web/held-bar.mjs): quiet status, one action at most */
+.held-bar {
+  flex: 0 0 auto; padding: 6px 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+  font-size: 12px; color: var(--dim); background: var(--surface2); border-bottom: 1px solid var(--border);
+}
+.held-bar[hidden] { display: none !important; }
+.held-bar .held-text, .held-bar .held-confirm { color: var(--dim); }
+.held-bar .held-confirm { color: var(--text); }
+.held-bar .held-note { color: var(--text); }
+.held-btn { font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 8px; cursor: pointer; border: 1px solid var(--border2); background: var(--ghost-fill); color: var(--text); }
+.held-btn:disabled { opacity: .5; }
+.held-btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
+@media (max-width: 600px) { .held-btn { min-height: 40px; } }
+.url-offers-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.url-offer-row { display: flex; align-items: center; gap: 8px; }
+
+/* THE GROUND is the bundle's v21 project wash: .pane-body carries `.wm-pane`
+   + `.wm-at-<washFrom>` (hwb-watermark.css), painted from --wm-pc — the recipe
+   colour, hue only. It replaced the v2 oklch ground that lived here. */
+
+/* ---- control lease: the paused card ---------------------------------------
+ * Shown when another viewer holds the keyboard. Deliberately a SCRIM over the
+ * terminal, not a disabled input: the output keeps streaming underneath (you
+ * can still watch the run), you just cannot type into it. */
+/* MODAL. Nothing behind it scrolls or types until it is answered (Owner,
+   2026-09-15: "can't we fix the prompt visibility so they can cancel it rather
+   than kludging the scroll"). So it has to be impossible to miss: a heavy
+   scrim, a card with a solid accent frame, two answers at touch size. */
+.pane-paused {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  background: color-mix(in srgb, var(--bg, #0d0f12) 86%, transparent);
+  backdrop-filter: blur(3px);
+  z-index: 40;
+}
+.pane-paused[hidden] { display: none; }
+.pane-paused-card {
+  max-width: 30rem;
+  width: min(100%, 30rem);
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  border: 2px solid var(--accent, #4aa3ff);
+  background: color-mix(in srgb, var(--bg, #0d0f12) 88%, var(--accent, #4aa3ff));
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+.pane-paused-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.pane-paused-actions .btn { min-height: 40px; padding: 0 16px; }
+/* The card's buttons are the manager's .btn (solo.css never styled it, so they
+   fell back to the browser's grey filled button): a ghost fill, a hairline,
+   and the teal outline on the one that answers it (the design system r23 review). */
+.pane-paused-actions .btn {
+  font: inherit;
+  color: var(--text, #e6e6e6);
+  background: var(--ghost-fill, transparent);
+  border: 1px solid var(--border2, #323c49);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.pane-paused-actions .btn:hover { background: var(--ghost-fill-hover, rgba(255, 255, 255, .06)); }
+.pane-paused-actions .btn-accent { border-color: var(--teal, #2dd4bf); color: var(--teal, #2dd4bf); }
+.pane-paused-actions .btn:focus-visible { outline: 2px solid var(--teal, #2dd4bf); outline-offset: 2px; }
+/* The reader's way back. Only visible after "Just watch". */
+.pane-viewbadge {
+  font: 600 11px/1 var(--mono);
+  color: var(--accent, #4aa3ff);
+  background: color-mix(in srgb, var(--accent, #4aa3ff) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent, #4aa3ff) 55%, transparent);
+  border-radius: 999px;
+  padding: 5px 9px;
+  margin-left: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pane-viewbadge[hidden] { display: none; }
+.pane-paused-who {
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin-bottom: 0.35rem;
+}
+.pane-paused-sub {
+  opacity: 0.72;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin-bottom: 0.9rem;
+}
+
+/* ---- PHONE ONLY (<=600px) -------------------------------------------------
+   THREE surfaces, not two (Owner, 2026-09-01: "separate layout for phone from
+   tablet from pc"), each split on the axis that actually decides it:
+
+     pointer: coarse   -> a finger drives it. Keypad, 44px targets, touch
+                          scrolling. True of a phone AND an iPad.
+     max-width: 600px  -> there is no ROOM. Drop the editors.
+     neither           -> desktop, untouched.
+
+   An iPad is coarse but roomy, so it keeps the name field, colour and logo:
+   trimming those there was me treating every touch device as a phone. Same
+   breakpoint window-lens uses, which KB design-notes-id names as the
+   reference implementation for this whole pattern. */
+/* (v21: the editors left for the recipe form and the head became the bundle's
+   session bar, so there is nothing left here to drop on a phone.) */
+
+/* ---- touch keypad ---------------------------------------------------------
+   The keys a phone does not have. Only ever rendered on coarse-pointer
+   surfaces (see buildTouchKeypad); desktop never sees this markup at all.
+
+   Bottom-LEFT on purpose: the soft keyboard rises from the bottom and most
+   right-handed thumb reach is bottom-right, which is exactly where a mis-tap
+   would hit Enter. Left keeps it clear of both. */
+.keypad {
+  position: absolute;
+  left: max(.5rem, env(safe-area-inset-left));
+  bottom: max(.5rem, env(safe-area-inset-bottom));
+  z-index: 30;                 /* under the paused scrim (40): a paused pane is
+                                  explained, not quietly typeable */
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  gap: .4rem;
+}
+.keypad-toggle {
+  /* Sized like the bar's own keys (40x40, radius 8, no padding) so the
+     chevron has the same box as a key and nothing can clip it; a grid centres
+     the SVG on both axes regardless of font metrics (Owner, IMG_7673). */
+  display: grid;
+  place-items: center;
+  width: 40px; height: 40px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--paper, #e8eaed) 22%, transparent);
+  background: color-mix(in srgb, var(--ink, #0d0f12) 82%, transparent);
+  color: var(--paper, #e8eaed);
+  line-height: 0;
+  overflow: hidden;
+  cursor: pointer;
+  backdrop-filter: blur(3px);
+  opacity: .55;                /* out of the way until wanted */
+  transition: opacity .15s;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+.keypad-toggle .kp-chevron { display: block; width: 20px; height: 20px; pointer-events: none; }
+.keypad.is-open .keypad-toggle,
+.keypad-toggle:active { opacity: 1; }
+/* THE BAR FOLLOWS THE SOFT KEYBOARD (Owner, 2026-09-29; solo.js
+   buildTouchKeypad). With the keyboard down there is nothing here at all — no
+   bar and no toggle. With it up the pad sits ON the keys: the pane is already
+   the visible viewport's height (--vvh), so its bottom edge is the top of the
+   keyboard, and the safe-area inset (the home indicator) is under the keys. */
+html:not(.kb-up) .keypad.kp-auto { display: none; }
+html.kb-up .keypad.kp-auto { bottom: 2px; }
+
+/* ONE ROW ACROSS THE SCREEN, not a 3x3 block (Owner, 2026-09-01: "narrow
+   vertically and use screen width"). With a soft keyboard up there are only a
+   handful of terminal rows left, and a tall pad spends them all — a strip costs
+   one row and still reaches every key. Order is the D-pad read left to right,
+   with esc/tab bracketing it and the two you press most at the end. */
+.keypad-grid {
+  display: flex;
+  /* ONE ROW, PAGED — more keys than a phone is wide.
+     Scrolling worked, but it "feels dangerous" (Owner, 2026-09-01): the same
+     strip asked a finger to do two different things, separated by an 8px
+     threshold that is a judgement call and will sometimes be wrong. A page
+     turner removes the ambiguity rather than tuning it — every touch on a key
+     is a key press, and changing page is its own button. */
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: .15rem;
+  padding: .45rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--paper, #e8eaed) 18%, transparent);
+  background: color-mix(in srgb, var(--ink, #0d0f12) 92%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .45);
+}
+.keypad-grid[hidden] { display: none; }
+.keypad-grid button {
+  /* FIXED width now, not elastic: a scrolling row needs keys that keep their
+     size so the same swipe always travels the same distance, and so a key is
+     never squeezed to illegibility just because a tenth one was added. 40px on
+     both axes — the narrow axis is under the 44px guideline deliberately, since
+     these are discrete well-separated keys whose mis-taps are cheap. */
+  flex: 0 0 40px;
+  min-width: 40px;
+  padding: 0 1px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--paper, #e8eaed) 16%, transparent);
+  background: color-mix(in srgb, var(--paper, #e8eaed) 8%, transparent);
+  color: var(--paper, #e8eaed);
+  font-size: 1.05rem;
+  cursor: pointer;
+  /* A held arrow must not select text or fire the iOS callout menu. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+.keypad-grid button:active {
+  background: color-mix(in srgb, var(--accent, #4aa3ff) 45%, transparent);
+}
+.keypad-grid .kp-wide { font-size: .8rem; letter-spacing: .02em; }
+/* Enter earns extra width — it is the key you reach for most, and the one whose
+   mis-tap costs the least to notice. */
+.keypad-grid .kp-wide { font-size: .68rem; }
+.keypad-grid .kp-enter { flex: 0 0 52px; }  /* the one you reach for most */
+
+/* The keys themselves, and the page turner pinned beside them. */
+.keypad-keys {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: stretch;
+  gap: .15rem;
+  min-width: 0;
+}
+.keypad-keys button[hidden] { display: none; }
+.kp-nav {
+  flex: 0 0 30px;
+  min-width: 30px;
+  height: 40px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--accent, #4aa3ff) 40%, transparent);
+  background: color-mix(in srgb, var(--accent, #4aa3ff) 18%, transparent);
+  color: var(--paper, #e8eaed);
+  font-size: .7rem;           /* it shows "1/2", not an icon */
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+.kp-nav[hidden] { display: none; }
+
+/* Open: the pad spans the width and sits on ONE line, toggle inline at its left
+   so closing it stays where opening it was. */
+.keypad.is-open {
+  left: 0;
+  right: 0;
+  flex-direction: row;
+  align-items: center;
+  gap: .25rem;
+  padding: 0 max(.25rem, env(safe-area-inset-left)) 0 max(.25rem, env(safe-area-inset-left));
+}
+/* beside the bar it keeps its own dark plate: it sits outside the bar's
+   background, over the terminal */
+.keypad.is-open .keypad-toggle { flex: 0 0 40px; }
+.keypad.is-open .keypad-grid {
+  flex: 1 1 auto;
+  /* min-width:0 or this grows to its CONTENT — which made every width
+     measurement report the overflow instead of the space available, so the
+     pager kept keys that could not fit. */
+  min-width: 0;
+  overflow: hidden;
+  padding: .15rem;
+  border-radius: 10px;
+}
+
+/* ---- touch layout: fit the phone, and let a finger scroll ------------------
+   On a phone the head row (name field, colour swatch, logo, font, auto-saves,
+   links, relaunch, close) is far wider than the viewport, so it pushed the page
+   sideways — the ✕ ended up off-screen entirely and the terminal inherited the
+   overflow, which is why the right-hand columns were unreachable (Owner,
+   2026-09-01).
+
+   The editors go, not the controls. Naming, colour and logo are deliberate acts
+   with a comfortable home on the desktop and in the manager; ending a session
+   and reading it are what you came to the phone for. */
+@media (pointer: coarse) {
+  html, body { overflow-x: hidden; }
+
+  /* The touch-scroll handler (solo.js) owns vertical drags over the terminal.
+     Without this the browser claims the gesture as a native pan on the first
+     sub-row movement — Chromium logs "Ignored attempt to cancel a touchmove
+     event ... scrolling is in progress" — and every later preventDefault is
+     ignored. pinch-zoom, NOT none: a deliberate two-finger pinch stays the
+     user's business (2026-09-01 lesson). (2026-09-15) */
+  .pane-term { touch-action: pinch-zoom; }
+  /* The control prompt on a phone: answers stacked, full width, 44px. */
+  .pane-paused-actions { flex-direction: column; }
+  .pane-paused-actions .btn { width: 100%; min-height: 44px; }
+
+  /* iOS-ONLY OVERFLOW, and why this block is defensive rather than measured.
+   *
+   * Owner's iPhone laid the page out WIDER than the screen: the head, the
+   * terminal and the keypad were all clipped at the same right edge, and a
+   * pinch-zoom-out revealed the rest before snapping back. The same page
+   * measures exactly 390px in Chromium's iPhone emulation, so this is WebKit
+   * behaviour that cannot be reproduced with the tools here — which means the
+   * fix has to remove the CAUSES structurally rather than chase a number.
+   *
+   * 1. Safari inflates text in some layouts unless told not to. Inflated text
+   *    in a nowrap flex row is exactly how a head row outgrows its screen. */
+  html { -webkit-text-size-adjust: 100%; }
+
+  /* 2. A flex item will not shrink below its content unless min-width is 0.
+   *    One un-shrinkable child is enough to push the whole row wide, and then
+   *    everything inside the pane inherits that width. */
+  .pane { overflow-x: clip; }
+  .pane > .hwb-sbar { max-width: 100%; }
+  .keypad-grid button { overflow: hidden; }
+
+  /* WHAT GIVES WAY WHEN THERE IS NOT ENOUGH ROOM — decide it, do not let the
+   * overflow decide it.
+   *
+   * `min-width: 0` on every head child let them all shrink equally and then
+   * `overflow: hidden` clipped whatever fell off the end — which is the RIGHT
+   * end, where ✕ and 🔗 live. So the two controls you most need on a phone were
+   * the two the browser chose to hide (Owner, 2026-09-01: "cant see enter",
+   * ✕ gone too).
+   *
+   * The name is the only thing here that can lose characters and still do its
+   * job, so it absorbs all the shrinking; the controls never shrink and never
+   * clip. */
+  .hwb-sbar .sb-title { flex: 1 1 0; min-width: 0; }
+
+  /* 100svh, NOT 100dvh (Owner 2026-09-01). `dvh` is the viewport as it is RIGHT
+     NOW, which counts the space behind a retractable toolbar as usable; `svh`
+     is the viewport with that toolbar at its largest. With the soft keyboard
+     CLOSED, Edge-on-iOS keeps its address bar and nav bar at the bottom, and
+     under dvh the keypad was drawn underneath them — sliced in half
+     horizontally, so the key row was there but unusable. With the keyboard OPEN
+     the same layout was fine, which is what made it look like a keyboard bug
+     rather than a toolbar one. svh is the conservative measure and is right in
+     both states. */
+  html, body { height: 100svh; }
+  /* --vvh is the VISUAL viewport (web/soft-keyboard.mjs) and is set ONLY while
+     the soft keyboard is up — that is the one case svh cannot know about. */
+  .pane { max-width: 100vw; height: var(--vvh, 100svh); }
+  /* ...and --vv-top (also keyboard-only) follows an iOS pan of the visual
+     viewport, so the pane's bottom — where the key bar sits — is the top of
+     the keys even when iOS has scrolled the view. Same lever as room.css. */
+  html.kb-up .pane { position: relative; top: var(--vv-top, 0px); }
+  /* THE KEYPAD OVERLAYS THE TERMINAL — it does not reserve space.
+   *
+   * Reserving was the right fix for the 3x3 block, which was tall enough to
+   * land on the prompt. A 47px strip is not: Claude Code puts its status noise
+   * ("bypass permissions on", "Auto-update failed") BELOW the input line, so a
+   * bar floating over the last couple of rows covers the noise and leaves the
+   * prompt clear. Reserving instead left an empty band under the terminal —
+   * visible as dead space past the end of the scrollbar — and spent vertical
+   * room on the device with the least of it (Owner, 2026-09-01: "free up the
+   * vertical space and then the widget and buttons will only cover the red
+   * text ... and not the input"). */
+
+
+  /* Bigger hit areas for the floating controls. */
+  .pane-float .pane-btn { min-width: 34px; min-height: 34px; }
+}
+
+/* The zoom escape hatch (see installZoomEscape in solo.js). Only ever visible
+   when the phone is showing a magnified crop of a correct layout, and pinned to
+   the VISUAL viewport so it cannot be off screen at the moment it is needed. */
+.zoom-escape {
+  position: fixed;
+  left: 10px;
+  bottom: 10px;
+  z-index: 60;
+  padding: 10px 14px;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface2);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 45%);
+}
+
+/* ---- HANDOFF (Owner, phone, 2026-09-04) -------------------------------------
+ * Fields an agent handed over, each with its own copy button, so structured
+ * data never has to be selected out of a reflowing terminal. */
+.pane-btn-handoff { position: relative; color: var(--teal); }
+.pane-badge {
+  position: absolute; top: -3px; right: -3px;
+  min-width: 14px; height: 14px; padding: 0 3px;
+  font-family: var(--mono); font-size: 9px; line-height: 14px; text-align: center;
+  color: var(--ink); background: var(--teal); border-radius: 7px;
+}
+.handoff-box { max-width: min(560px, 94vw); }
+.handoff-list {
+  display: flex; flex-direction: column; gap: 10px;
+  max-height: 60vh; overflow-y: auto; margin-bottom: 10px;
+}
+/* Label above value above actions. A row, not a table: the value can be a
+   60-character token and the label two words, and any column layout makes one
+   of them unreadable on a phone. */
+.handoff-row {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 10px; border: 1px solid var(--border2); border-radius: 8px;
+  background: var(--ink);
+}
+.handoff-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--dim);
+}
+/* WRAP, never ellipsise. A truncated credential is worse than useless — it
+   looks like a value and is not one. `anywhere` because tokens have no spaces
+   to break at, and user-select stays on so a desktop user can still drag it. */
+.handoff-value {
+  font-family: var(--mono); font-size: 13px; color: var(--text);
+  overflow-wrap: anywhere; white-space: pre-wrap;
+  -webkit-user-select: text; user-select: text;
+}
+.handoff-acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+/* Sized like Dismiss/Close — the modal's own button vocabulary (Owner,
+   2026-09-04). They were 34/44px for the touch-target floor, which made three
+   of them dominate a card whose actual content is the VALUE above them. Still
+   comfortably tappable; the value's own row is what has to be readable. */
+.handoff-acts .pane-btn { border-color: var(--border2); }
+.handoff-copy { border-color: var(--teal); color: var(--teal); }
+.handoff-copy.is-done { background: color-mix(in srgb, var(--lime) 18%, transparent); color: var(--lime); border-color: var(--lime); }
+
+@media (max-width: 600px) {
+  /* The VALUE gets the phone treatment, not the buttons: it is the thing you
+     have to read before you decide which button to press. */
+  .handoff-value { font-size: 14px; }
+}
+
+/* ---- FABRIC INBOX (Stage 3, engine half) ------------------------------------
+ * Envelopes another agent addressed to this session's slug.
+ *
+ * `attention` is a ROUTER-assigned field the sender may not set (contract §2),
+ * and here it does exactly one thing: pick the badge's colour. It does not
+ * animate, escalate, repeat, or time anything out — the post-it ladder in
+ * the design notes is not built, and a badge that quietly grew half
+ * of it would be the worst possible version of it. The four tones climb in
+ * loudness only: dim -> sky -> amber -> coral. */
+.pane-btn-fabric { position: relative; color: var(--sky); border-color: var(--border2); }
+.pane-fabric-label { margin-left: 5px; font-size: 11px; letter-spacing: .01em; }
+.pane-btn-fabric.at-ambient { color: var(--dim); }
+.pane-btn-fabric.at-notice { color: var(--sky); }
+.pane-btn-fabric.at-ask { color: var(--amber); border-color: var(--amber); }
+.pane-btn-fabric.at-interrupt { color: var(--coral); border-color: var(--coral); }
+
+.fabric-list {
+  display: flex; flex-direction: column; gap: 10px;
+  max-height: 60vh; overflow-y: auto; margin-bottom: 10px;
+}
+.fabric-row {
+  display: flex; flex-direction: column; gap: 5px;
+  padding: 10px; border: 1px solid var(--border2); border-radius: 8px;
+  background: var(--ink);
+}
+.fabric-head { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.fabric-from { font-family: var(--mono); font-size: 12px; color: var(--text); }
+.fabric-tags {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--dim);
+}
+/* WRAP, never ellipsise — same rule the handoff value follows. A truncated
+   message reads as a complete one, which is the failure mode that matters. */
+.fabric-body {
+  font-size: 13px; color: var(--text);
+  overflow-wrap: anywhere; white-space: pre-wrap;
+  -webkit-user-select: text; user-select: text;
+}
+.fabric-ref { font-family: var(--mono); font-size: 12px; color: var(--sky); overflow-wrap: anywhere; }
+
+@media (max-width: 600px) {
+  .fabric-body { font-size: 14px; }
+  /* The label is the first thing to go on a narrow head — the glyph and its
+     colour already say "something arrived", which is the whole job at 320px. */
+  .pane-fabric-label { display: none; }
+}
+
+/* TEXT SIZE lives on the keypad's LAST page (solo.js buildTouchKeypad), not as
+   a floating widget: it is set once, and permanent chrome over a phone
+   terminal costs rows every session to save a tap in one (Owner, 2026-09-20).
+   Sized like its siblings; the label is glyph-width, not a key cap. */
+.kp-font { font-size: .9rem; letter-spacing: .02em; }
+
+/* KEYS HELD WHILE THE SOCKET IS DOWN (2026-09-21). A stalled flow used to be
+   invisible: the pane looked connected and five minutes of typing arrived at
+   once when it recovered. The keys are not lost and the CLI is fine, so this is
+   a quiet strip rather than a modal — and it removes itself when the queue
+   goes out. Above the keypad, clear of the terminal's last line. */
+.pane-queued {
+  position: absolute; z-index: 35;
+  left: 50%; transform: translateX(-50%);
+  bottom: max(3.6rem, calc(env(safe-area-inset-bottom) + 3.6rem));
+  padding: 5px 10px; border-radius: 999px;
+  font-family: var(--mono); font-size: 11.5px;
+  color: var(--ink); background: var(--amber, #e6a817);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .45);
+  pointer-events: none;
+}
+.pane-queued[hidden] { display: none; }

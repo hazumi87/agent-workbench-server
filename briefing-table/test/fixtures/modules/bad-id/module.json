@@ -1,0 +1,1 @@
+{ "id": "bad-id", "name": "Bad id", "version": "0.1.0", "class": "tool", "provides": ["hellocard"], "contexts": ["dashboard"], "actions": "actions.json" }

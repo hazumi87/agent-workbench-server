@@ -1,0 +1,9 @@
+.color-swatches { display:flex; flex-wrap:wrap; gap:10px; --swatch-focus:var(--md-sys-color-primary); }
+.color-swatch { display:grid; place-items:center; position:relative; width:44px; height:44px; flex:none; border-radius:50%; background:var(--md-sys-color-primary); color:var(--md-sys-color-on-primary); cursor:pointer; }
+.color-swatch input { position:absolute; inset:0; width:100%; height:100%; opacity:0; margin:0; cursor:inherit; }
+.color-swatch-check { pointer-events:none; visibility:hidden; font:500 20px/24px var(--font); }
+.color-swatch[data-current="true"] { box-shadow:0 0 0 2px var(--md-sys-color-surface),0 0 0 4px var(--swatch-focus); }
+.color-swatch[data-current="true"] .color-swatch-check { visibility:visible; }
+.color-swatch:has(input:focus-visible) { outline:2px solid var(--swatch-focus); outline-offset:6px; }
+.color-swatches[aria-busy="true"] { cursor:progress; }
+@media(max-width:640px),(pointer:coarse) { .color-swatch { width:48px; height:48px; } }

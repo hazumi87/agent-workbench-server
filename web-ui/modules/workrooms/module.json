@@ -1,0 +1,15 @@
+{
+  "id": "workrooms",
+  "name": "Workrooms",
+  "version": "0.1.0",
+  "description": "The Workrooms tab: your rooms, their people and agents, the conversation, notes and files.",
+  "class": "workrooms",
+  "icon": "apps",
+  "main": "index.js",
+  "entry": "ui/index.html",
+  "settings": "settings.schema.json",
+  "permissions": [
+    "ui.tab",
+    "settings"
+  ]
+}

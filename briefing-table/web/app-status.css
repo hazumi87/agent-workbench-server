@@ -1,0 +1,15 @@
+/* App registration state chip + the "Settings ›" link [ticket, ticket]
+   (web/app-status.mjs). Pinned the design system tokens only: teal = fine, amber = a
+   person must act, dim = out of the catalog. */
+.app-chip {
+  display: inline-flex; align-items: center; gap: 5px; min-height: 20px; padding: 0 8px;
+  border: 1px solid var(--border2); border-radius: 10px; white-space: nowrap;
+  font: 500 11px var(--font); letter-spacing: 0; text-transform: none; color: var(--dim);
+}
+.app-chip i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
+.app-chip[data-state="registered"] { color: var(--teal); border-color: color-mix(in srgb, var(--teal) 45%, transparent); }
+.app-chip[data-state="needs-approval"] { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 55%, transparent); }
+.app-chip[data-state="unregistered-candidate"] { color: var(--dim); }
+.app-set-link { font: 500 12px var(--font); color: var(--sky); text-decoration: none; white-space: nowrap; }
+.app-set-link:hover { text-decoration: underline; }
+.app-set-link:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; border-radius: 3px; }

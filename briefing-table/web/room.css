@@ -1,0 +1,1229 @@
+/* Workroom page — engine-side STAND-IN (the design notes §0.1 Q4).
+   Colours come from the pinned the design system tokens (web/vendor/aurora-tokens.css);
+   the ring's own colours, states and animation belong to hwb-ring.css and are
+   never overridden here — this sheet only sizes and places the ring. */
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+/* THE FRAME IS LOCKED TO THE GLASS [web/room-ios-lock] (Owner 2026-09-28, iPhone:
+   the whole page scrolled and resized around the line, and drew shrunk to ~70%).
+   The installation's phone pattern, as solo/manager have it (KB design-notes-id and
+   its 2026-09-01 correction): html AND body clip (body alone propagates to the
+   viewport and iOS scrolls it anyway), no rubber band or pull-to-refresh, no
+   text inflation, no pinch or double-tap zoom (the JS blockers in
+   web/room-frame.mjs are the other half). The ONLY scrollers are the line
+   (#lineScroll) and the panels / sheets inside the page. */
+html, body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-x pan-y;
+}
+/* a control never double-tap-zooms, so its quick second tap stays a click */
+button, a, input, textarea, select, label, summary, [role="button"] { touch-action: manipulation; }
+body {
+  /* The app's ROOT box. `--app-w` is set only when the browser lays the page
+     out wider than the screen (web/screen-clamp.mjs, iOS Display Zoom); the
+     whole room is inside body, so this is the one lever. */
+  width: var(--app-w, auto);
+  max-width: 100vw;
+  background: var(--ink);
+  color: var(--text);
+  font: 14px/1.4 var(--font);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* THE ROOM COLOUR (round 3, the design system room-round3-v1 §3). room.js sets --room-c to
+     the room's own colour, else the lead's project colour, else neutral. It
+     is IDENTITY: every tone is derived with PINNED lightness so any pick keeps
+     contrast (never paint with the raw pick). Function colours (Send, links,
+     focus, status) stay teal / sky / amber / coral.
+     NOT `--rc`: hwb-ring.css owns --rc (the ring's state colour), and a ring
+     state that sets none of its own INHERITED the room colour from body — a
+     status ring painted in identity [rooms/character]. The tone names below
+     (--rc-ink / -wash / -tint / -edge) are distinct and stay. */
+  --room-c: #5a6672;
+  --rc-ink: oklch(from var(--room-c) .82 clamp(.02, calc(c * .6), .13) h);  /* the room name */
+  --rc-wash: oklch(from var(--room-c) .27 clamp(0, calc(c * .4), .05) h);   /* the header gradient */
+  --rc-tint: oklch(from var(--room-c) .30 clamp(0, calc(c * .45), .06) h);  /* the selected seat's ground */
+  --rc-edge: oklch(from var(--room-c) .45 clamp(0, calc(c * .55), .08) h);  /* its hairline */
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+/* 16px on inputs so iOS does not focus-zoom (the solo/manager rule). */
+input, select, textarea { font-size: 16px; }
+[hidden] { display: none !important; }
+.rm-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.rm-top {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-height: 48px;
+  padding: 6px 8px 6px 16px; border-bottom: 1px solid var(--border);
+  /* the ground is .hwb-barwash (window-chrome v32, room-character.css): the
+     agent tab/bar wash from the room colour, replacing the old left-to-right
+     gradient [rooms/character] */
+}
+.rm-name { font: 600 16px/1.2 var(--display); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--rc-ink); }
+/* ⚙ Room settings: a 36px icon button, top right; pressed = lifted */
+.rm-gear, .pv-x {
+  flex: none; width: 36px; height: 36px; border-radius: var(--corner); border: 0; background: none; color: var(--dim);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
+}
+.rm-gear { margin-left: auto; }
+.rm-push:not([hidden]) ~ .rm-gear { margin-left: 0; }
+.rm-gear svg, .pv-x svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.rm-gear:hover, .pv-x:hover { background: var(--cap-hover); color: var(--text); }
+.rm-gear[aria-pressed="true"] { background: var(--surface3, var(--surface2)); color: var(--text); }
+.rm-gear:focus-visible, .pv-x:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.rm-state { font-size: 12px; color: var(--amber); border: 1px solid currentColor; border-radius: 999px; padding: 0 8px; }
+.rm-push { font-size: 12px; color: var(--dim); margin-left: auto; }
+/* per-seat results of a disconnect / reconnect: one line each, plain */
+.rm-cycleres { display: flex; flex-direction: column; gap: 2px; width: 100%; }
+.rm-cycleres b { font-weight: 600; }
+.rm-cycleres .cy-seat { font-size: 12.5px; color: var(--dim); overflow-wrap: anywhere; }
+.rm-cycleres .cy-seat .h { font-family: var(--mono); color: var(--text); }
+.rm-cycleres .cy-orphan { color: var(--amber); }
+.rm-cycleres .cy-fail { color: var(--coral); }
+.rm-reply.is-cycle { border-color: color-mix(in srgb, var(--room-accent, var(--teal)) 45%, transparent); }
+.rm-reply.is-cycle.has-orphan { border-color: color-mix(in srgb, var(--amber) 60%, transparent); }
+
+.rm-main {
+  flex: 1 1 auto; min-height: 0; position: relative;
+  display: grid; grid-template-columns: 272px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr);
+}
+/* THE PREVIEW COLUMN (round 3): a third column; the main one SHRINKS (no
+   overlay). 320px, never under 280 (the design system: 320, min 280, max 400). Resizable
+   since 2026-09-30: room-rail.css overrides this with the saved width. */
+.rm-main.has-pv { grid-template-columns: 272px minmax(0, 1fr) minmax(280px, 320px); }
+/* ROOM NAV v3: one right column, two contents: the line (room selected) or
+   the seat's framed solo page (a seat selected). Same cell; one is hidden. */
+.rm-roster { grid-column: 1; grid-row: 1; }
+.rm-line, .rm-seatview { grid-column: 2; grid-row: 1; }
+.rm-seatview { position: relative; min-width: 0; min-height: 0; background: var(--ink); }
+.rm-seatview iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; background: var(--ink); }
+.rm-seatnone {
+  padding: 24px 20px; color: var(--dim); font-size: 13px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+}
+.rm-seatnone b { color: var(--text); font-weight: 600; font-family: var(--mono); }
+.rm-seatnone-head { display: flex; align-items: center; gap: 10px; }
+.rm-seatnone p { margin: 0; }
+.rm-switch { display: none; }
+.rm-h { font: 600 12px/1 var(--font); text-transform: uppercase; letter-spacing: .06em; color: var(--dim); margin: 0 0 8px; }
+.rm-lead-none { color: var(--dim); text-transform: none; letter-spacing: 0; margin-left: 6px; }
+
+/* ---- roster = the LEFT COLUMN (the design system room-nav-v3) ---- */
+.rm-roster { overflow-y: auto; padding: 0; border-right: 1px solid var(--border); background: var(--surface); }
+
+/* ---- CELLS (the design system room-cells-v1): header + body, collapsible ---- */
+.cell { border-bottom: 1px solid var(--border2); }
+/* THE RAIL REFRESH [ticket] (Owner 2026-09-29: "the tools in the left column
+   run together"). Each section's TITLE BAR wears its tool's identity tone as a
+   soft wash from the left (where its icon is), fading to the column's ground;
+   the icon and the title take that tone's lifted ink (L .82, the identity
+   register, never the raw colour). The app's body below is untouched. The
+   seats cell is the room's own, so it wears the room colour. Tones are
+   the design system --id-* (categorisation), never the function seven. */
+.cell { --cell-c: var(--dim2); }
+.cell[data-cell="seats"], .cell[data-cell="room"] { --cell-c: var(--room-c); } /* [rail split] both bars wear the room color */
+.cell[data-tone="cobalt"] { --cell-c: var(--id-cobalt); }
+.cell[data-tone="green"] { --cell-c: var(--id-green); }
+.cell[data-tone="orchid"] { --cell-c: var(--id-orchid); }
+.cell[data-tone="violet"] { --cell-c: var(--id-violet); }
+.cell[data-tone="orange"] { --cell-c: var(--id-orange); }
+.cell {
+  --cell-ink: oklch(from var(--cell-c) .82 clamp(.02, calc(c * .6), .13) h);
+  --cell-wash: oklch(from var(--cell-c) .30 clamp(0, calc(c * .40), .065) h);
+}
+.cell > .cell-hw { background: linear-gradient(90deg, var(--cell-wash), var(--surface) 78%); }
+.cell > .cell-hw .cell-h .ic { stroke: var(--cell-ink); }
+.cell > .cell-hw .cell-h .tt { color: var(--cell-ink); }
+.cell > .cell-hw .cell-h:hover .tt { color: color-mix(in oklab, var(--cell-ink) 70%, var(--text)); }
+.cell-hw { display: flex; align-items: center; }
+.cell-hw > .cell-h { flex: 1 1 auto; min-width: 0; }
+.cell-h {
+  display: flex; align-items: center; gap: 8px; width: 100%; height: 32px; padding: 0 10px 0 14px;
+  background: none; border: 0; color: inherit; cursor: pointer; user-select: none; text-align: left;
+}
+.cell-h .ic { width: 14px; height: 14px; fill: none; stroke: var(--dim); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.cell-h .tt { font: 700 .64rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--dim2, var(--dim)); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cell-h .n { font: 500 11px var(--mono); color: var(--dim); }
+.cell-h .chev { color: var(--dim); font-size: 11px; width: 14px; text-align: center; transition: transform .15s; }
+.cell.collapsed .chev { transform: rotate(-90deg); }
+.cell.collapsed .cell-b { display: none; }
+.cell-h:hover .tt { color: var(--dim); }
+.cell-h:focus { outline: none; }
+.cell-h:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+.cell-b { position: relative; }
+.cell-b.app { border-top: 1px solid var(--border); } /* the frame edge: the app's own ground starts here */
+.cell-b.app iframe { display: block; width: 100%; border: 0; background: var(--surface); }
+/* states the HOST draws, never a blank frame */
+.cell-load { height: 96px; background: var(--surface); }
+.cell-err { padding: 12px 14px; font-size: 12.5px; color: var(--dim); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.cell-err b { color: var(--text); font-weight: 600; }
+.cell-retry { background: none; border: 0; padding: 2px 4px; color: var(--room-accent, var(--teal)); font: 500 12.5px var(--font); cursor: pointer; border-radius: var(--corner); }
+.cell-retry:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.cell-toast {
+  position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); z-index: 3; max-width: calc(100% - 20px);
+  padding: 5px 10px; border-radius: var(--corner); background: var(--surface3, var(--surface2)); border: 1px solid var(--border2);
+  font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;
+}
+.cell-toast[data-kind="error"] { border-color: color-mix(in srgb, var(--coral) 60%, transparent); white-space: normal; }
+/* THE BLOCKED BADGE [ticket]: an app cell's title bar while its actions are
+   blocked (held for approval / not registered). A small amber link to
+   Settings → Apps, beside the header (never in it), after the tool's own tone
+   (ticket), which it leaves alone. */
+.cell-badge {
+  flex: none; display: inline-flex; align-items: center; min-height: 20px; margin-right: 6px; padding: 0 7px;
+  border: 1px solid color-mix(in srgb, var(--amber) 55%, transparent); border-radius: 10px;
+  font: 500 11px var(--font); color: var(--amber); text-decoration: none; white-space: nowrap;
+}
+.cell-badge[data-state="unregistered"] { color: var(--dim); border-color: var(--border2); }
+.cell-badge:hover { background: var(--cap-hover); }
+.cell-badge:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+/* the header "+" (Add member on seats, Add file on an upload app): an action, so teal */
+.cell-hadd {
+  flex: none; width: 28px; height: 28px; margin-right: 6px; padding: 0; border: 0; border-radius: var(--corner);
+  background: none; color: var(--room-accent, var(--teal)); font: 500 18px/1 var(--font); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.cell-hadd[hidden] { display: none; }
+.cell-hrec { margin-right: 0; }
+.cell-hrec svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.cell-hrec:disabled { opacity: .5; cursor: default; }
+.cell-hadd:hover { background: var(--cap-hover); }
+.cell-hadd:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+.cell-own { padding: 3px 14px 6px; font-size: 10.5px; color: var(--dim2, var(--dim)); }
+/* the host lightbox (a panel asked: {panel:'open'}) */
+.rm-lb {
+  position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--ink) 88%, transparent); cursor: zoom-out;
+}
+.rm-lb:focus { outline: none; }
+.rm-lb-fig { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; max-width: 92vw; }
+.rm-lb-fig img { max-width: min(80vw, 900px); max-height: 80vh; height: auto; border: 1px solid var(--border2); border-radius: var(--corner); background: var(--surface); }
+.rm-lb-fig figcaption { color: var(--dim); font-size: 12px; text-align: center; overflow-wrap: anywhere; }
+.rm-lb-fig a { color: var(--room-accent, var(--teal)); }
+/* ‹ › over a set of images (room-lightbox-nav.mjs); 44px for a thumb on a phone */
+.rm-lb-nav {
+  position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 64px; padding: 0;
+  display: flex; align-items: center; justify-content: center; font: 400 34px/1 inherit;
+  color: var(--text, #fff); background: color-mix(in srgb, var(--surface) 70%, transparent);
+  border: 1px solid var(--border2); border-radius: var(--corner); cursor: pointer;
+}
+.rm-lb-nav.prev { left: 12px; }
+.rm-lb-nav.next { right: 12px; }
+.rm-lb-nav:hover:not(:disabled) { background: var(--surface); }
+.rm-lb-nav:disabled { opacity: .3; cursor: default; }
+.rm-lb-nav:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 2px; }
+.rm-lb-count { color: var(--dim); font-size: 11px; }
+
+.rm-roster > .rm-h { padding: 0 14px; font: 700 .64rem/1 var(--display); letter-spacing: .1em; color: var(--dim2, var(--dim)); }
+.rm-seats { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+/* a row = the design system list-row selection; the ground is the room tint (round 3) */
+.seat {
+  position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 2px 10px; align-items: center;
+  padding: 8px 12px 8px 11px; border-left: 3px solid transparent; border-bottom: 1px solid var(--border); cursor: pointer;
+}
+.seat:hover:not(.sel) { background: var(--surface2); }
+/* round 3: the selected ground is the ROOM TINT with its edge hairline (no bar) */
+.seat.sel { background: var(--rc-tint); box-shadow: inset 0 0 0 1px var(--rc-edge); }
+.seat:focus { outline: none; }
+.seat:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+/* LEAD: B5, the old-gold plate edge, drawn by the ring bundle (primary) */
+.seat-glyph { grid-row: 1 / 3; width: 28px; height: 28px; display: grid; place-items: center; }
+.seat-ring, .seat-plate { --s: 28px; width: 28px; height: 28px; display: inline-block; }
+.seat-mark { width: 20px; height: 20px; display: inline-block; color: var(--dim); opacity: .8; }
+.seat-mark svg, .seat-ring svg, .seat-plate svg { width: 100%; height: 100%; display: block; }
+.seat-mark svg path { fill: currentColor; }
+.seat-top { grid-column: 2; display: flex; align-items: baseline; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; }
+/* the @name in its project's derived tone, the same as in the line (v2) */
+.seat-handle { font: 500 13.5px/1.25 var(--mono); overflow: hidden; text-overflow: ellipsis; color: var(--pc-ink, var(--text)); }
+.seat.sel .seat-handle { font-weight: 600; }
+.seat.is-room .seat-handle { font: 600 13.5px/1.25 var(--display); }
+.seat-lead { font-size: 11px; color: var(--dim); font-weight: 500; }
+.seat-nudge {
+  /* the design system ruling 2026-09-25 (one class, roster + Assemble modal): an ACTION
+     (rename), so a teal text button, no border */
+  font-size: 11.5px; font-weight: 500; padding: 0 4px; border-radius: var(--corner);
+  background: none; border: 0; color: var(--room-accent, var(--teal)); cursor: pointer;
+}
+.seat-nudge:hover { background: var(--cap-hover); }
+.seat-nudge:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+/* ONE --dim status line: status · (transient policy) · held text */
+.seat-meta { grid-column: 2; font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.seat-worktree { grid-column: 2; font-size: 11.5px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+/* NEEDS YOU [ticket/1886]: the seat's session is stuck on a prompt only a
+   human answers (login / permission / question) — said in the alert colour,
+   with the way to answer it: open its tab */
+.seat-needs { grid-column: 2 / 4; font-size: 12px; color: var(--coral); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.seat-needs-t { font-weight: 600; }
+.seat-needs-open {
+  font: 500 12px var(--font); padding: 0 4px; border-radius: var(--corner);
+  background: none; border: 0; color: var(--room-accent, var(--teal)); cursor: pointer; text-decoration: underline;
+}
+.seat-needs-open:hover { background: var(--cap-hover); }
+.seat-needs-open:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.rm-dchip .nw { font: 600 11.5px var(--font); white-space: nowrap; color: var(--coral); }
+.seat[data-status="never-started"] .seat-status,
+.seat[data-status="empty"] .seat-status { font-style: italic; }
+.seat-side { grid-row: 1 / 3; grid-column: 3; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.seat-count { font: 600 11px/16px var(--mono); color: var(--ink); background: var(--room-accent, var(--teal)); border-radius: 8px; padding: 0 6px; }
+/* Restore / Start: the acts that change a seat's life stay on the row */
+.seat-act {
+  font: 500 11.5px var(--font); color: var(--room-accent, var(--teal)); background: none; cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--room-accent, var(--teal)) 60%, transparent); border-radius: 6px; padding: 3px 8px;
+}
+.seat-act:disabled { opacity: .5; }
+.seat-act:focus-visible { outline: 2px solid color-mix(in srgb, var(--room-accent, var(--teal)) 70%, transparent); outline-offset: 1px; }
+.rm-roster .rm-addform { margin-left: 12px; margin-right: 12px; width: auto; }
+
+/* ---- read state (item 4): quiet, one line, never an alarm ---- */
+.entry-reads { display: flex; flex-wrap: wrap; gap: 2px 12px; margin-top: 3px; font-size: 11px; color: var(--dim); }
+.entry-reads .rd-unknown { font-style: italic; }
+/* held: the one state the user acts on, so its WORD is amber [web/room-phone-7] */
+.entry-reads .rd-held .rd-w { color: var(--amber); }
+/* waking: the person's line is held while a disconnected agent comes up (dim, in motion by words only); NOT DELIVERED is the state the person acts on:
+   coral word, and the one button that fixes it [wake deliver] */
+.entry-reads .rd-waking .rd-w { color: var(--amber); }
+.entry-reads .rd-not-delivered { color: var(--text); display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; }
+.entry-reads .rd-not-delivered .rd-w { color: var(--coral); font-weight: 600; }
+.entry-reads .rd-wake { min-height: 28px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--room-accent, var(--teal)); background: none; color: var(--room-accent, var(--teal)); font: 600 11.5px var(--font); cursor: pointer; } /* coral is the problem; the button is the fix: the room's normal accent */
+.entry-reads .rd-wake:disabled { opacity: .55; cursor: default; }
+.entry-reads .rd-wake:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 2px; }
+@media (max-width: 600px) { .entry-reads .rd-wake { min-height: 40px; } }
+/* [held notice] (Owner 2026-10-11, room lines [ref] / [ref]). The block below is the design system ruling,
+   VERBATIM from styleguide/mockups/room-held-notice-v1.html upstream revision [ticket]: re-pull it, never
+   restyle it here. The page half is web/room.js heldNotice(). */
+/* ==== IMPLEMENT: NOTICE PLATE (web/room.css) ================================================== */
+/* A message of YOURS needs you. Sits under your own bubble, above the read line. Its colors are
+   pinned tokens (tokens.css v36), so it is the same plate in every palette, in Light and Dark,
+   and over room art: it is its own ground, so no halo and no backdrop. */
+.rm-notice {
+  --_bg: var(--notice-bg);
+  grid-column: 2; justify-self: start; margin-top: 5px; max-width: 440px; min-width: 0;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px 12px;
+  padding: 7px 8px 7px 11px; border-radius: 8px;
+  background: var(--_bg); color: var(--notice-ink);
+  border: 1px solid color-mix(in oklab, var(--_bg) 50%, var(--notice-ink)); /* the plate's edge on a light ground */
+  font-size: 13px; line-height: 1.35; text-shadow: none; text-align: left;
+}
+.rm-notice.is-stop { --_bg: var(--notice-bg-stop); }
+.entry.by-user > .rm-notice { grid-column: 1; justify-self: end; }
+/* the notice may be wider than a short bubble: the bubble keeps its own width */
+.entry.by-user:has(> .rm-notice) > .entry-bubble { justify-self: end; }
+.rm-notice-text { flex: 1 1 14em; min-width: 0; overflow-wrap: anywhere; }
+.rm-notice-text b { font-weight: 700; }
+.rm-notice-act {
+  flex: none; min-height: 32px; padding: 0 16px; border-radius: 6px; cursor: pointer;
+  border: 1.5px solid var(--notice-ink); background: var(--notice-ink); color: var(--_bg); font: 600 13px var(--font);
+}
+.rm-notice-act:focus-visible { outline: 2px solid var(--notice-ink); outline-offset: 2px; }
+.rm-notice-act:disabled { background: none; color: var(--notice-ink); cursor: default; } /* waiting: outlined, still 11:1 */
+@media (max-width: 600px) { .rm-notice-act { min-height: 40px; } }
+/* ==== /IMPLEMENT ============================================================================== */
+/* [approval ask] first cut, on the design system plate above (same pinned tokens): the second button is the outlined one, as the waiting Deliver is.
+   the design system has not drawn this yet. */
+.rm-notice-alt { background: none; color: var(--notice-ink); }
+.rm-approval .rm-notice-act + .rm-notice-act { margin-left: -4px; }
+
+/* ---- add member (item 2) ---- */
+.rm-addform {
+  margin-top: 10px; padding: 10px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border2);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.rm-field { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--dim); }
+/* values as .f-row in the manager: 13px, --text; --dim only for placeholders */
+.rm-field select, .rm-field input {
+  min-width: 0; width: 100%; background: var(--ink); border: 1px solid var(--border2); border-radius: 7px; padding: 5px 8px;
+  font-size: 13px; color: var(--text);
+}
+.rm-field input::placeholder { color: var(--dim); }
+.rm-field select:focus-visible, .rm-field input:focus-visible, .rm-addacts button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--room-accent, var(--teal)) 70%, transparent); outline-offset: 1px;
+}
+.rm-addacts .rm-cancel { border-radius: 8px; }
+.rm-addnote { margin: 0; font-size: 12px; color: var(--dim); }
+.rm-adderr { margin: 0; font-size: 12px; color: var(--coral); }
+.rm-addacts { display: flex; gap: 6px; }
+
+/* ---- line ---- */
+.rm-line { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.rm-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding: 8px 16px; }
+.rm-older {
+  display: block; margin: 0 auto 8px; font-size: 12px; padding: 3px 10px; cursor: pointer;
+  background: var(--ghost-fill); border: 1px solid var(--border2); border-radius: 999px; color: var(--dim);
+}
+.rm-feednote { text-align: center; font-size: 13px; color: var(--dim); margin: 6px 12px 10px; line-height: 1.5; }
+.rm-feednote .rm-older { display: inline-block; margin: 0 0 0 4px; }
+.rm-start { text-align: center; font-size: 12px; color: var(--dim); margin: 0 0 8px; }
+/* ---- ROOM AUTHORSHIP v2 (the design system room-authorship-v2, Owner 2026-09-27). The
+   three voices (wr §2.5b) told apart by SIDE and GLYPH, never by a bar: you on
+   the right (a raised neutral bubble + your square picture), agents on the
+   left (their seat glyph + a wash of their project colour), the room's facts
+   centred small and dim. A delivery is a dim line under its message. ---- */
+.rm-entries { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+/* project tones: DERIVED from the seat's --pc with pinned lightness (the @name
+   .82, the wash .25, its edge .34), never the raw colour. No --pc = these are
+   invalid and every use falls back to the neutral token. */
+.entry, .seat, .ph-chip {
+  --pc-ink: oklch(from var(--pc) .82 clamp(.02, calc(c * .6), .13) h);
+  --pc-wash: oklch(from var(--pc) .25 clamp(0, calc(c * .35), .045) h);
+  --pc-edge: oklch(from var(--pc) .34 clamp(0, calc(c * .4), .06) h);
+}
+.entry { display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 8px; align-items: start; max-width: 84%; min-width: 0; }
+.entry:not(.same):not([data-side]) { margin-top: 10px; }
+.entry.by-agent { align-self: flex-start; }
+.entry.by-user { align-self: flex-end; grid-template-columns: minmax(0, 1fr) 28px; }
+.entry.by-user > .entry-glyph { grid-column: 2; grid-row: 1; }
+.entry.by-user > .entry-bubble { grid-column: 1; grid-row: 1; }
+.entry-glyph { width: 28px; height: 28px; display: grid; place-items: center; }
+.entry.same > .entry-glyph { visibility: hidden; } /* one glyph per group */
+.entry-bubble { min-width: 0; padding: 7px 11px 8px; border-radius: 12px; line-height: 1.42; }
+.entry.by-agent .entry-bubble { background: var(--pc-wash, var(--surface)); border: 1px solid var(--pc-edge, var(--border)); }
+.entry.by-user .entry-bubble { background: var(--surface3, var(--surface2)); border: 1px solid var(--border2); }
+.entry.by-agent.same .entry-bubble { border-top-left-radius: 4px; }
+.entry.by-user.same .entry-bubble { border-top-right-radius: 4px; }
+.entry-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; margin-bottom: 1px; font-size: 12px; color: var(--dim); }
+.entry-author { font: 600 13px var(--mono); color: var(--pc-ink, var(--text)); }
+.entry.same .entry-author, .entry.same-to .entry-target { display: none; }
+.entry-kind { text-transform: uppercase; letter-spacing: .05em; font-size: 10px; }
+.entry-via { font-size: 11px; padding: 0 7px; border: 1px solid var(--border2, var(--border)); border-radius: 999px; color: var(--dim); } /* a line a panel action posted [ticket] */
+.entry-ts { margin-left: auto; padding-left: 10px; font: 400 11px var(--mono); color: var(--dim2, var(--dim)); }
+.entry-body { white-space: pre-wrap; overflow-wrap: anywhere; }
+/* @names in message text: a seat's in its project ink (the tone its @name
+   wears; --pc from #seatTones, reset here so the AUTHOR's colour never leaks
+   onto a seat without one), yours in the room's ink, anything else plain. */
+.mention[data-tone="seat"] {
+  --pc: initial;
+  --pc-ink: oklch(from var(--pc) .82 clamp(.02, calc(c * .6), .13) h);
+  color: var(--pc-ink, var(--text)); font-weight: 600;
+}
+.mention[data-tone="user"] { color: var(--rc-ink); font-weight: 600; }
+.entry.k-command .entry-body { font-family: var(--mono); }
+/* the room's own lines: centred, 12px, dim, no bubble, no glyph */
+.entry.by-room { display: block; align-self: center; max-width: 92%; text-align: center; font-size: 12px; color: var(--dim); }
+.entry.by-room:not([data-side]) { margin: 10px 0 6px; }
+.entry.by-room .entry-body { color: var(--dim); }
+/* a delivery: a dim line under its message, on that message's side */
+.entry.by-room[data-side] { font-size: 11.5px; text-align: left; margin: 0 0 2px; }
+.entry.by-room[data-side="user"] { align-self: flex-end; margin-right: 36px; }
+.entry.by-room[data-side="agent"] { align-self: flex-start; margin-left: 36px; }
+.entry.by-room[data-side] .entry-ts { font: inherit; padding: 0; color: inherit; }
+/* the read line sits under the bubble, on its side */
+.entry > .entry-reads { grid-column: 2; }
+.entry.by-user > .entry-reads { grid-column: 1; justify-content: flex-end; }
+/* YOUR glyph: a square picture (rounded like every chrome square), else your
+   initial on the raised neutral ground, in the same square */
+.you {
+  width: 28px; height: 28px; border-radius: 7px; overflow: hidden; flex: none;
+  border: 1px solid var(--border2); background: var(--surface3, var(--surface2));
+  display: grid; place-items: center; font: 700 13px var(--display); color: var(--text);
+}
+.you img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.you.big { width: 64px; height: 64px; border-radius: 14px; font-size: 26px; }
+
+.rm-reply {
+  margin: 0 16px 6px; padding: 8px 10px; border-radius: 8px; font-size: 13px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+  background: var(--surface2); border: 1px solid var(--border2);
+}
+.rm-reply.is-refused, .rm-reply.is-error { border-color: color-mix(in srgb, var(--coral) 60%, transparent); }
+.rm-reply.is-confirm { border-color: color-mix(in srgb, var(--amber) 60%, transparent); }
+.rm-newer-draft {
+  margin: 0 16px 6px; padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;
+  align-self: flex-start; color: var(--dim); background: var(--surface2); border: 1px solid var(--border2);
+}
+.rm-newer-draft:hover { color: var(--text); }
+.rm-newer-draft[hidden] { display: none; }
+.rm-delivery { margin: 6px 0 8px; padding: 0 16px; font-size: 12px; color: var(--dim); overflow-wrap: anywhere; } /* the entries' own 6px gap (the design system) */
+/* CHAR LIMIT [ticket]: the same status line, in --coral, while a char-limit
+   note is showing (room.js's paintDeliveryLine picks which text). */
+.rm-delivery.rm-delivery-danger { color: var(--coral); }
+.rm-suggest { color: var(--sky); font-family: var(--mono); }
+.rm-confirm, .rm-cancel, .rm-help-close {
+  padding: 4px 12px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border2); background: var(--ghost-fill);
+}
+.rm-confirm { border-color: var(--amber); color: var(--amber); }
+
+.rm-help { margin: 0 16px 6px; padding: 8px 10px; border-radius: 8px; background: var(--surface2); max-height: 40vh; overflow: auto; }
+.rm-help-head { display: flex; justify-content: space-between; align-items: center; font-weight: 600; margin-bottom: 6px; }
+.rm-verbs { width: 100%; border-collapse: collapse; font-size: 12px; }
+.rm-verbs td { padding: 3px 6px; vertical-align: top; border-top: 1px solid var(--border); }
+.rm-verb-usage { font-family: var(--mono); white-space: nowrap; }
+.rm-verb[data-class="not-in-build"] { color: var(--dim); }
+.rm-help-foot { font-size: 12px; color: var(--dim); margin: 6px 0 0; }
+.rm-help-sub { margin-top: 12px; }
+.rm-help-x { width: 28px; height: 28px; border: 0; border-radius: 6px; background: none; color: var(--dim); font-size: 14px; cursor: pointer; }
+.rm-help-x:hover { background: var(--surface3, var(--border)); color: var(--text); }
+.rm-help-x:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.rm-ask-chip { display: inline-block; margin-left: 4px; padding: 0 7px; border-radius: 9px; border: 1px solid var(--border2, var(--border)); color: var(--dim); font-size: 11px; line-height: 16px; white-space: nowrap; vertical-align: 1px; }
+.entry-reads .rd-waking { display: inline-flex; align-items: center; gap: 6px; }
+.entry-reads .rd-ring { display: inline-flex; flex: none; }
+.rm-help-note { font-size: 12px; color: var(--dim); margin: 0 0 6px; }
+.rm-verb-ask { cursor: pointer; }
+.rm-verb-ask:hover td, .rm-verb-ask:focus-visible td { background: var(--surface3, var(--border)); }
+.rm-verb-ask:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+@media (max-width: 600px) { .rm-verbs-agent td { padding: 9px 6px; } .rm-help-x { width: 40px; height: 40px; } }
+
+.rm-compose { display: flex; gap: 12px; padding: 9px 16px 10px; border-top: 1px solid var(--border); align-items: flex-end; }
+/* THE COMPOSER ON ART (Owner 2026-10-04; hub v2 2026-10-05): the bar gets its own ground so it does not float on a
+   tile, and the box a prominent outline: the room accent at 75% with an ink gap (the focus look, always on). */
+.rm-compose { position: relative; z-index: 2; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border-top-color: var(--border2); }
+.rm-inputwrap { position: relative; flex: 1 1 auto; min-width: 0; }
+.rm-inputwrap textarea {
+  display: block; /* inline-block left a descender gap under it, so Send sat lower than the box (Owner) */
+  width: 100%; resize: none; min-height: 40px; max-height: 30vh; padding: 8px 10px;
+  background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px;
+  line-height: 22px; overflow-y: auto;
+}
+/* one line, ellipsised: a long hint must not wrap into a box sized for one
+   line (it was cut through at 390px — the design system) */
+/* the message box: no border, the ring instead (the over-limit rules below still win: coral border) */
+.rm-inputwrap textarea { border-color: transparent; box-shadow: 0 0 0 1px var(--ink), 0 0 0 3px color-mix(in srgb, var(--room-accent, var(--teal)) 75%, transparent); }
+.rm-inputwrap textarea:focus-visible { outline: none; box-shadow: 0 0 0 1px var(--ink), 0 0 0 3px var(--room-accent, var(--teal)); }
+.rm-inputwrap textarea::placeholder { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* CHAR LIMIT [ticket]: within ~12 chars of the 4000 send cap, the border
+   turns coral. Past it, the mirrored backdrop (#inputHi, painted by room.js)
+   shows through a transparent-text textarea so the overflow renders coral —
+   a textarea cannot color part of its own text. Caret, selection, IME,
+   paste and Ctrl-A/Ctrl-C are untouched: only color/background change. */
+.rm-inputwrap textarea.rm-near-limit { border-color: var(--coral); }
+.rm-inputwrap textarea.rm-near-limit:focus-visible { outline-color: color-mix(in srgb, var(--coral) 70%, transparent); }
+.rm-inputwrap textarea.rm-over-limit { position: relative; z-index: 1; background: transparent; color: transparent; caret-color: var(--text); }
+.rm-inputhi {
+  position: absolute; inset: 0; margin: 0; padding: 8px 10px; border: 1px solid transparent; border-radius: 8px;
+  font: inherit; line-height: 22px; overflow: hidden; white-space: pre-wrap; word-wrap: break-word; word-break: break-word;
+  pointer-events: none; color: var(--text); z-index: 0;
+}
+.rm-inputhi .over { color: var(--coral); }
+.rm-send {
+  flex: 0 0 40px; width: 40px; height: 40px; min-height: 40px; padding: 0; border-radius: 8px;
+  border: 1px solid var(--room-accent, var(--teal)); color: var(--room-accent, var(--teal)); background: var(--ghost-fill); cursor: pointer;
+  font-size: 20px; line-height: 1; display: inline-flex; align-items: center; justify-content: center;
+}
+.rm-send:disabled { opacity: .5; }
+.rm-complete {
+  position: absolute; left: 0; bottom: calc(100% + 4px); z-index: 5; list-style: none; margin: 0; padding: 4px;
+  min-width: 180px; max-width: 100%; max-height: 200px; overflow-y: auto;
+  background: var(--surface3); border: 1px solid var(--border2); border-radius: 8px;
+}
+.rm-opt { padding: 4px 8px; border-radius: 5px; font-family: var(--mono); cursor: pointer; }
+.rm-opt.is-active { background: color-mix(in srgb, var(--room-accent, var(--teal)) 25%, transparent); }
+
+/* THE "/" COMMAND LIST [slash list] (the design system [ref]): opens above the box, the box's width, at most 6 rows (4 on a phone) of 56 px,
+   never over 40% of the window. Two lines a row: the command with its arguments dimmed, then one dimmed description. */
+.rm-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.rm-complete.rm-cmds {
+  right: 0; max-width: none; min-width: 0; padding: 4px;
+  max-height: min(40vh, 340px); overscroll-behavior: contain;
+  background: var(--surface3); backdrop-filter: blur(var(--bubble-blur, 5px)); -webkit-backdrop-filter: blur(var(--bubble-blur, 5px));
+  animation: rm-cmds-in .1s linear;
+}
+@keyframes rm-cmds-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .rm-complete.rm-cmds { animation: none; } }
+.rm-cmds .rm-cmd {
+  display: flex; flex-direction: column; justify-content: center; gap: 2px; height: 56px; min-height: 56px; box-sizing: border-box;
+  padding: 6px 10px; border-radius: 6px; cursor: pointer; font-family: var(--font);
+}
+.rm-cmds .rm-cmd:hover { background: color-mix(in srgb, var(--room-accent, var(--teal)) 12%, transparent); }
+.rm-cmds .rm-cmd.is-active { background: color-mix(in srgb, var(--room-accent, var(--teal)) 22%, transparent); outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+.rm-cmds .rm-cmd.is-hint, .rm-cmds .rm-cmd-none { cursor: default; }
+.rm-cmd-u { font-family: var(--mono); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rm-cmd-u b { font-weight: 700; color: var(--text); }
+.rm-cmd-a { color: var(--dim); }
+.rm-cmd-d { color: var(--dim); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rm-cmd-head {
+  list-style: none; padding: 6px 10px 2px; font: 600 11px/1 var(--font); text-transform: uppercase; letter-spacing: .06em; color: var(--dim);
+}
+@media (max-width: 600px) {
+  .rm-complete.rm-cmds { max-height: min(40vh, 232px); }
+}
+.rm-picker { padding: 16px; overflow-y: auto; }
+.rm-rooms a { color: var(--sky); }
+
+/* ---- THE PREVIEW COLUMN (round 3, the design system room-round3-v1 §2; room-preview.mjs).
+   No accent bar: a 1px --border2 edge, a soft shadow and the --surface ground. ---- */
+.rm-pv {
+  grid-column: 3; grid-row: 1; position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column;
+  background: var(--surface); border-left: 1px solid var(--border2); box-shadow: -10px 0 24px -14px rgba(0, 0, 0, .7);
+}
+.rm-pv:focus { outline: none; }
+.pv-h { display: flex; align-items: center; gap: 4px; height: 48px; flex: none; padding: 0 6px 0 14px; border-bottom: 1px solid var(--border); }
+.pv-t {
+  flex: 1; min-width: 0; font: 600 11.5px var(--font); letter-spacing: .05em; text-transform: uppercase; color: var(--dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pv-t:not(.no-type) .pv-type::after { content: ' · '; }
+.pv-t b { color: var(--text); letter-spacing: 0; text-transform: none; font-size: 13px; }
+.pv-back { display: none; }
+.pv-trail {
+  display: block; width: 100%; flex: none; text-align: left; padding: 8px 14px; font: 400 12.5px var(--font); color: var(--sky);
+  background: none; border: 0; border-bottom: 1px solid var(--border); cursor: pointer;
+}
+.pv-trail:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+.pv-b { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 14px; position: relative; }
+/* a VIEW (the panel's own app at a sub-path) fills the body */
+.pv-view { position: absolute; inset: 0; }
+.pv-frame { position: absolute; inset: 0; }
+.pv-frame iframe { display: block; width: 100%; height: 100%; border: 0; background: var(--surface); }
+.pv-frame .cell-load { height: 100%; }
+/* an ITEM: image (→ the lightbox), status, meta, excerpt, actions */
+.pv-img { display: block; width: 100%; padding: 0; border: 1px solid var(--border); border-radius: var(--corner); background: var(--surface2); cursor: zoom-in; overflow: hidden; }
+.pv-img img { display: block; width: 100%; height: auto; max-height: 60vh; object-fit: contain; }
+.pv-img:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.pv-status { margin: 10px 0 0; font-size: 13px; font-weight: 600; }
+.pv-meta { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; margin: 10px 0; font-size: 12px; line-height: 1.6; color: var(--dim); }
+.pv-meta dd { margin: 0; color: var(--text); overflow-wrap: anywhere; }
+.pv-excerpt { margin: 10px 0; font-size: 13px; color: var(--dim); line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pv-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.pv-btn {
+  display: inline-flex; align-items: center; min-height: 32px; padding: 0 11px; border-radius: 8px; font: 400 12.5px var(--font);
+  border: 1px solid var(--border2); background: none; color: var(--text); text-decoration: none; cursor: pointer;
+}
+.pv-btn.pri { border-color: var(--room-accent, var(--teal)); color: var(--room-accent, var(--teal)); }
+.pv-btn:hover { background: var(--cap-hover); }
+.pv-btn:focus-visible, .pv-chip:focus-visible, .pv-swatch:focus-visible, .pv-sel:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+/* Room settings */
+.pv-set h4 { font: 700 .64rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--dim2, var(--dim)); margin: 4px 0 8px; }
+.pv-inh-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 4px 0; font-size: 13px; }
+.pv-inh-row .k { min-width: 110px; color: var(--dim); }
+.pv-inh-row .v { flex: 1 1 auto; }
+.pv-live-row { display: none; }
+.tw-keys { display: none; }
+html.touch-wide .tw-keys { display: block; }
+.tw-keys-grid { display: grid; grid-template-columns: repeat(3, minmax(44px, 1fr)); gap: 6px; padding: 8px 10px 4px; }
+.tw-keys-grid button {
+  min-width: 44px; height: 48px; padding: 0 4px; border-radius: var(--corner); border: 1px solid var(--border2);
+  background: var(--surface2); color: var(--text); font: 500 17px var(--mono); cursor: pointer; touch-action: manipulation;
+}
+.tw-keys-grid button.kp-wide { font-size: 14px; }
+.tw-keys-grid button svg.kp-nl { width: 26px; height: 20px; }
+.tw-keys-grid button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.tw-keys-grid button:active { background: var(--surface3, var(--surface2)); }
+.tw-keys-grid button:disabled { opacity: .4; cursor: default; }
+.tw-keys-grid button:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.tw-keys-note { margin: 0; padding: 0 12px 10px; font-size: 12px; color: var(--dim); }
+.tw-keys-note:empty { display: none; }
+.pv-wg-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 4px 0; }
+.pv-wg-sw { width: 28px; height: 28px; flex: none; border-radius: 7px; border: 1px solid var(--border2); background: var(--c); cursor: pointer; padding: 0; }
+.pv-wg-sw[data-set="false"] { background: repeating-linear-gradient(135deg, var(--surface2) 0 5px, var(--surface3, var(--surface2)) 5px 10px); }
+.pv-wg-sw:focus-visible, .pv-wg-name:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.pv-wg-name { flex: 1 1 140px; min-width: 0; height: 32px; box-sizing: border-box; padding: 0 8px; border-radius: 7px; border: 1px solid var(--border2); background: var(--surface2); color: var(--text); font-family: inherit; }
+.pv-wg-alias { color: var(--dim); font-size: 12px; }
+.pv-wg-msg { flex: 1 1 100%; margin: 0; }
+.pv-wg-msg:empty { display: none; }
+.pv-grp { padding: 0 0 16px; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
+.pv-grp:last-child { border-bottom: 0; }
+.pv-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.pv-chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border: 1px solid var(--border2);
+  border-radius: 15px; background: none; font-size: 12.5px; cursor: pointer;
+}
+.pv-chip[aria-pressed="true"] { background: var(--surface3, var(--surface2)); border-color: var(--text); }
+.pv-chip[aria-pressed="true"]::before { content: '✓'; font-size: 11px; }
+.pv-sel { width: 100%; min-height: 34px; margin-top: 8px; border-radius: 8px; border: 1px solid var(--border2); background: var(--surface2); padding: 0 10px; font-size: 13px; }
+.pv-note { font-size: 11.5px; color: var(--dim); margin: 8px 0 0; line-height: 1.45; }
+.pv-msg { font-size: 12px; color: var(--dim); margin: 6px 0 0; }
+.pv-msg:empty { display: none; }
+.pv-msg[data-kind="error"] { color: var(--coral); }
+.pv-sw { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+.pv-swatch { aspect-ratio: 1; padding: 0; border-radius: 8px; border: 1px solid var(--border2); background: var(--c); cursor: pointer; }
+.pv-swatch[aria-pressed="true"] { outline: 2px solid var(--text); outline-offset: 2px; }
+.pv-pal { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 12px; }
+.pv-tone { height: 40px; border-radius: 6px; border: 1px solid var(--border); display: flex; align-items: flex-end; padding: 3px 5px; font: 500 9.5px var(--mono); color: var(--text); }
+.pv-tone.t-tab { background: var(--room-c); }
+.pv-tone.t-ink { background: var(--surface); color: var(--rc-ink); }
+.pv-tone.t-wash { background: var(--rc-wash); }
+.pv-tone.t-tint { background: var(--rc-tint); border-color: var(--rc-edge); }
+.pv-tone.t-edge { background: var(--surface); box-shadow: inset 0 0 0 2px var(--rc-edge); }
+/* Your picture + your @name: moved to global Settings (web/settings.css) —
+   Owner 2026-09-30. The room's ⚙ column only links there now (youSettingsLink,
+   web/room.js), so .pv-pic / .pv-handle / .pv-lbl / .pv-in and friends no
+   longer have anything to style here. */
+
+/* ---- desktop: none of the phone's pieces ---- */
+.ph-home, .ly-bar, .rm-appview, .ly-edge, .ph-scrim, .ph-sheet { display: none; }
+
+/* THE DELIVERY CHIPS ON EVERY WIDTH [ticket] (Owner 2026-09-29: "PC and web
+   still show '→ briefing-table not live'-style notices; use the phone's status
+   and activity presentation there too"). The phone round's readout (the
+   addressed seats' ring + @handle in their project ink, the ring animating
+   while they work) replaces the text report on the desktop too. Where each
+   copy got to stays the read line under your bubble (.entry-reads), as on the
+   phone. The char-limit note is the one thing that still speaks in the
+   delivery line. The phone block below re-states these for its own chip
+   geometry; this is the desktop's. */
+.rm-delivery { display: none; }
+.rm-delivery.rm-delivery-danger { display: block; }
+.rm-dchips {
+  display: flex; flex: none; gap: 10px; align-items: center; overflow-x: auto; overflow-y: hidden; min-width: 0;
+  padding: 6px 16px; margin: -2px 0; scrollbar-width: none; overscroll-behavior-x: contain; pointer-events: none;
+}
+.rm-dchips[hidden] { display: none; }
+.rm-dchips::-webkit-scrollbar { display: none; }
+.rm-dchip {
+  position: relative; flex: none; display: inline-flex; align-items: center; gap: 5px; pointer-events: auto;
+  min-height: 20px; height: 20px; padding: 0; border: 0; border-radius: 0; background: none;
+  color: var(--dim); font-size: 12px; cursor: pointer;
+}
+.rm-dchip::after { content: ''; position: absolute; left: -3px; right: -3px; top: -6px; bottom: -6px; }
+.rm-dchip .seat-ring, .rm-dchip .seat-plate, .rm-dchip .seat-mark { --s: 18px; width: 18px; height: 18px; }
+.rm-dchip .h { font: 400 12px var(--mono); white-space: nowrap; color: var(--pc-ink, var(--text)); }
+.rm-dchip:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 3px; }
+.rm-layer { display: contents; }
+
+/* THE SOFT KEYBOARD AT ANY WIDTH [ipad kb] Owner 2026-10-05 (iPad, landscape: the keyboard covered the message box):
+   html.kb-up and --vvh are set by the tracker (web/soft-keyboard.mjs) on any touch device, so the page shrinks to what the
+   keyboard leaves and the composer stays in view on an iPad as on a phone. Only the keyboard rules are lifted out of the
+   phone block; the layout is not. */
+html.kb-up body { height: var(--vvh, 100%); position: relative; top: var(--vv-top, 0px); }
+html.kb-up .rm-inputwrap textarea { max-height: var(--ta-max, 30vh); }
+
+/* ---- ROOM ON PHONE v1 (≤600px, the design system room-phone-v1): the LINE is home; an
+   agent or an app is a full-screen LAYER sliding over it; lists are bottom
+   SHEETS. Rows, glyphs, colours and words are the desktop column's. ---- */
+@media (max-width: 600px) {
+  /* 100svh, NOT 100dvh (solo.css, 2026-09-01): svh excludes the strip behind
+     Edge-on-iOS's bottom bars. --vvh (web/room-frame.mjs) is the visual
+     viewport and is set ONLY while the soft keyboard is up, so the composer
+     sits above the keys; it is never the default. */
+  html { height: 100svh; }
+  body { height: var(--vvh, 100svh); }
+  /* keyboard up: the room sits IN the visible viewport, which iOS may pan
+     down the layout viewport (--vv-top = visualViewport.offsetTop). A relative
+     offset, not a transform: a transform would make body the containing block
+     of every fixed sheet and menu. [web/room-ios-keyboard] */
+  html.kb-up body { position: relative; top: var(--vv-top, 0px); }
+  /* ...and the jump strip steps aside while typing: at a 254px visible
+     viewport (Owner's 320x522 with the keys up) header + strip + a composer
+     holding attachments is taller than the glass, and the composer is what
+     fell off the bottom. The header stays (the way to the apps / agents). */
+  html.kb-up .ph-strip { display: none; }
+  /* ...and if the glass is shorter still (a predictive bar, a composer holding
+     attachments), the HEADER gives way, never the composer: the line column
+     is at least as tall as its composer (flex-shrink 0 on a basis that counts
+     the composer but not the line's content, which has basis 0), and the
+     header takes what is left, clipped. */
+  html.kb-up .ph-home { flex: 0 1 auto; min-height: 0; overflow: hidden; }
+  html.kb-up .rm-line { flex: 1 0 auto; }
+  html.kb-up .rm-scroll { flex: 1 1 0; }
+  /* ...and the input box's cap is what is LEFT of the visible viewport
+     (room.js capComposer writes --ta-max) [web/room-phone-7] */
+  html.kb-up .rm-inputwrap textarea { max-height: var(--ta-max, 30vh); }
+  .rm-top .rm-name { display: none; }
+  .rm-top:not(:has(> .rm-push:not([hidden]), > .rm-state:not([hidden]))) { display: none; }
+  .rm-main { display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  /* the desktop column is not on the phone; Add member's A2 form borrows it */
+  .rm-roster { display: none; }
+  .rm-main.adding .rm-roster { display: block; position: absolute; inset: 0; z-index: 30; overflow-y: auto; border-right: 0; }
+  .rm-main.adding .rm-roster > .cell:not([data-cell="seats"]), .rm-main.adding #panelCells, .rm-main.adding #roster { display: none; }
+  .rm-line { flex: 1 1 auto; min-height: 0; }
+  /* PHONE BUBBLE WIDTH (Owner 2026-09-29): no indent on the far side. An
+     incoming line runs from its glyph to the right edge, yours from the left
+     edge to your glyph; the 84% cap was wasting a sixth of a 320px screen. */
+  .entry:not(.by-room) { max-width: 100%; }
+  /* home: header + jump strip */
+  .ph-home { display: block; flex: none; }
+  /* THE HEADER [web/room-phone-7], REORDERED (Owner 2026-10-02, phone header
+     order). Flat grid, two rows in the same ~56px. The line toggle (grid
+     glyph, the "rail menu") sits at the far left like a hamburger, spanning
+     both rows. Row 1 is the room NAME alone, full width, ellipsis at the right
+     edge. Row 2, left to right: the room mark (shrunk to fit the row), the
+     agents button, "N agents" / "M apps" on two stacked lines, then the filter and settings
+     buttons at the right.
+     [web/room-phone-7b] The icon buttons' VISUAL box is 32px tall and sits
+     wholly under the name row (a pressed / hover box never covers the name,
+     IMG_7669); an invisible ::before takes the tap target back to 44px, 6px
+     each way, so the header's height is unchanged. */
+  .ph-hdr {
+    display: grid; grid-template-columns: 44px auto 44px minmax(0, 1fr) 44px 44px 44px; grid-template-rows: auto auto; /* the 7th column: search [search ui] */
+    align-items: center; min-height: 52px; padding: 2px 6px 2px 4px; border-bottom: 1px solid var(--border);
+  } /* ground: .hwb-barwash [rooms/character] */
+  #phLine { grid-column: 1; grid-row: 1 / 3; }
+  .ph-name {
+    grid-column: 2 / 7; grid-row: 1; min-width: 0; padding: 0 12px 0 6px; font-size: 16px; line-height: 20px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--rc-ink);
+  }
+  .ph-brief { grid-column: 7; grid-row: 1; justify-self: center; display: grid; } /* [room brief] */
+  .ph-g { grid-column: 2; grid-row: 2; width: 22px; height: 22px; margin: 0 2px 0 6px; display: grid; place-items: center; flex: none; }
+  .ph-g .seat-ring { --s: 22px; width: 22px; height: 22px; }
+  #phAgents { grid-column: 3; grid-row: 2; }
+  .ph-meta { grid-column: 4; grid-row: 2; min-width: 0; padding-left: 2px; font-size: 11.5px; line-height: 14px; color: var(--dim); }
+  .ph-meta > span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #phSearch { grid-column: 5; grid-row: 2; }
+  #phFilter { grid-column: 6; grid-row: 2; }
+  #phGear { grid-column: 7; grid-row: 2; }
+  /* ONE rule for every icon button in the header (line toggle, agents, filter,
+     settings, and any later one): same box, same padding, same pressed / hover
+     box. Never per-button. */
+  .ph-hdr .ph-ib { width: 44px; min-width: 44px; height: 32px; padding: 0; }
+  .ph-hdr .ph-ib[aria-pressed="true"] { color: var(--text); background: var(--surface2); }
+  @media (hover: hover) { .ph-hdr .ph-ib:hover { color: var(--text); background: var(--surface2); } }
+  .ph-hdr .ph-ib::before { content: ''; position: absolute; left: 0; right: 0; top: -6px; bottom: -6px; }
+  .ph-hdr .ph-ib .dot { top: 3px; right: 9px; }
+  .ph-hdr .ph-ib .vbadge { top: -2px; }
+  .ph-ib {
+    position: relative; min-width: 44px; height: 44px; border-radius: var(--corner); border: 0; background: none;
+    display: inline-flex; align-items: center; justify-content: center; color: var(--dim); cursor: pointer; flex: none;
+  }
+  .ph-ib:active { background: var(--surface2); }
+  .ph-ib:focus-visible, .ly-back:focus-visible, .ph-chip:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+  .ph-ib svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .ph-ib .n { position: absolute; top: 6px; right: 4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--surface3, var(--surface2)); color: var(--text); font: 600 10px/16px var(--mono); }
+  .ph-ib .dot, .ph-chip .dot { position: absolute; top: 9px; right: 9px; width: 8px; height: 8px; border-radius: 50%; background: var(--coral); }
+  .ph-strip { display: flex; gap: 6px; overflow-x: auto; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--surface); scrollbar-width: none; }
+  .ph-strip::-webkit-scrollbar { display: none; }
+  .ph-strip:empty, .ph-strip[hidden] { display: none; }
+  .ph-chip {
+    position: relative; flex: none; display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 12px 0 8px;
+    border: 1px solid var(--border2); border-radius: var(--corner); background: var(--surface2); color: var(--text); font-size: 13px; cursor: pointer;
+  }
+  .ph-chip .seat-ring, .ph-chip .seat-plate, .ph-chip .seat-mark { --s: 24px; width: 24px; height: 24px; }
+  .ph-chip .h { font-family: var(--mono); font-weight: 500; }
+  .ph-chip svg.ic { width: 18px; height: 18px; fill: none; stroke: var(--dim); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .ph-chip .dot { top: 4px; right: 4px; }
+  /* the CLI Manager chip, first on the line [web/room-phone-7] */
+  .ph-chip.ph-places { font-weight: 600; }
+  .ph-chip.ph-places svg.ic { stroke: var(--room-accent, var(--teal)); }
+
+  /* THE DELIVERY CHIPS [web/room-phone-7]: the text report over the composer
+     becomes each addressed seat's live chip (the strip's); one row that
+     scrolls sideways inside itself, never wraps, never widens the page */
+  .rm-delivery { display: none; }
+  /* CHAR LIMIT [ticket]: the char-limit note must still be readable on a
+     phone, where the delivery report is normally hidden in favour of the
+     chips row (item 5: phone and desktop both). */
+  .rm-delivery.rm-delivery-danger { display: block; }
+  .rm-dchips {
+    display: flex; flex: none; gap: 6px; overflow-x: auto; overflow-y: hidden; padding: 4px 10px 6px; min-width: 0;
+    scrollbar-width: none; overscroll-behavior-x: contain;
+  }
+  .rm-dchips[hidden] { display: none; }
+  .rm-dchips::-webkit-scrollbar { display: none; }
+  .rm-dchip .h { white-space: nowrap; }
+  /* a seat's @handle wears its project ink, as its bubble's author name does
+     (the strip and the readout below) [web/room-phone-7b] */
+  .ph-chip[data-seat] .h { color: var(--pc-ink, var(--text)); }
+  /* THE READOUT [web/room-phone-7b] (Owner: "more like the spinner in CLI than
+     a button"): no box, no border, no padding; the ring + a small @handle,
+     inline. The row's flow height is 24px; its 6px padding each way is pulled
+     back by negative margins (and passes taps through), so each chip's
+     invisible ::after gives a 32px tap target without a taller row. */
+  .rm-dchips { gap: 8px; align-items: center; padding: 6px 12px; margin: -4px 0; pointer-events: none; }
+  .rm-dchip {
+    pointer-events: auto; min-height: 20px; height: 20px; padding: 0; gap: 5px; border: 0; border-radius: 0;
+    background: none; color: var(--dim); font-size: 12px;
+  }
+  .rm-dchip::after { content: ''; position: absolute; left: -3px; right: -3px; top: -6px; bottom: -6px; }
+  .rm-dchip .seat-ring, .rm-dchip .seat-plate, .rm-dchip .seat-mark { --s: 18px; width: 18px; height: 18px; }
+  .rm-dchip .h { font-weight: 400; font-size: 12px; }
+
+  /* the CLI Manager sheet's rows (web/room-places.mjs): the column's .seat
+     rows, a breath of each room's colour from the left, its art mark ghosted
+     behind the name, and an "Open in new tab" icon at the end */
+  .ph-sheet .pl-row { isolation: isolate; overflow: hidden; }
+  .ph-sheet .pl-row.pl-tinted { background: linear-gradient(90deg, color-mix(in srgb, var(--pl-c) 22%, transparent), transparent 70%); }
+  /* the mark sits toward the RIGHT, just before the new-tab icon, clear of
+     the room glyph on the left [web/room-phone-7b] */
+  .pl-mark { position: absolute; right: 60px; top: 50%; width: 52px; height: 52px; transform: translateY(-50%); opacity: .16; z-index: -1; pointer-events: none; color: var(--text); }
+  .pl-mark > span, .pl-mark svg { display: block; width: 100%; height: 100%; fill: currentColor; }
+  .pl-new {
+    width: 40px; height: 40px; border: 0; border-radius: var(--corner); background: none; color: var(--dim); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .pl-new svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .pl-new:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+  .pl-note { padding: 8px 16px 14px; margin: 0; }
+
+  /* the line's filter on the phone: the rows (no bar over the line — Owner 2026-09-28) */
+  /* a filter row is the design system .hwb-lift (v31, no bar): pressed = LIFTED, in
+     the room tint + its edge (round 3), and a ✓ on the right */
+  .ph-frow {
+    display: flex; align-items: center; width: calc(100% - 16px); margin: 2px 8px; min-height: 56px; padding: 0 16px;
+    background: none; color: var(--text); font-size: 15px; text-align: left; cursor: pointer;
+    --lift-bg: var(--rc-tint); --lift-edge: var(--rc-edge);
+  }
+  .ph-frow[aria-pressed="true"]::after { content: '✓'; margin-left: auto; color: var(--text); }
+  .ph-ib .dot.on { background: var(--room-accent, var(--teal)); }
+  /* a layer: full screen, slides in from the right over the line */
+  .rm-layer {
+    display: flex; flex-direction: column; position: absolute; inset: 0; z-index: 10; background: var(--ink);
+    transform: translateX(100%); visibility: hidden; box-shadow: -8px 0 24px rgba(0, 0, 0, .55);
+    transition: transform .22s var(--metro-ease, ease), visibility 0s linear .22s;
+  }
+  .rm-main.in-layer .rm-layer { transform: none; visibility: visible; transition: transform .22s var(--metro-ease, ease), visibility 0s; }
+  .ly-bar { display: flex; align-items: center; gap: 4px; min-height: 52px; padding: 0 6px; border-bottom: 1px solid var(--border); background: var(--surface); flex: none; }
+  .ly-back {
+    display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 10px 0 6px; border: 0; background: none;
+    color: var(--sky); font-size: 14px; border-radius: var(--corner); cursor: pointer; flex: none;
+  }
+  .ly-back .n { font: 600 11px/16px var(--mono); color: var(--ink); background: var(--room-accent, var(--teal)); border-radius: 8px; padding: 0 5px; }
+  .ly-g { width: 28px; height: 28px; display: grid; place-items: center; flex: none; }
+  .ly-g .seat-ring, .ly-g .seat-plate { --s: 28px; width: 28px; height: 28px; }
+  .ly-g svg.ic { width: 20px; height: 20px; fill: none; stroke: var(--dim); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .ly-t { flex: 1; min-width: 0; }
+  .ly-t b { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ly-t b.h { font-family: var(--mono); font-weight: 500; }
+  .ly-t small { display: block; font-size: 11.5px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rm-seatview, .rm-appview { display: block; flex: 1 1 auto; position: relative; min-height: 0; }
+  .rm-appview > .ly-app { position: absolute; inset: 0; display: flex; flex-direction: column; }
+  .rm-appview .ly-frame { position: relative; flex: 1 1 auto; min-height: 0; }
+  .ly-bar .ly-add { color: var(--room-accent, var(--teal)); font: 500 24px/1 var(--font); }
+  .rm-appview iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--surface); }
+  .rm-appview .cell-load { position: absolute; inset: 0; height: auto; }
+  .ly-edge { display: block; position: absolute; left: 0; top: 52px; bottom: 0; width: 16px; z-index: 4; } /* swipe from the left edge = back */
+
+  /* sheets: the library's bottom sheet, v1's bar-free form: no top line; a
+     grab handle, a ground one step lighter, rounded top, a soft shadow up */
+  .ph-scrim { display: block; position: fixed; inset: 0; z-index: 40; background: color-mix(in srgb, var(--ink) 60%, transparent); }
+  .ph-sheet {
+    display: flex; flex-direction: column; position: fixed; left: 0; right: 0; bottom: 0; z-index: 41; max-height: 78%;
+    background: var(--surface3, var(--surface2)); border-radius: 14px 14px 0 0; box-shadow: 0 -10px 24px -8px rgba(0, 0, 0, .6);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .ph-sheet[hidden], .ph-scrim[hidden] { display: none !important; }
+  .ph-sheet .grab { width: 36px; height: 4px; border-radius: 2px; background: var(--dim2, var(--dim)); margin: 8px auto 6px; flex: none; }
+  .ph-sheet-b { overflow-y: auto; min-height: 0; }
+  .ph-sheet h3 { font: 700 .64rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--dim2, var(--dim)); margin: 10px 16px 4px; }
+  .ph-sheet ol { list-style: none; margin: 0; padding: 0; }
+  .ph-sheet .seat { min-height: 56px; padding-left: 13px; padding-right: 16px; border-bottom: 0; border-top: 1px solid var(--border); }
+  .ph-sheet .seat-handle { font-size: 15px; }
+  .ph-sheet .seat.is-room .seat-handle { font-size: 15px; }
+  .ph-sheet .seat-meta { font-size: 12.5px; }
+  .seat-needs-open { min-height: 40px; } /* [ticket] the touch floor for "open its tab" */
+  .ph-sheet .seat-app .seat-glyph { border-radius: var(--corner); background: var(--surface2); }
+  .ph-sheet .seat-app .seat-glyph svg { width: 18px; height: 18px; fill: none; stroke: var(--dim); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .ph-sheet h3.ph-h3add { display: flex; align-items: center; justify-content: space-between; margin-top: 2px; margin-bottom: 0; margin-right: 6px; }
+  .cell-hadd { width: 44px; height: 44px; margin-right: 0; font-size: 22px; }
+  .cell-hrec svg { width: 20px; height: 20px; }
+  .ph-h3btns { display: inline-flex; align-items: center; }
+
+  /* the PREVIEW column is a full-screen LAYER over the line (room-phone-v1),
+     with a back control; the ⚙ lives in the phone header */
+  .rm-top .rm-gear { display: none; }
+  .rm-pv { position: absolute; inset: 0; z-index: 20; border-left: 0; box-shadow: -8px 0 24px rgba(0, 0, 0, .55); }
+  .pv-h { height: auto; min-height: 52px; padding: 0 6px; background: var(--surface); }
+  .pv-back {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; border: 0; background: none;
+    color: var(--sky); font-size: 26px; line-height: 1; border-radius: var(--corner); cursor: pointer; flex: none;
+  }
+  .pv-back:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+  .pv-x { display: none; }
+  /* LIVE PREVIEW: the settings sheet as a bottom half; the line (and its background) shows above */
+  .rm-pv.pv-live { inset: auto 0 0 0; height: 50%; border-top: 1px solid var(--border2); border-radius: 14px 14px 0 0; box-shadow: 0 -8px 24px rgba(0, 0, 0, .45); }
+  .rm-pv.pv-live .pv-h { min-height: 44px; }
+  .pv-live-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-height: 44px; margin: 0 0 6px; font-size: 14px; }
+  .pv-live-row input { width: 22px; height: 22px; margin: 0; flex: none; }
+  .pv-live-row small { flex: 1 1 100%; color: var(--dim); font-size: 12px; margin-left: 30px; margin-top: -6px; }
+  .pv-trail { min-height: 44px; font-size: 14px; }
+  .pv-btn, .pv-chip { min-height: 40px; }
+  .pv-sel { min-height: 44px; font-size: 16px; }
+
+  /* Every button is a 40px touch target on a phone (the manager's floor). */
+  .rm-send, .rm-confirm, .rm-cancel, .rm-help-close, .rm-older, .seat-nudge, .rm-field select, .rm-field input, .seat-act { min-height: 40px; }
+  .seat-act { padding: 0 12px; }
+  .rm-older { padding-left: 14px; padding-right: 14px; }
+  .seat-nudge { display: inline-flex; align-items: center; }
+  .cell-h { height: 44px; }
+  .cell-badge { min-height: 32px; }
+}
+/* the no-name fallback in the "you" square (the design system FIX-1) */
+.you .you-person { width: 62%; height: 62%; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+
+/* ==== THE SEAT MENU (the design system room-seat-menu-v1, web/room-seat-menu.mjs) ====
+   The CLI Manager's room menu surface (cli-manager-rooms-v1: --surface3, 1px
+   --border2, radius 8, 34px items, a 48px bottom sheet on a phone) plus a
+   title row. Colour = function: teal = Restore/Start, coral = Remove only. */
+.seat.has-more { grid-template-columns: 28px minmax(0, 1fr) auto; }
+.seat.has-more:has(> .seat-side) { grid-template-columns: 28px minmax(0, 1fr) auto auto; }
+.rsm-more {
+  grid-row: 1 / 3; grid-column: -2 / -1; width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center;
+  color: var(--dim); background: none; border: 0; padding: 0; cursor: pointer; opacity: 0;
+}
+.rsm-more svg { width: 16px; height: 16px; fill: currentColor; }
+.seat:hover .rsm-more, .seat:focus-within .rsm-more, .rsm-more[aria-expanded="true"] { opacity: 1; }
+@media (hover: none) { .rsm-more { opacity: 1; } }
+.rsm-more:hover { background: var(--cap-hover); color: var(--text); }
+.rsm-more:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; opacity: 1; }
+/* CLEARED IN ITS CLI: a small amber chip beside the seat's name (Owner 2026-10-03); a warning, not an alarm (coral is for needs-you) */
+.rsm-cleared {
+  flex: none; font: 600 10.5px var(--font); padding: 0 6px; min-height: 18px; border-radius: 9px; cursor: pointer;
+  background: color-mix(in srgb, var(--amber, #e0a030) 16%, transparent); border: 1px solid var(--amber, #e0a030); color: var(--amber, #e0a030);
+}
+.rsm-cleared:hover { background: color-mix(in srgb, var(--amber, #e0a030) 28%, transparent); }
+.rsm-cleared:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+@media (max-width: 600px) { .rsm-cleared { min-height: 28px; padding: 0 10px; font-size: 12px; } }
+.rsm-menu, .rsm-card { --pc-ink: oklch(from var(--pc) .82 clamp(.02, calc(c * .6), .13) h); }
+.rsm-menu { position: fixed; z-index: 80; min-width: 224px; padding: 4px; background: var(--surface3); border: 1px solid var(--border2); border-radius: 8px; box-shadow: 0 14px 30px -8px rgba(0, 0, 0, .7); }
+.rsm-mt { padding: 6px 10px; margin: 0 0 4px; border-bottom: 1px solid var(--border); font: 500 12px var(--mono); color: var(--pc-ink, var(--text)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rsm-mst { font: 400 11px var(--font); color: var(--dim); margin-left: 6px; }
+.rsm-mi { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 34px; padding: 0 10px; border-radius: 6px; font: inherit; font-size: 13px; text-align: left; color: var(--text); background: none; border: 0; cursor: pointer; }
+.rsm-mi svg { width: 16px; height: 16px; fill: none; stroke: var(--dim); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.rsm-mi:hover:not([aria-disabled="true"]), .rsm-mi:focus-visible { background: color-mix(in srgb, var(--text) 8%, transparent); }
+.rsm-mi:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+.rsm-mi .rsm-sub { margin-left: auto; font-size: 11px; color: var(--dim2); }
+.rsm-mi.go svg { stroke: var(--room-accent, var(--teal)); }
+.rsm-mi.danger { color: var(--coral); }
+.rsm-mi.danger svg { stroke: var(--coral); }
+.rsm-mi[aria-disabled="true"] { color: var(--dim2); cursor: default; }
+.rsm-mi[aria-disabled="true"] svg { stroke: var(--dim3); }
+.rsm-msep { height: 1px; background: var(--border); margin: 4px 6px; }
+.rsm-scrim { position: fixed; inset: 0; z-index: 79; background: color-mix(in srgb, var(--ink) 60%, transparent); }
+.rsm-menu.is-sheet { left: 0; right: 0; bottom: 0; top: auto; min-width: 0; max-height: calc(100svh - 96px); overflow-y: auto; overscroll-behavior: contain; padding: 8px 0; padding-bottom: max(12px, env(safe-area-inset-bottom)); border-radius: 14px 14px 0 0; border-bottom: 0; box-shadow: 0 -10px 24px -8px rgba(0, 0, 0, .6); }
+.rsm-menu.is-sheet .grab { width: 36px; height: 4px; border-radius: 2px; background: var(--dim2); margin: 0 auto 8px; }
+.rsm-menu.is-sheet .rsm-mt { padding: 4px 16px 10px; font-size: 13px; }
+.rsm-menu.is-sheet .rsm-mi { min-height: 48px; padding: 0 16px; font-size: 15px; border-radius: 0; }
+.rsm-menu.is-sheet .rsm-cancel { position: sticky; bottom: 0; background: var(--surface3); }
+.rsm-cancel { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; padding: 0 16px; border: 0; border-radius: 0; background: none; color: var(--dim); font: inherit; font-size: 15px; cursor: pointer; }
+.rsm-cancel:active { background: color-mix(in srgb, var(--text) 8%, transparent); }
+.rsm-cancel:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+/* rename, inline: the @ fixed, a teal edge; one line under it */
+.rsm-ren { display: inline-flex; align-items: center; flex: 1 1 auto; min-width: 0; height: 26px; border: 1px solid var(--room-accent, var(--teal)); border-radius: 5px; background: var(--surface); padding: 0 6px; font: 500 13.5px var(--mono); cursor: text; }
+.rsm-ren .at { color: var(--dim); }
+.rsm-ren input { all: unset; flex: 1; min-width: 0; color: var(--pc-ink, var(--text)); }
+.rsm-ren.bad { border-color: var(--coral); }
+/* the row's second line takes a row of its OWN, under the side column (the
+   Restore / Start and the more button) too: at the default 272px rail column 2 alone
+   is ~100px, which cut "disconnected · 2:14 PM" to "disconnected · 2:1…" and
+   wrapped the rename hint (the design system review S1, S2). rsm-off = a seat a person
+   disconnected (decorate); its side and the more button keep to row 1. */
+.seat.is-renaming > .seat-side, .seat.is-renaming > .rsm-more,
+.seat.rsm-off > .seat-side, .seat.rsm-off > .rsm-more { grid-row: 1; }
+.rsm-renhint, .rsm-renerr { grid-column: 2 / -1; grid-row: 2; font-size: 11.5px; white-space: normal; min-width: 0; }
+.seat.rsm-off > .seat-meta { grid-column: 2 / -1; grid-row: 2; }
+.rsm-renhint { color: var(--dim); }
+.rsm-renerr { color: var(--coral); }
+/* Remove: the styleguide .modal-card, small, as an alertdialog */
+.rsm-dscrim { position: fixed; inset: 0; z-index: 85; display: grid; place-items: center; background: color-mix(in srgb, var(--ink) 70%, transparent); padding: 16px; }
+.rsm-card { width: min(380px, 100%); background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; box-shadow: 0 24px 60px -12px rgba(0, 0, 0, .8); }
+.rsm-card .hd { padding: 18px 20px 10px; font: 700 1rem var(--display); overflow-wrap: anywhere; }
+.rsm-card .hd code { font: 600 .95em var(--mono); color: var(--pc-ink, var(--text)); }
+.rsm-card .bd { padding: 0 20px 14px; font-size: 13.5px; line-height: 1.5; color: var(--dim); }
+.rsm-card .bd ul { margin: 8px 0 0; padding-left: 18px; }
+.rsm-card .bd li { margin-bottom: 3px; }
+.rsm-derr { margin-top: 8px; color: var(--coral); }
+.rsm-csws { display: flex; flex-wrap: wrap; gap: 8px; }
+.rsm-csw { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border2); background: var(--c); cursor: pointer; padding: 0; }
+.rsm-csw[aria-pressed="true"] { outline: 2px solid var(--text); outline-offset: 2px; }
+.rsm-csw:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 2px; }
+.rsm-crow { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.rsm-ccustom { width: 44px; height: 32px; padding: 0; border: 1px solid var(--border2); border-radius: 8px; background: none; cursor: pointer; }
+.rsm-dload { color: var(--dim); font-style: italic; }
+.rsm-prog { color: var(--text); line-height: 1.5; }
+.rsm-card .hd:has(.rsm-xclose) { position: relative; padding-right: 56px; }
+.rsm-xclose { position: absolute; top: 4px; right: 6px; width: 44px; height: 44px; border: 0; border-radius: 8px; background: none; color: var(--dim); font-size: 18px; cursor: pointer; }
+.rsm-xclose:hover { background: var(--cap-hover); color: var(--text); }
+.rsm-xclose:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.rsm-check { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13.5px; cursor: pointer; }
+.rsm-check input { margin: 0; }
+.rsm-wh { margin-top: 12px; font-weight: 600; color: var(--text); }
+.rsm-wtext { box-sizing: border-box; width: 100%; margin-top: 8px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border2); background: var(--bg, transparent); color: var(--text); font: 13px/1.45 var(--font); resize: vertical; }
+.rsm-wtext[hidden] { display: none; }
+.rsm-card .ft { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px 16px; border-top: 1px solid var(--border); }
+/* Switch assistant [basic]: phone-sized choices (44px targets), no sideways scroll */
+.rsm-swnow { margin-top: 4px; }
+.rsm-swh { font-weight: 600; color: var(--text); }
+.rsm-dsub { display: block; font-size: 12.5px; color: var(--dim); margin-top: 2px; overflow-wrap: anywhere; }
+.rsm-swchoices { display: grid; gap: 8px; margin-top: 12px; }
+.rsm-swchoice { display: block; width: 100%; min-height: 44px; padding: 10px 12px; text-align: left; border-radius: 10px; border: 1px solid var(--border2); background: none; color: var(--text); font: 500 14px var(--font); cursor: pointer; }
+.rsm-swchoice[aria-checked="true"] { border-color: var(--pc-ink, var(--teal)); box-shadow: inset 0 0 0 1px var(--pc-ink, var(--teal)); }
+.rsm-swchoice:disabled { opacity: .55; cursor: default; }
+.rsm-swchoice:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 2px; }
+.rsm-switch .ft .rsm-btn { min-height: 44px; }
+.rsm-switch .ft { flex-wrap: wrap; }
+.rsm-btn { min-height: 34px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--border2); background: none; color: var(--text); font: 500 13px var(--font); cursor: pointer; }
+.rsm-btn.danger { border-color: var(--coral); color: var(--coral); }
+.rsm-btn.danger:hover { background: color-mix(in srgb, var(--coral) 12%, transparent); }
+.rsm-btn:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 2px; }
+@media (max-width: 600px) {
+  .rsm-more { width: 40px; height: 40px; opacity: 1; }
+  .rsm-btn { min-height: 44px; }
+  .rsm-csw { width: 44px; height: 44px; }
+  .rsm-ccustom { width: 56px; height: 44px; }
+  .rsm-ren { height: 36px; font-size: 15px; }
+  .rsm-wtext { font-size: 16px; }
+  .rsm-card { max-height: calc(100svh - 24px); overflow-y: auto; }
+}
+/* ==== end THE SEAT MENU ==== */
+
+/* ---- ROOM VOICE (W1, the design notes §9.4; the design system room-voice-v1, A0).
+   Colour is function: connected teal, muted dim (a choice, not a warning),
+   waiting coral (the ONLY coral). A glyph plus a word, never a stripe. ---- */
+.vg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.vg .fill { fill: currentColor; stroke: none; }
+.vg-ring circle:first-child { stroke-width: 2; }
+.cell-h .vs { display: inline-flex; align-items: center; gap: 5px; min-width: 0; white-space: nowrap; }
+.vs-part { display: inline-flex; align-items: center; gap: 4px; font: 500 11.5px var(--font); }
+.vs-sep { color: var(--dim2, var(--dim)); font-size: 11px; }
+.vs-part[data-state="off"] { color: var(--dim); }
+.vs-part[data-state="connected"] { color: var(--room-accent, var(--teal)); }
+.vs-part[data-state="connected"] .vg { width: 9px; height: 9px; }
+.vs-part[data-state="muted"] { color: var(--dim); }
+.vs-part[data-state="waiting"] { color: var(--coral); }
+/* the host's loading state and its own Mute / Disconnect: only while the
+   frame is down (§9.3) — never two sets */
+.cell-load.vload { height: auto; min-height: 44px; display: flex; align-items: center; padding: 0 14px; font-size: 12.5px; color: var(--dim); background: none; }
+.cell-load.vload::before {
+  content: ''; width: 12px; height: 12px; margin-right: 8px; border-radius: 50%;
+  border: 2px solid var(--border2); border-top-color: var(--room-accent, var(--teal)); animation: vspin .9s linear infinite;
+}
+@keyframes vspin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .cell-load.vload::before { animation: none; } }
+.vfb { display: flex; align-items: center; gap: 12px; padding: 0 14px 12px; }
+.vfb-mute[aria-pressed="true"] { color: var(--text); }
+.vfb-id {
+  min-height: 28px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border2); background: none;
+  color: var(--dim); font: 500 12.5px var(--font); cursor: pointer;
+}
+.vfb-id[aria-pressed="true"] { color: var(--text); }
+.vfb-id { white-space: nowrap; }
+.vfb-id:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+/* the puck buttons (open mic, the agent's voice): icon-only, the design system 28px
+   box (40 on a phone) with the titlebar gear's 18px (22px) glyph. The state marks take the design system function tokens through two local
+   names, so Owner's "red slash / green check" is one line to retune. */
+.vfb { --vfb-off: var(--mcp-err); --vfb-on: var(--mcp-ok); }
+.vfb-ib {
+  width: 28px; height: 28px; padding: 0; display: inline-grid; place-items: center; border-radius: 8px;
+  border: 1px solid var(--border2); background: none; color: var(--dim); cursor: pointer;
+}
+.vfb-ib:hover { color: var(--text); }
+.vfb-ib:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.vfb-ib svg { width: 18px; height: 18px; }
+.vfb-ib .vm-off { stroke: var(--vfb-off); stroke-width: 2.4; }
+.vfb-ib .vm-on { stroke: var(--vfb-on); stroke-width: 2.4; }
+.vs-part[data-state="idoff"] { color: var(--dim); }
+.vfb-disc { background: none; border: 0; padding: 2px 4px; color: var(--room-accent, var(--teal)); font: 500 12.5px var(--font); cursor: pointer; border-radius: var(--corner); }
+.vfb-disc:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+/* a voice line looks like any line of its author: the speaker glyph beside
+   the author, to / re / via, the #vid in mono; no bar, no accent */
+.entry-voice { width: 14px; height: 14px; color: var(--dim); align-self: center; }
+.entry-vdir { font-size: 12px; color: var(--dim); }
+.entry-vid { font: 400 11px var(--mono); color: var(--dim); }
+.va-glyph { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--border2); background: var(--surface2); color: var(--dim); }
+.entry > .entry-vnotes { grid-row: 2; grid-column: 2; margin: 3px 2px 0; font-size: 11.5px; color: var(--dim2, var(--dim)); }
+.entry.by-user > .entry-vnotes { grid-column: 1; text-align: right; }
+/* {panel:'line'}: the exchange the voice tool pointed at — an outline, not a bar */
+.entry.is-found > .entry-bubble { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 2px; }
+/* the phone's Apps badge (18px, glyph only): waiting > muted > connected */
+.vbadge {
+  position: absolute; top: 4px; right: 2px; display: inline-flex; align-items: center; justify-content: center; gap: 3px;
+  min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border2);
+}
+.vbadge .vb-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--room-accent, var(--teal)); }
+.vbadge[data-state="waiting"] { border-color: var(--coral); color: var(--coral); }
+.vbadge[data-state="waiting"] .vb-dot { background: var(--coral); }
+.vbadge[data-state="muted"] { color: var(--dim); }
+.ph-ib .vbadge svg { width: 11px; height: 11px; stroke-width: 2.2; }
+/* the Voice settings group */
+.pv-vhd { display: flex; align-items: center; justify-content: space-between; }
+.pv-vhd h4 { margin: 4px 0; }
+.pv-switch { position: relative; width: 34px; height: 20px; border-radius: 10px; border: 1px solid var(--border2); background: var(--surface2); padding: 0; cursor: pointer; }
+.pv-switch .pv-knob { position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--dim); transition: left .15s; }
+.pv-switch[aria-checked="true"] { border-color: var(--room-accent, var(--teal)); background: color-mix(in srgb, var(--room-accent, var(--teal)) 30%, transparent); }
+.pv-switch[aria-checked="true"] .pv-knob { left: 17px; background: var(--room-accent, var(--teal)); }
+.pv-field { display: grid; gap: 5px; margin-top: 12px; min-width: 0; align-content: start; } /* a stretched pair must not push its shorter field's input down */
+.pv-flabel { font-size: 13px; color: var(--text); }
+.pv-field > .pv-sel { margin-top: 0; }
+.pv-hint { margin: 0; font-size: 11.5px; color: var(--dim); line-height: 1.4; }
+.pv-hint:empty { display: none; }
+.pv-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.pv-num, .pv-text { min-height: 34px; width: 100%; box-sizing: border-box; border-radius: 8px; border: 1px solid var(--border2); background: var(--surface2); padding: 0 10px; color: var(--text); }
+.pv-num { font: 400 13px var(--mono); }
+.pv-text { font: 400 13px var(--font); }
+@media (max-width: 600px) { .pv-text, .pv-num { font-size: 16px; min-height: 44px; } } /* no focus-zoom on a phone */
+.pv-check { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--dim); }
+.pv-check[data-fixed="1"] { color: var(--text); }
+.pv-seg { display: inline-flex; border: 1px solid var(--border2); border-radius: 8px; overflow: hidden; width: max-content; }
+.pv-segb { min-height: 32px; padding: 0 14px; border: 0; background: none; color: var(--dim); font: 400 12.5px var(--font); cursor: pointer; }
+.pv-segb + .pv-segb { border-left: 1px solid var(--border2); }
+.pv-segb[aria-pressed="true"] { background: var(--surface3, var(--surface2)); color: var(--text); font-weight: 600; }
+.pv-switch:focus-visible, .pv-num:focus-visible, .pv-text:focus-visible, .pv-segb:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.pv-sel:disabled { color: var(--dim); }
+.pv-vrest.off { opacity: .42; }
+/* the user's GLOBAL voice switch is off: the room's voice group greys, its values kept */
+.pv-vbody.off { opacity: .42; }
+.pv-goff { margin: 2px 0 6px; color: var(--text); }
+.pv-gmore { margin-top: 10px; }
+/* the Security block: a switch per key, its consequence spelled out under it */
+.pv-seck { align-items: flex-start; color: var(--text); margin-top: 4px; }
+.pv-seck input { margin-top: 3px; flex: none; }
+.pv-seckw { display: grid; gap: 2px; }
+.pv-num:disabled { color: var(--dim); opacity: .6; }
+.seat-meta .vs, #lySub .vs { display: inline-flex; align-items: center; gap: 5px; vertical-align: middle; }
+@media (max-width: 600px) {
+  .vfb-id { min-height: 40px; }
+  .vfb-ib { width: 40px; height: 40px; }
+  .vfb-ib svg { width: 22px; height: 22px; }
+  .vfb-disc { min-height: 40px; }
+  .cell-retry { min-height: 40px; padding: 0 8px; } /* the 40px touch floor */
+}
+
+/* Send's context menu checkbox [enter pref] Owner 2026-10-05 (the menu itself is .rsm-menu above) */
+.enter-box { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border: 1px solid var(--border2); border-radius: 3px; font-size: 12px; line-height: 1; color: var(--room-accent, var(--teal)); flex: none; }
+
+/* DIALOGS ABOVE THE SOFT KEYBOARD [dialog kb] Owner 2026-10-06 (phone: the seat Reload card's welcome box sat under the keys).
+   A `position: fixed` scrim covers the LAYOUT viewport, which the keyboard does not shrink, so while html.kb-up every dialog scrim
+   becomes the VISIBLE area (--vv-top / --vvh from web/soft-keyboard.mjs) and its card is capped to it and scrolls inside
+   (web/dialog-keyboard.mjs brings the focused field into view). The brief's bottom sheet docks to the visible bottom. */
+html.kb-up .rsm-dscrim, html.kb-up .apc-scrim, html.kb-up .nt-scrim, html.kb-up .ad-scrim, html.kb-up .dv-scrim {
+  inset: auto; left: 0; right: 0; top: var(--vv-top, 0px); height: var(--vvh, 100%);
+}
+/* OPT-IN [kb cap] Owner 2026-10-13: only a CENTRED dialog card carries the class `kb-capped` (added where it is built: rsm-, apc-, ad-
+   cards, the chat-height note card). A full-height card or sheet (note full page, document viewer) simply does not carry it, so it never
+   has to override a cap it did not ask for. A new centred dialog card adds `kb-capped`; nothing else to edit. */
+html.kb-up .kb-capped { max-height: calc(var(--vvh, 100svh) - 24px); overflow-y: auto; }
+/* the buttons stay in reach while the body scrolls under the keys */
+html.kb-up .rsm-card .ft, html.kb-up .apc-card .ft { position: sticky; bottom: 0; background: var(--surface); }
+html.kb-up .rbf.is-sheet { bottom: calc(100% - var(--vv-top, 0px) - var(--vvh, 100%)); max-height: calc(var(--vvh, 100svh) - 16px); }
+
+/* FOLLOW THE ROOM [wg follow]: the switch row is the Voice header's shape; whatever it hides stays hidden whatever the group's own display */
+.pv-set [hidden] { display: none !important; }
+.pv-follow .pv-vhd { margin-bottom: 4px; }
+@media (max-width: 600px) { .pv-follow .pv-vhd { min-height: 44px; } }
+
+/* ---- THE SCRATCHPAD CELL [scratchpad] (the design system 1.C V2.1): two 40px signal lines; the room's Assets panel cell is replaced by it ---- */
+.cell-pad[hidden] { display: none; }
+#panelCells .cell.pad-replaced { display: none !important; }
+.cell-h .n.is-new { color: var(--teal); }
+.pad-line {
+  display: flex; align-items: center; gap: 10px; width: 100%; height: 40px; padding: 0 14px; border: 0; border-top: 1px solid var(--border);
+  background: none; color: var(--text); font: 13px var(--font); text-align: left; cursor: pointer;
+}
+.pad-line:first-child { border-top: 0; }
+.pad-line:hover { background: var(--cap-hover); }
+.pad-line.open { background: color-mix(in srgb, var(--cell-c, var(--teal)) 14%, transparent); }
+.pad-line:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+.pad-line .pk { flex: 1 1 auto; min-width: 0; }
+.pad-line .pn { flex: none; font: 500 11.5px var(--mono); color: var(--dim); white-space: nowrap; }
+.pad-line[data-new="1"] .pn { color: var(--teal); }
+.pad-line[data-new="1"] .pn::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--teal); vertical-align: 1px; }
+.pad-line .pc { flex: none; color: var(--dim2, var(--dim)); }
+
+/* THE PHONE'S TITLE [layers]: "Project › Workgroup", the project dimmer, shortened first when the row is too narrow */
+@media (max-width: 600px) {
+  .ph-name.has-wg, .ph-name:has(.pn-wg) { display: flex; align-items: baseline; gap: 6px; }
+  .ph-name .pn-proj { flex: 0 100 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--dim); font-weight: 500; }
+  .ph-name .pn-sep { flex: none; color: var(--dim2, var(--dim)); }
+  .ph-name .pn-wg { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+}
+
+/* ==== PHONE SEAT ROWS (Owner [ref]): similar handles (@alpha-platform /
+   @alpha-platform2) must stay readable. The @name takes the top line and WRAPS
+   (never an ellipsis; room.js fitSeatHandle cuts the MIDDLE only past two
+   lines, at 320px); the lead badge sits under it; the status lines wrap; the
+   Restore / Start button is a 44px icon (the word is its aria-label and the
+   menu's item); the ⋯ is 44px. Seats only (.seat[data-handle]): the places
+   sheet's .pl-row and the room/nav rows keep their layout. Desktop untouched:
+   the icon is hidden and the word shown outside this block. */
+.seat-act-i { display: none; }
+@media (max-width: 600px) {
+  .seat[data-handle] .seat-top { flex-direction: column; align-items: flex-start; gap: 2px; white-space: normal; overflow: visible; }
+  .seat[data-handle] .seat-handle { overflow: visible; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; }
+  .seat[data-handle] .seat-lead { font-size: 10.5px; line-height: 1.5; padding: 0 6px; border: 1px solid var(--border2, var(--border)); border-radius: 8px; }
+  .seat[data-handle] .seat-meta, .seat[data-handle] .seat-worktree { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+  .seat[data-handle] .seat-needs { white-space: normal; overflow: visible; text-overflow: clip; }
+  .seat[data-handle] .seat-act { position: relative; width: 44px; height: 44px; min-height: 44px; padding: 0; display: grid; place-items: center; }
+  .seat[data-handle] .seat-act-t { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .seat[data-handle] .seat-act-i { display: block; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .seat[data-handle] .seat-act[data-act="start"] .seat-act-i { fill: currentColor; stroke: none; }
+  .seat[data-handle] .rsm-more { width: 44px; height: 44px; }
+}

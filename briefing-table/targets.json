@@ -1,0 +1,10 @@
+{
+  "targets": [
+    {
+      "id": "local",
+      "label": "Local",
+      "kind": "local",
+      "shell": "/bin/bash"
+    }
+  ]
+}

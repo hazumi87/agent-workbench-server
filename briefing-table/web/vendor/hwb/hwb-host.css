@@ -1,0 +1,71 @@
+/* ============================================================================
+   hwb-host.css — the ONLY CSS harbor-window-host adds on top of the design system
+   vendored v2 window chrome (hwb-chrome.css).
+
+   WHY THIS FILE EXISTS: hwb-chrome.css is vendored verbatim so re-vendoring
+   stays a straight copy. Everything here is host-platform plumbing that the
+   component deliberately does not carry — a page rendered in a plain browser
+   needs none of it, and a WebView2 frameless window cannot work without it.
+
+   `app-region` is the WebView2 non-client-region property (enabled host-side
+   by CoreWebView2Settings.IsNonClientRegionSupportEnabled = true before
+   Navigate). It is what makes an HTML element behave as real window caption.
+   ============================================================================ */
+
+/* 1 · The bar IS the window's drag surface. Without this the frameless window
+      cannot be moved at all, and double-click-to-maximize never fires. */
+.hwb-bar {
+  app-region: drag;
+  -webkit-app-region: drag;
+}
+
+/* 2 · Caption cells must be clickable, not draggable — a drag region swallows
+      the click before the DOM sees it. (The maximize cell additionally has the
+      host's HTMAXBUTTON overlay HWND parked on top of it for the Snap Layouts
+      flyout; that overlay is positioned from the cmd:'hwb:rects' report.) */
+.hwb-caps {
+  app-region: no-drag;
+  -webkit-app-region: no-drag;
+}
+
+/* 3 · NEW IN v2, AND LOAD-BEARING: tabs now live INSIDE tier 1 (spec §4), so
+      every tab chip sits on top of the drag surface. Without an explicit
+      no-drag the OS reads a press on a chip as the start of a caption drag and
+      the tabs are simply DEAD — no select, no close, no tear-off gesture.
+
+      Scoped to the CHIPS and the `+` only, never to the .hwb-tabs container:
+      the empty lane to the right of the last chip must keep dragging the
+      window. That is Chrome/Edge behaviour and it is the only drag surface a
+      full strip leaves the user besides the 154px reserve. */
+.hwb-tab,
+.hwb-newtab {
+  app-region: no-drag;
+  -webkit-app-region: no-drag;
+}
+
+/* v18 overflow chevrons: controls, not content — same rule as the tab chips.
+   Without this the OS eats chevron clicks as caption drags (dead chevrons). */
+.hwb-chev { app-region: no-drag; }
+
+/* Status-icon menu (interim treatment, tokens only — the design system owns the final
+   design). Bound to the CLASS, not a JS-added one, so it survives the bar
+   rebuild hwbRenderTabs does on every render. The cell must escape the bar's
+   app-region:drag or the OS eats the click as a caption/system-menu action. */
+.hwb-act { app-region: no-drag; cursor: pointer; border-radius: 6px; }
+.hwb-act:hover { background: color-mix(in srgb, var(--text) 10%, transparent); }
+.hwb-actmenu {
+  position: fixed; z-index: 9999; min-width: 160px; padding: 4px;
+  /* palette tokens, same look as the room's .rsm-menu.
+     --panel is not a palette token, so the old var(--panel, #1a212b) always fell
+     back to the dark hex while the item text followed the palette: dark text on
+     a dark menu in light mode. */
+  background: var(--surface3); border: 1px solid var(--border2);
+  border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.45);
+}
+html[data-mode=light] .hwb-actmenu { box-shadow: 0 8px 24px rgba(0,0,0,.18); }
+.hwb-actmenu-item {
+  display: block; width: 100%; text-align: left; padding: 7px 10px;
+  background: none; border: 0; border-radius: 5px; cursor: pointer;
+  color: var(--text); font: 500 .78rem var(--font, sans-serif);
+}
+.hwb-actmenu-item:hover { background: color-mix(in srgb, var(--text) 12%, transparent); }

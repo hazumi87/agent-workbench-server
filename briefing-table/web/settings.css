@@ -1,0 +1,120 @@
+/* Global Settings page (web/settings.html). Colours come from the pinned the design system
+   tokens. NO NEW VISUAL LANGUAGE: the group, row, helper-text and control rules
+   below are the room ⚙ column's (web/room.css, "Room settings" + "Your
+   picture" + "Your @name"), copied so a group mounted here looks exactly like
+   the same control does in a room. Mounted modules may use these classes:
+   pv-grp / h4, pv-lbl, pv-note, pv-msg (+ data-kind="error"), pv-btn (+ .pri,
+   .pv-txt), pv-in, pv-sel, pv-chips / pv-chip (aria-pressed). */
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--ink);
+  color: var(--text);
+  font: 14px/1.4 var(--font);
+  min-height: 100vh;
+  overflow-x: hidden;
+  /* the neutral room colour (room.css): the @ wears its ink */
+  --room-c: #5a6672;
+  --rc-ink: oklch(from var(--room-c) .82 clamp(.02, calc(c * .6), .13) h);
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+/* 16px on inputs so iOS does not focus-zoom (the solo/manager rule). */
+input, select, textarea { font-size: 16px; }
+[hidden] { display: none !important; }
+/* screen-reader-only (the hidden file input behind "Choose image…") */
+.rm-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* the bar: the room's .rm-top / .rm-name */
+.st-top {
+  display: flex; align-items: center; gap: 10px; min-height: 48px;
+  padding: 6px 8px 6px 16px; border-bottom: 1px solid var(--border);
+}
+.st-name { margin: 0; font: 600 16px/1.2 var(--display); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-back { margin-left: auto; }
+.st-main { max-width: 560px; margin: 0 auto; padding: 14px 16px 32px; }
+
+/* ---- the room ⚙ column's groups (room.css) ---- */
+.pv-set h4 { font: 700 .64rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--dim2, var(--dim)); margin: 4px 0 8px; }
+.pv-grp { padding: 0 0 16px; margin-bottom: 14px; border-bottom: 1px solid var(--border); min-width: 0; }
+.pv-grp:last-child { border-bottom: 0; }
+.pv-btn {
+  display: inline-flex; align-items: center; min-height: 32px; padding: 0 11px; border-radius: 8px; font: 400 12.5px var(--font);
+  border: 1px solid var(--border2); background: none; color: var(--text); text-decoration: none; cursor: pointer;
+}
+.pv-btn.pri { border-color: var(--room-accent, var(--teal)); color: var(--room-accent, var(--teal)); }
+.pv-btn.pv-txt { border: 0; color: var(--dim); padding: 0 4px; }
+.pv-btn:hover { background: var(--cap-hover); }
+.pv-btn:focus-visible, .pv-chip:focus-visible, .pv-sel:focus-visible, .pv-in:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.pv-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.pv-chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border: 1px solid var(--border2);
+  border-radius: 15px; background: none; font-size: 12.5px; cursor: pointer;
+}
+.pv-chip[aria-pressed="true"] { background: var(--surface3, var(--surface2)); border-color: var(--text); }
+.pv-chip[aria-pressed="true"]::before { content: '✓'; font-size: 11px; }
+.pv-sel { width: 100%; min-height: 34px; margin-top: 8px; border-radius: 8px; border: 1px solid var(--border2); background: var(--surface2); padding: 0 10px; font-size: 13px; }
+.pv-note { font-size: 11.5px; color: var(--dim); margin: 8px 0 0; line-height: 1.45; }
+.pv-msg { font-size: 12px; color: var(--dim); margin: 6px 0 0; }
+.pv-msg:empty { display: none; }
+.pv-msg[data-kind="error"] { color: var(--coral); }
+.pv-lbl { display: block; font-size: 12.5px; margin-bottom: 6px; }
+.pv-in {
+  flex: 1 1 0; min-width: 0; min-height: 34px; border-radius: 8px; border: 1px solid var(--border2); background: var(--surface2);
+  padding: 0 10px; font-family: var(--mono);
+}
+
+/* ---- the "You" group: your picture (64px + the 28px look) and your @name ---- */
+.pv-pic { display: flex; align-items: center; gap: 14px; }
+.pv-picacts { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.pv-picprev { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 12px; color: var(--dim); }
+.pv-handle { margin-top: 16px; }
+.pv-handlerow { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.pv-at { font: 600 14px var(--mono); color: var(--rc-ink); }
+.you {
+  width: 28px; height: 28px; border-radius: 7px; overflow: hidden; flex: none;
+  border: 1px solid var(--border2); background: var(--surface3, var(--surface2));
+  display: grid; place-items: center; font: 700 13px var(--display); color: var(--text);
+}
+.you img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.you.big { width: 64px; height: 64px; border-radius: 14px; font-size: 26px; }
+.you .you-person { width: 62%; height: 62%; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+
+/* ---- SECTION MENU (hub V2, Owner 2026-10-05; the design system v2.js SET_CSS) ---- */
+.st-main.v2nav { max-width: 860px; display: grid; grid-template-columns: 200px minmax(0, 560px); gap: 0 36px; }
+.st-col { min-width: 0; }
+.st-nav { position: sticky; top: 14px; align-self: start; display: flex; flex-direction: column; gap: 2px; padding-top: 4px; }
+.st-nav a { display: flex; align-items: center; min-height: 34px; padding: 0 12px; border-radius: 8px; color: var(--dim); text-decoration: none; font-size: 13.5px; border-left: 2px solid transparent; }
+.st-nav a:hover { background: var(--cap-hover); color: var(--text); }
+.st-nav a[aria-current="true"] { color: var(--text); background: var(--surface2); border-left-color: var(--room-accent, var(--teal)); }
+.st-nav a:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: -2px; }
+.st-nav .new { margin-left: auto; font: 600 10px var(--mono); color: var(--sky); }
+/* section headings as a band: the room-neutral wash, a 3px accent edge; jumps land with room above */
+#groups > .pv-grp { scroll-margin-top: 24px; }
+#groups > .pv-grp > h4 {
+  display: flex; align-items: center; gap: 8px; margin: 0 -12px 12px; padding: 9px 12px; border-radius: 6px;
+  font: 700 .72rem var(--display); letter-spacing: .12em; color: var(--text);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--room-accent, var(--teal)) 16%, var(--surface2)), var(--surface2) 70%);
+  border-left: 3px solid var(--room-accent, var(--teal));
+}
+/* phone: the menu becomes a row of chips above the content */
+@media (max-width: 640px) {
+  .st-main.v2nav { display: block; max-width: none; }
+  .st-nav { position: sticky; top: 0; z-index: 5; flex-direction: row; gap: 6px; overflow-x: auto; margin: -14px -16px 12px; padding: 8px 16px; background: var(--ink); border-bottom: 1px solid var(--border); scrollbar-width: none; }
+  .st-nav::-webkit-scrollbar { display: none; }
+  .st-nav a { flex: none; min-height: 34px; padding: 0 12px; border: 1px solid var(--border2); border-radius: 17px; white-space: nowrap; }
+  .st-nav a[aria-current="true"] { border-color: var(--room-accent, var(--teal)); }
+  #groups > .pv-grp { scroll-margin-top: 64px; }
+}
+
+/* ---- title-bar tone swatches (Global color palette summary + each app's card) ---- */
+.tb-sw { display: flex; gap: 5px; }
+.tb-sw button { width: 24px; height: 24px; border-radius: 5px; border: 1px solid var(--border2); padding: 0; cursor: pointer; background: var(--c); }
+.tb-sw button[aria-pressed="true"] { outline: 2px solid var(--text); outline-offset: 2px; }
+.tb-sw button:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 2px; }
+.tb-bar {
+  height: 24px; border-radius: 4px; display: flex; align-items: center; padding: 0 8px; min-width: 120px;
+  font: 700 .58rem var(--display); letter-spacing: .1em; text-transform: uppercase;
+  background: linear-gradient(90deg, oklch(from var(--c) .30 clamp(0, calc(c * .4), .065) h), var(--surface) 78%);
+  color: oklch(from var(--c) .82 clamp(.02, calc(c * .6), .13) h);
+}

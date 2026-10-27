@@ -1,0 +1,11 @@
+{
+ "name": "workbench-web-ui-build-tools",
+ "private": true,
+ "description": "The pinned tools that build the web app from this folder: esbuild bundles wb-web.js, the xterm files are copied into the bundle.",
+ "dependencies": {
+  "@xterm/addon-fit": "0.11.0",
+  "@xterm/addon-serialize": "0.14.0",
+  "@xterm/xterm": "6.0.0",
+  "esbuild": "0.28.0"
+ }
+}

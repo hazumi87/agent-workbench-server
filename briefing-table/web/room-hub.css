@@ -1,0 +1,121 @@
+/* ROOM ART MODEL + LINE WASH + ROOM SETTINGS [hub-v2] (Owner 2026-10-05, the design system b0f8099
+   sec 1.E/F/G). Colors are tokens or oklch()/color-mix on them; no hex here. */
+
+/* ---- the tile on the line (web/room-tile.mjs) ----
+   The line is an isolated stacking context while tiled, so the wash's blend mode
+   blends with the art and the line's own wash under it, never with the page. The
+   layers are negative-z backdrops under the feed and the composer, like .rc-art. */
+.rm-line.rc-tiled { position: relative; isolation: isolate; }
+/* with a tile chosen, the tile REPLACES the room art */
+.rm-line.rc-tiled > .rc-art { display: none; }
+.rc-tile, .rc-tilewash { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.rc-tile { background-repeat: repeat; }
+/* the wash in front: the room color as the same spot -> edge falloff as the line's own wash,
+   shifted by how far each handle sits from the default spot (--rc-wsd / --rc-wed, room-wash.mjs) */
+.rc-tilewash {
+  background: radial-gradient(ellipse 130% 130% at var(--wm-at, 25% 75%),
+    oklch(from var(--room-c) calc(l + var(--rc-wsd, 0)) c h) 0%,
+    oklch(from var(--room-c) calc(l + var(--rc-wed, -.14)) c h) 62%);
+}
+
+/* ---- Room settings: the radio shell, the palette override, the color rows ---- */
+.rs-radio { display: grid; gap: 8px; }
+.rs-opt { border: 1px solid var(--border2); border-radius: 8px; padding: 8px 10px; }
+.rs-opt.on { border-color: var(--room-accent, var(--teal)); background: color-mix(in srgb, var(--room-accent, var(--teal)) 6%, transparent); }
+.rs-opt > label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer; min-height: 28px; }
+.rs-opt .rs-body { margin-top: 8px; }
+.rs-opt:not(.on) .rs-body { display: none; }
+.rs-body > .rc-grp { padding: 0; margin: 0; border: 0; }
+.rs-body > .rc-grp > h4 { display: none; } /* today's "Room art" heading: the radio's label says it */
+.rs-prev {
+  height: 64px; border-radius: 6px; border: 1px solid var(--border2); margin-top: 8px;
+  background-color: var(--surface3); background-repeat: repeat; background-size: 64px 64px;
+}
+.rs-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 12px; color: var(--dim); }
+.rs-row > select { margin: 0; width: auto; flex: 1; }
+.rs-row > input[type="range"] { flex: 1; min-width: 0; accent-color: var(--room-accent, var(--teal)); }
+.rs-row > output { font: 500 11px var(--mono); min-width: 5ch; text-align: right; }
+.rs-seg { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--border2); border-radius: 8px; }
+.rs-seg button { min-height: 28px; padding: 0 12px; border-radius: 6px; border: 1px solid transparent; background: none; color: var(--dim); cursor: pointer; font-size: 12.5px; }
+.rs-seg button[aria-pressed="true"] { background: var(--surface3); border-color: var(--border2); color: var(--text); }
+.rs-seg button:disabled { opacity: .45; cursor: default; }
+.rs-pal { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rs-pal > .pv-sel { margin: 0; flex: 1 1 180px; }
+.rs-reset { color: var(--sky); }
+
+.rc-rows .rrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.rc-rows .rl { width: 104px; font-size: 12px; color: var(--dim); flex: none; }
+.rc-rows .sw { width: 26px; height: 26px; border-radius: 5px; border: 1px solid var(--border2); padding: 0; cursor: pointer; background: var(--c); }
+.rc-rows .sw[aria-pressed="true"] { outline: 2px solid var(--text); outline-offset: 2px; }
+.rc-rows .sws { display: flex; gap: 6px; flex-wrap: wrap; }
+.rc-rows .hx { font: 500 11px var(--mono); color: var(--dim); }
+.rc-rows .pv-sw { flex: 1; min-width: 0; }
+.rc-rows .pv-acts { margin: 0; }
+
+/* ---- Line wash: Spot | Edge (web/room-wash.mjs) ---- */
+.wse { user-select: none; -webkit-user-select: none; padding: 6px 0 2px; }
+.wse-t { position: relative; height: 22px; border-radius: 6px; border: 1px solid var(--border2); cursor: pointer; touch-action: none; }
+.wse-off {
+  position: absolute; top: 0; bottom: 0; pointer-events: none;
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--ink) 45%, transparent) 0 4px, color-mix(in srgb, var(--ink) 20%, transparent) 4px 8px);
+}
+.wse-off.l { left: 0; border-radius: 5px 0 0 5px; }
+.wse-off.r { right: 0; border-radius: 0 5px 5px 0; }
+.wse-band { position: absolute; top: 7px; bottom: 7px; border-radius: 4px; background: color-mix(in srgb, var(--text) 22%, transparent); cursor: grab; }
+.wse-h {
+  position: absolute; top: -4px; width: 14px; height: 28px; margin-left: -7px; border-radius: 5px; background: var(--text);
+  box-shadow: 0 0 0 2px var(--ink), 0 2px 6px color-mix(in srgb, var(--ink) 60%, transparent); cursor: ew-resize; outline: none;
+}
+.wse-h:focus-visible { box-shadow: 0 0 0 2px var(--ink), 0 0 0 4px var(--room-accent, var(--teal)); }
+.wse-h::after { content: ""; position: absolute; left: 4px; right: 4px; top: 8px; bottom: 8px; border-left: 1.5px solid var(--ink); border-right: 1.5px solid var(--ink); }
+.wse-lb { display: flex; justify-content: space-between; margin-top: 6px; font: 500 11px var(--mono); color: var(--dim); }
+.wse-lb b { color: var(--text); font-weight: 600; }
+
+/* ---- Spot position pad (web/room-wash.mjs mountSpotPad) [hub-v2 sec 1.I] (the design system 3385f69) ----
+   The precision cursor is Asset Studio's review-mark cursor, VERBATIM (crosshair + centre ring,
+   white 3px under black 1px, hotspot 16 16): /srv/code/tools/asset-studio/app/view.mjs L257,
+   `html.marking`. Same SVG on touch, drawn 56px above the finger (.wsp-x). */
+.wsp { display: flex; gap: 12px; align-items: flex-start; margin: 4px 0 8px; }
+.wsp-pad { position: relative; flex: none; width: 128px; height: 128px; border-radius: 6px; border: 1px solid var(--border2); touch-action: none; cursor: crosshair; overflow: hidden; }
+.wsp-pad:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 2px; }
+.wsp-pad i { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 1px black, inset 0 0 0 1px black; pointer-events: none; }
+.wsp-pad.aiming i { display: none; }
+.wsp-t { font-size: 11.5px; color: var(--dim); line-height: 1.45; }
+.wsp-t b { display: block; font: 500 11px var(--mono); color: var(--text); margin-bottom: 4px; }
+html.wsp-aim, html.wsp-aim * { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cg fill='none' stroke='%23fff' stroke-width='3'%3E%3Ccircle cx='16' cy='16' r='5'/%3E%3Cpath d='M16 1v9M16 22v9M1 16h9M22 16h9'/%3E%3C/g%3E%3Cg fill='none' stroke='%23000' stroke-width='1'%3E%3Ccircle cx='16' cy='16' r='5'/%3E%3Cpath d='M16 1v9M16 22v9M1 16h9M22 16h9'/%3E%3C/g%3E%3C/svg%3E") 16 16, crosshair !important; }
+.wsp-x { position: fixed; z-index: 99; width: 32px; height: 32px; margin: -16px 0 0 -16px; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cg fill='none' stroke='%23fff' stroke-width='3'%3E%3Ccircle cx='16' cy='16' r='5'/%3E%3Cpath d='M16 1v9M16 22v9M1 16h9M22 16h9'/%3E%3C/g%3E%3Cg fill='none' stroke='%23000' stroke-width='1'%3E%3Ccircle cx='16' cy='16' r='5'/%3E%3Cpath d='M16 1v9M16 22v9M1 16h9M22 16h9'/%3E%3C/g%3E%3C/svg%3E") center / 32px 32px no-repeat; }
+
+@media (max-width: 600px) {
+  .rs-seg button { min-height: 40px; }
+  .rs-row > select { min-height: 44px; font-size: 16px; }
+  .rc-rows .rl { width: 100%; }
+  .wse-t { height: 30px; }
+  .wse-h { height: 38px; top: -4px; width: 20px; margin-left: -10px; }
+  .wse-h::after { top: 12px; bottom: 12px; left: 6px; right: 6px; }
+  .wse-band { top: 10px; bottom: 10px; }
+}
+
+/* ---- SMALL TEXT ON TILED ART [hub-v2 sec 1.H] (the design system 2026-10-05, review [ref]) ----
+   Only while a tile is on (.rc-tiled): the line's small texts sit on a glass pill, the bubbles'
+   material but quieter. Without a tile nothing here matches and room-line-halo.css (the
+   watermark's halo) is untouched; inside a pill the halo is off. Text stays --dim. */
+.rm-line.rc-tiled :is(.entry.by-room, .entry-reads, .entry-files, .entry-vnotes, .rm-start) {
+  width: fit-content; box-sizing: border-box; padding: 2px 10px; border-radius: 12px;
+  /* 20% clear by default (Owner 2026-10-05); it rides the room's Bubble glass slider at a
+     lower rate than the bubbles (room-glass.mjs writes --pill-clear), so it stays more solid */
+  background: color-mix(in srgb, var(--surface), transparent var(--pill-clear, 20%));
+  -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
+  text-shadow: none !important;
+}
+.rm-line.rc-tiled .entry.by-room:not([data-side]) { padding: 3px 12px; }
+.rm-line.rc-tiled .entry.by-room *, .rm-line.rc-tiled .entry-files button { text-shadow: none !important; }
+.rm-line.rc-tiled .rm-start { margin-left: auto; margin-right: auto; }
+/* the read line and the files/voice note hug their bubble's side: start, or end under your own bubble */
+.rm-line.rc-tiled .entry > :is(.entry-reads, .entry-files, .entry-vnotes) { justify-self: start; }
+.rm-line.rc-tiled .entry.by-user > :is(.entry-reads, .entry-files, .entry-vnotes) { justify-self: end; }
+@media (max-width: 600px) {
+  .rm-line.rc-tiled :is(.entry.by-room, .entry-reads, .entry-files, .entry-vnotes, .rm-start) {
+    background: color-mix(in srgb, var(--surface), transparent var(--pill-clear, 20%));
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+}

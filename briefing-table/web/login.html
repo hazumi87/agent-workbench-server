@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sign in to Agent Workbench</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<style>
+  /* SELF-CONTAINED BY NECESSITY. This is the only page an unauthenticated
+     client sees, so every asset it references would have to be public. Pulling
+     /vendor/aurora-tokens.css got a 401 and rendered the page unstyled (found
+     live behind Tailscale Serve, 2026-08-19). The handful of values it needed
+     are inlined instead of widening the unauthenticated surface. */
+  :root {
+    color-scheme: dark;
+    --ink: #0d0f12;
+    --paper: #e8eaed;
+    --teal: #2dd4bf;
+  }
+  body {
+    margin: 0; min-height: 100dvh; display: grid; place-items: center;
+    background: var(--ink, #0d0f12); color: var(--paper, #e8eaed);
+    font-family: "Selawik", system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 1.5rem;
+  }
+  form {
+    width: min(24rem, 100%); padding: 1.75rem;
+    border: 1px solid rgba(255,255,255,.12); border-radius: 12px;
+    background: rgba(255,255,255,.03);
+  }
+  h1 { margin: 0 0 .35rem; font-size: 1.15rem; }
+  p { margin: 0 0 1.25rem; font-size: .85rem; opacity: .7; line-height: 1.45; }
+  label { display: block; font-size: .8rem; opacity: .8; margin-bottom: .4rem; }
+  input {
+    width: 100%; box-sizing: border-box; padding: .65rem .75rem; font-size: 1rem;
+    border-radius: 8px; border: 1px solid rgba(255,255,255,.18);
+    background: rgba(0,0,0,.35); color: inherit;
+    font-family: ui-monospace, "Cascadia Mono", "JetBrains Mono", monospace;
+  }
+  button {
+    width: 100%; margin-top: 1rem; padding: .7rem; font-size: .95rem; font-weight: 600;
+    border: 0; border-radius: 8px; cursor: pointer;
+    background: var(--teal, #2dd4bf); color: #06231f;
+  }
+  .err {
+    margin: 0 0 1rem; padding: .6rem .75rem; border-radius: 8px; font-size: .85rem;
+    background: rgba(248,113,113,.14); border: 1px solid rgba(248,113,113,.4);
+  }
+  .err[hidden] { display: none; }
+  /* 16px on every input, not for looks: anything smaller makes iOS Safari zoom
+     the page on focus, which is how the 2026-09-01 viewport bug was survivable
+     at all. 44px targets for the same reason — see CLAUDE.md. */
+  .row { margin-bottom: .9rem; }
+  .row[hidden] { display: none; }
+  input[type="text"], input[type="password"] { min-height: 44px; font-size: 16px; }
+  .check { display: flex; align-items: center; gap: .6rem; min-height: 44px; font-size: .9rem; }
+  .check input { width: 20px; height: 20px; min-height: 20px; accent-color: var(--teal); }
+  .check label { margin: 0; opacity: 1; }
+  .hint { margin: .75rem 0 0; font-size: .75rem; opacity: .55; line-height: 1.4; }
+  /* The passkey button is the PRIMARY path once one is enrolled, so it sits
+     above the password and wears the accent; the password form below it is the
+     fallback. `type="button"` on it, always — it lives inside the form and a
+     submit button would post the password form instead of running WebAuthn. */
+  #passkey { margin: 0 0 .25rem; }
+  .or {
+    display: flex; align-items: center; gap: .6rem;
+    margin: 1rem 0; font-size: .72rem; opacity: .45; text-transform: uppercase;
+  }
+  .or::before, .or::after {
+    content: ""; flex: 1 1 0; height: 1px; background: rgba(255,255,255,.14);
+  }
+  #row-passkey[hidden], .or[hidden], #row-realm[hidden] { display: none; }
+  /* R6a: the realm sign-in is a plain link (a top-level GET to /auth/realm/start),
+     styled as a secondary button so it works with no JS at all. */
+  #realm {
+    display: flex; align-items: center; justify-content: center; min-height: 44px;
+    border: 1px solid rgba(255,255,255,.22); border-radius: 8px; color: inherit;
+    text-decoration: none; font-size: .95rem; margin: 0 0 .25rem;
+  }
+</style>
+</head>
+<body>
+<form method="POST" action="/login">
+  <h1>Sign in to Agent Workbench</h1>
+  <p>This server runs your agents and terminals. Sign in once on this device; the session is remembered.</p>
+  <div class="err" id="err" hidden></div>
+  <input type="hidden" name="next" id="next">
+
+  <div class="row" id="row-passkey" hidden>
+    <button type="button" id="passkey">Sign in with a passkey</button>
+  </div>
+  <div class="row" id="row-realm" hidden>
+    <a id="realm" href="/auth/realm/start">Sign in with your realm account</a>
+  </div>
+  <div class="or" id="or" hidden>or</div>
+
+  <!-- NOTHING here is `required`, deliberately. A hidden input carrying
+       `required` makes Chrome refuse the whole submit with "an invalid form
+       control is not focusable" and no visible error — and exactly one of the
+       token field and the username field is hidden in every mode. The server
+       validates; the browser must not block the submit it cannot explain. -->
+  <div class="row" id="row-user" hidden>
+    <label for="username">Username</label>
+    <input id="username" name="username" type="text" autocomplete="username"
+           spellcheck="false" autocapitalize="none">
+  </div>
+  <div class="row" id="row-pass" hidden>
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="current-password">
+  </div>
+  <div class="row check" id="row-remember" hidden>
+    <input id="remember" name="remember" type="checkbox">
+    <label for="remember">Remember this device</label>
+  </div>
+
+  <div class="row" id="row-token">
+    <label for="token">Access token</label>
+    <input id="token" name="token" type="password" autocomplete="current-password"
+           spellcheck="false">
+  </div>
+
+  <button type="submit">Sign in</button>
+  <p class="hint" id="hint" hidden></p>
+</form>
+<script>
+  /* WHICH FORM THIS IS, decided by the server at serve time.
+     The shipped file contains the literal placeholder below, and the page reads
+     anything it does not recognise as "legacy" — so when identity is off the
+     server serves this file UNTOUCHED and it is exactly the token form it has
+     always been. No mode endpoint, nothing for an unauthenticated caller to ask. */
+  const MODE = '__IDENTITY_MODE__';
+  const identity = MODE === 'both' || MODE === 'strict';
+  const show = (id, on) => { document.getElementById(id).hidden = !on; };
+  show('row-user', identity);
+  show('row-pass', identity);
+  show('row-remember', identity);
+  /* `both` is the transition: Owner has an account, every script and window
+     still holds the shared token, and the same form takes either. */
+  show('row-token', MODE !== 'strict');
+  /* The passkey button appears only when the browser HAS the API. It is never
+     gated on "does this account have a passkey": answering that to an
+     unauthenticated caller is user enumeration, and a browser that holds none
+     simply shows its own "no passkey here" and falls back to the form below. */
+  const canPasskey = identity && typeof window.PublicKeyCredential === 'function';
+  show('row-passkey', canPasskey);
+  /* R6a: the server writes 'on' here only when a realm issuer is configured;
+     the shipped placeholder reads as off. */
+  const REALM = '__REALM_SIGNIN__' === 'on' && identity;
+  show('row-realm', REALM);
+  show('or', canPasskey || REALM);
+  if (identity) {
+    document.getElementById('username').focus();
+    if (MODE === 'both') {
+      const h = document.getElementById('hint');
+      h.textContent = 'Leave the username blank to sign in with the shared engine token.';
+      h.hidden = false;
+    }
+  } else {
+    document.getElementById('token').focus();
+  }
+</script>
+<script>
+  /* The server redirects back with ?bad=1 rather than rendering a variant page,
+     so this file stays static and cacheable. */
+  /* Carry the destination through the round trip so the action the user clicked
+     (a tray deep link, a bookmarked session) survives the detour. */
+  const nx = new URLSearchParams(location.search).get('next');
+  if (nx && nx.startsWith('/') && !nx.startsWith('//')) {
+    document.getElementById('next').value = nx;
+  }
+  if (new URLSearchParams(location.search).has('bad')) {
+    const e = document.getElementById('err');
+    e.textContent = "That username or password isn't right.";
+    e.hidden = false;
+  }
+  /* R6a: why a realm sign-in came back. Fixed words from the server, mapped
+     here; the param itself is never shown. */
+  const realmWhy = {
+    unlinked: 'That realm account is not linked to an engine account. Sign in here with your engine password, then link it from your account page.',
+    unreachable: 'The realm cannot be reached right now. Sign in with your engine password instead.',
+    refused: 'The realm sign-in was not accepted.',
+    expired: 'That sign-in took too long or was started in another browser. Try again.',
+    cancelled: 'The realm sign-in was cancelled.',
+  }[new URLSearchParams(location.search).get('realm')];
+  if (realmWhy) {
+    const e = document.getElementById('err');
+    e.textContent = realmWhy;
+    e.hidden = false;
+  }
+  if (nx && nx.startsWith('/') && !nx.startsWith('//')) {
+    document.getElementById('realm').href = '/auth/realm/start?next=' + encodeURIComponent(nx);
+  }
+  if (new URLSearchParams(location.search).has('slow')) {
+    const e = document.getElementById('err');
+    e.textContent = 'Too many attempts. Wait a few minutes and try again.';
+    e.hidden = false;
+  }
+</script>
+<script>
+/* WEBAUTHN, BY HAND — no library and no build step.
+   The whole browser half is base64url in and base64url out: the API takes and
+   returns ArrayBuffers where our JSON carries strings, and that conversion IS
+   the work. `PublicKeyCredential.parseCreationOptionsFromJSON` would do it for
+   us but only landed in Safari 17.4, and Owner's iPhone is one of the two
+   devices this exists for — so the ~20 lines below are the portable version.
+   The same pair lives in account.html for the enrolment half; they are short
+   enough that sharing them would mean a fetched module, and this page cannot
+   fetch one (it is the only page an unauthenticated client sees — see the
+   comment on the stylesheet). */
+const b64uToBuf = (s) => {
+  const pad = s.replace(/-/g, '+').replace(/_/g, '/');
+  const bin = atob(pad + '='.repeat((4 - (pad.length % 4)) % 4));
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i += 1) { out[i] = bin.charCodeAt(i); }
+  return out.buffer;
+};
+const bufToB64u = (buf) =>
+  btoa(String.fromCharCode(...new Uint8Array(buf)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+function fail(text) {
+  const e = document.getElementById('err');
+  e.textContent = text;
+  e.hidden = false;
+}
+
+/* Every await inside a click handler gets a local catch (CLAUDE.md 2026-09-02):
+   an unhandled rejection in an event handler goes nowhere and the button reads
+   as doing nothing. A user CANCELLING the Hello prompt lands here too, and is
+   not an error worth shouting about. */
+document.getElementById('passkey').onclick = async () => {
+  const btn = document.getElementById('passkey');
+  btn.disabled = true;
+  try {
+    const started = await fetch('/login/passkey/options', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: '{}',
+    });
+    const offer = await started.json();
+    if (!started.ok) { throw new Error(offer.error || 'Could not start a passkey sign-in.'); }
+
+    const opts = offer.options;
+    opts.challenge = b64uToBuf(opts.challenge);
+    for (const c of opts.allowCredentials || []) { c.id = b64uToBuf(c.id); }
+    const cred = await navigator.credentials.get({ publicKey: opts });
+    if (!cred) { throw new Error('No passkey was returned.'); }
+
+    const done = await fetch('/login/passkey', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        ticket: offer.ticket,
+        next: document.getElementById('next').value || null,
+        remember: document.getElementById('remember').checked,
+        response: {
+          id: cred.id,
+          rawId: bufToB64u(cred.rawId),
+          type: cred.type,
+          clientExtensionResults: cred.getClientExtensionResults(),
+          response: {
+            clientDataJSON: bufToB64u(cred.response.clientDataJSON),
+            authenticatorData: bufToB64u(cred.response.authenticatorData),
+            signature: bufToB64u(cred.response.signature),
+            userHandle: cred.response.userHandle ? bufToB64u(cred.response.userHandle) : undefined,
+          },
+        },
+      }),
+    });
+    const body = await done.json();
+    if (!done.ok) { throw new Error(body.error || 'That passkey was not accepted.'); }
+    location.href = body.next || '/';
+  } catch (err) {
+    if (err && (err.name === 'NotAllowedError' || err.name === 'AbortError')) {
+      fail('Passkey sign-in was canceled.');
+    } else {
+      fail(err.message || String(err));
+    }
+    btn.disabled = false;
+  }
+};
+</script>
+</body>
+</html>

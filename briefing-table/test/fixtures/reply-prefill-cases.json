@@ -1,0 +1,141 @@
+{
+  "about": "Reply prefill (User 2026-09-28 / 2026-10-03; Workbench bug [ref], toolkit [ref]). Replying to a line puts '@a @b ' in the message box: the author, then every seat the line @-names outside code and quotes, as editable text. Rule = web/room-reply-all.mjs replyAllHandles + replyAllPrefix, gated by web/room-reply.mjs prefixFor/applyPrefill. Each case: the replied-to line (body, author = its author's seat handle or null for the person / a fact), the room's seat handles, the lead's handle, the person's own @name, and the expected prefix. Room seats here: alpha, gamma, delta, epsilon, beta; lead = gamma; me = owner.",
+  "seats": [
+    "alpha",
+    "gamma",
+    "delta",
+    "epsilon",
+    "beta"
+  ],
+  "lead": "gamma",
+  "me": "owner",
+  "cases": [
+    {
+      "name": "User's case: a seat's line naming four seats and the person",
+      "author": "alpha",
+      "body": "@gamma @delta @epsilon @user Both are on the Workrooms page",
+      "prefix": "@alpha @gamma @delta @epsilon "
+    },
+    {
+      "name": "author only (no mentions)",
+      "author": "beta",
+      "body": "deploy is green",
+      "prefix": "@beta "
+    },
+    {
+      "name": "mentions anywhere in the body, not just the first line; a backticked name is not a reference",
+      "author": "alpha",
+      "body": "first line\nsecond line for @epsilon\nand `@beta` in code still counts",
+      "prefix": "@alpha @epsilon "
+    },
+    {
+      "name": "a plain @beta still counts beside a backticked word",
+      "author": "alpha",
+      "body": "ask `beta`, not @beta",
+      "prefix": "@alpha @beta "
+    },
+    {
+      "name": "the person is dropped (@user and their own @name)",
+      "author": "beta",
+      "body": "@user and @owner: done",
+      "prefix": "@beta "
+    },
+    {
+      "name": "duplicates and case collapse; author first",
+      "author": "alpha",
+      "body": "@Alpha @EPSILON @epsilon",
+      "prefix": "@alpha @epsilon "
+    },
+    {
+      "name": "@lead resolves to the lead's handle",
+      "author": "alpha",
+      "body": "@lead please rule",
+      "prefix": "@alpha @gamma "
+    },
+    {
+      "name": "a handle that is not a seat of this room is dropped",
+      "author": "alpha",
+      "body": "@homehub and @epsilon",
+      "prefix": "@alpha @epsilon "
+    },
+    {
+      "name": "my own line: the seats it named, no author",
+      "author": null,
+      "body": "@alpha @beta can you two check",
+      "prefix": "@alpha @beta "
+    },
+    {
+      "name": "my own line naming only myself / nobody: no prefill",
+      "author": null,
+      "body": "note to self @owner",
+      "prefix": ""
+    },
+    {
+      "name": "my own line to @room only: '@room'",
+      "author": null,
+      "body": "@room heads up",
+      "prefix": "@room "
+    },
+    {
+      "name": "@room alongside seats: the seats only",
+      "author": "alpha",
+      "body": "@room and @beta",
+      "prefix": "@alpha @beta "
+    },
+    {
+      "name": "an email address is not a mention",
+      "author": "beta",
+      "body": "mail noreply@example.com",
+      "prefix": "@beta "
+    },
+    {
+      "name": "a backticked @name is not a reference (User [ref])",
+      "author": "alpha",
+      "body": "run `@bee` and ping @beta",
+      "prefix": "@alpha @beta "
+    },
+    {
+      "name": "a quoted @name is not a reference",
+      "author": "alpha",
+      "body": "he said \"@epsilon ok\" to @beta",
+      "prefix": "@alpha @beta "
+    },
+    {
+      "name": "curly-quoted names are not references",
+      "author": "beta",
+      "body": "“@bee” and “@ant”",
+      "prefix": "@beta "
+    },
+    {
+      "name": "only quoted and backticked names: the author alone",
+      "author": "alpha",
+      "body": "see \"@bee\" and `@ant`",
+      "prefix": "@alpha "
+    },
+    {
+      "name": "a fenced block is not a reference",
+      "author": "alpha",
+      "body": "```\n@bee\n```\n@beta",
+      "prefix": "@alpha @beta "
+    },
+    {
+      "name": "my own line: quoted names are not references either",
+      "author": null,
+      "body": "tell \"@alpha\" nothing, ask @beta",
+      "prefix": "@beta "
+    },
+    {
+      "name": "5\" pipe is not a quote (the names after it still count)",
+      "author": "alpha",
+      "body": "5\" pipe for @beta",
+      "prefix": "@alpha @beta "
+    }
+  ],
+  "gates": [
+    "No prefill for a voice line or a room fact (author 'room' with no seat).",
+    "No prefill when the message box already starts with an @address (the person typed one).",
+    "A cancel (the reply chip's x or Esc) takes the prefix back only while the box still holds exactly what the prefill put in; any edit keeps the text.",
+    "Starting another reply over an untouched prefill replaces it.",
+    "A name inside a quotation (\"...\" or curly) or code (inline or fenced) is not a reference, so it is not filled in (User [ref], toolkit [ref]). Same quote rules as test/fixtures/address-cases.json."
+  ]
+}

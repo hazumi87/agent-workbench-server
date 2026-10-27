@@ -1,0 +1,27 @@
+{
+  "scripts": [
+    "src/renderer/web-setup/signin-mount.mjs",
+    "src/renderer/web-setup/settings-mount.mjs",
+    "src/renderer/web-terminal/watching.mjs",
+    "src/renderer/web-setup/onboarding-mount.mjs",
+    "src/renderer/widgets/web-mount.js"
+  ],
+  "styles": [
+    "src/renderer/web-files/folder-picker.css",
+    "src/renderer/web-files/scratchpad-page.css",
+    "src/renderer/web-files/cards.css",
+    "src/renderer/web-setup/signin.css",
+    "src/renderer/web-browser-feedback/styles.css",
+    "src/renderer/web-agents/styles.css",
+    "src/renderer/web-notifications/styles.css",
+    "src/renderer/web-shared/approval-segment.css",
+    "src/renderer/web-setup/settings.css",
+    "src/renderer/web-terminal/watching.css",
+    "src/renderer/web-notifications/banner.css",
+    "src/renderer/web-nav/nav.css",
+    "src/renderer/web-setup/onboarding.css",
+    "src/renderer/widgets/web-widgets.css",
+    "src/renderer/web-plugins/page.css",
+    "src/renderer/web-terminal/keypad.css"
+  ]
+}

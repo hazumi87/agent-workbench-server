@@ -1,0 +1,13 @@
+.wb-agent-dialog { box-sizing:border-box; width:min(560px,calc(100vw - 32px)); max-height:calc(100vh - 32px); overflow:auto; border:1px solid var(--md-sys-color-outline-variant); border-radius:24px; padding:24px; background:var(--md-sys-color-surface-container-high); color:var(--md-sys-color-on-surface); font:14px/1.5 var(--font); }
+.wb-agent-dialog::backdrop { background:rgb(0 0 0 / .4); }
+.wb-agent-dialog h2 { margin:0 0 20px; font:500 24px/32px var(--font); }
+.wb-agent-field { display:grid; gap:6px; margin:16px 0; }
+.wb-agent-field input,.wb-agent-field select { box-sizing:border-box; min-height:44px; width:100%; padding:10px 12px; border:1px solid var(--md-sys-color-outline); border-radius:8px; font:inherit; background:var(--md-sys-color-surface-container-lowest); color:var(--md-sys-color-on-surface); }
+.wb-agent-folder { display:flex; gap:8px; }.wb-agent-folder input { min-width:0; }
+.wb-agent-dialog button { min-height:44px; padding:8px 16px; border:0; border-radius:22px; background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); font:500 14px/20px var(--font); cursor:pointer; }
+.wb-agent-dialog button:disabled { opacity:.38; cursor:default; }
+.wb-agent-dialog fieldset { border:0; padding:0; margin:20px 0 0; }.wb-agent-dialog legend { padding:0; margin:0 0 8px; }
+.wb-agent-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:24px; }.wb-agent-actions button:last-child { background:var(--md-sys-color-primary); color:var(--md-sys-color-on-primary); }
+.wb-agent-help { color:var(--md-sys-color-on-surface-variant); }.wb-agent-dialog [role=alert] { color:var(--md-sys-color-error); }
+.wb-agent-dialog :focus-visible { outline:2px solid var(--md-sys-color-primary); outline-offset:3px; }
+@media(max-width:480px){.wb-agent-dialog{padding:20px 16px;}.wb-agent-folder{flex-wrap:wrap;}.wb-agent-folder input{flex-basis:100%;}}

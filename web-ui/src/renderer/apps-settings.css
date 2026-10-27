@@ -1,0 +1,33 @@
+.at-settings { padding:8px 0; color:var(--md-sys-color-on-surface); }
+.at-settings h2 { margin:0 0 8px; font:500 22px/28px var(--font); }
+.at-subtitle,.at-tone { color:var(--md-sys-color-on-surface-variant); font:400 14px/20px var(--font); }
+.at-list { display:grid; gap:12px; margin-top:24px; }
+.at-row { display:grid; grid-template-columns:48px minmax(0,1fr) auto; gap:12px; align-items:center; padding:16px; background:var(--md-sys-color-surface-container-low); border:1px solid var(--md-sys-color-outline-variant); border-radius:16px; }
+.at-sample { width:48px; height:48px; display:grid; place-items:center; border-radius:12px; background:var(--md-sys-color-primary); color:var(--md-sys-color-on-primary); }
+.at-info h3 { margin:0; font:500 16px/24px var(--font); }
+.at-tone { margin:2px 0 0; }
+.at-actions { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.at-settings button { min-height:44px; border:0; border-radius:22px; padding:0 16px; font:500 14px/20px var(--font); cursor:pointer; }
+.at-settings button:focus-visible { outline:2px solid var(--md-sys-color-primary); outline-offset:3px; }
+.at-settings button:disabled { cursor:default; opacity:.38; }
+.at-change,.at-close { background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); }
+.at-reset { background:transparent; color:var(--md-sys-color-primary); }
+.at-error { grid-column:2/-1; margin:0; font:400 14px/20px var(--font); color:var(--md-sys-color-error); }
+.at-backdrop { position:fixed; inset:0; z-index:220; display:flex; justify-content:center; align-items:center; padding:24px; background:color-mix(in srgb,var(--md-sys-color-scrim) 32%,transparent); }
+.at-picker { max-width:360px; width:100%; box-sizing:border-box; padding:24px; background:var(--md-sys-color-surface-container-high); color:var(--md-sys-color-on-surface); border-radius:24px; box-shadow:0 8px 32px color-mix(in srgb,var(--md-sys-color-shadow) 20%,transparent); }
+.at-picker h3 { margin:0 0 24px; font:500 20px/28px var(--font); }
+.at-picker .color-swatches { padding:6px; margin:-6px; }
+.at-picker .at-close { display:block; margin:24px 0 0 auto; }
+.at-settings [hidden] { display:none!important; }
+@media(max-width:640px) {
+ .at-row { grid-template-columns:48px minmax(0,1fr); padding:16px; }
+ .at-actions { grid-column:1/-1; }
+ .at-settings button { min-height:48px; }
+ .at-error { grid-column:1/-1; }
+ .at-backdrop { align-items:flex-end; padding:0; }
+ .at-picker { max-width:none; border-radius:24px 24px 0 0; padding:24px 24px max(24px,env(safe-area-inset-bottom)); }
+}
+
+.sr-g[data-app-tone] > .sr-gb { color:var(--md-sys-color-on-surface-variant); }
+/* a tool card's tone is a round icon tile (the design's amendment, 2026-10-26); the title stays plain text on the card */
+.wr-toolcard .tc-ic[data-app-tone] { background:var(--md-sys-color-primary-container); color:var(--md-sys-color-on-primary-container); }

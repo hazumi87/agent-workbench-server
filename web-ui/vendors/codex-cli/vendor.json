@@ -1,0 +1,36 @@
+{
+  "id": "codex-cli",
+  "label": "Codex CLI",
+  "binary": "codex",
+  "mark": "codex",
+  "color": "#10A37F",
+  "installUrl": "https://github.com/openai/codex",
+  "install": {
+    "win32": "npm install -g @openai/codex",
+    "darwin": "npm install -g @openai/codex",
+    "linux": "npm install -g @openai/codex"
+  },
+  "seamVersion": 1,
+  "verifiedWith": "0.1",
+  "resumable": false,
+  "settings": {
+    "model": {
+      "type": "choice",
+      "label": "Default model",
+      "options": [
+        "gpt-5"
+      ],
+      "labels": [
+        "GPT-5"
+      ],
+      "default": "gpt-5",
+      "other": true
+    },
+    "extraArgs": {
+      "type": "args",
+      "label": "Extra arguments",
+      "hint": "Added to every launch, like --verbose",
+      "default": ""
+    }
+  }
+}

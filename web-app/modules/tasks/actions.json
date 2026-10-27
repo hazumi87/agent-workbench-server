@@ -1,0 +1,12 @@
+{
+  "actions": [
+    {
+      "name": "add-task",
+      "title": "Add a task",
+      "provides": "room.tasks",
+      "input": { "title": { "type": "string", "title": "Task", "maxLength": 200 } },
+      "output": { "kind": "text" },
+      "contexts": ["workroom"]
+    }
+  ]
+}

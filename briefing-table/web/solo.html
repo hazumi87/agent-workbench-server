@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en" data-palette="off">
+<head>
+  <!-- global color palette, first paint (hub V2): see web/palette-boot.js -->
+  <script src="/palette-boot.js"></script>
+  <meta charset="utf-8" />
+  <!-- NO `maximum-scale` / `user-scalable=no` here, deliberately, and it is not an
+       oversight: on a phone with iOS Display Zoom ON, those two stop Safari from
+       fitting the layout to the zoomed display. Owner's phone reported
+       `innerWidth 398` against `screen.width 320` — the page laid out 24% wider
+       than the glass, permanently, with no way to scroll or pinch back to it.
+       Focus-zoom is prevented by the 16px input rule in solo.css, which is the
+       right lever for it; this one costs the whole right-hand side of the app. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <!-- theme-color tints the Edge app-window titlebar where Edge honors it;
+       solo.js sets it to the session's identity accent. -->
+  <meta name="theme-color" content="#0b1016" />
+  <title>Session</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/aurora/window-chrome/tokens.css" />
+  <link rel="stylesheet" href="/aurora/window-chrome/hwb-ring.css" />
+  <!-- v21: the session bar (.hwb-sbar) lives in the chrome sheet; the terminal
+       watermark (.wm-pane / .wm / .wm-backlit) in its own. Both vendored,
+       never edited. -->
+  <link rel="stylesheet" href="/aurora/window-chrome/hwb-chrome.css" />
+  <link rel="stylesheet" href="/aurora/window-chrome/hwb-watermark.css" />
+  <link rel="stylesheet" href="/vendor/xterm/xterm.css" />
+  <link rel="stylesheet" href="/solo.css" />
+  <link rel="stylesheet" href="/places-sheet.css" />
+  <link rel="stylesheet" href="/phone-menu.css" /> <!-- [phone menu] Workbench / room rows of the one menu -->
+  <!-- Chat | CLI (Owner 2026-10-05): the bubbles and composer restate the room line; room-bubbles is the glass, as is -->
+  <link rel="stylesheet" href="/room-bubbles.css" />
+  <link rel="stylesheet" href="/agent-chat.css" />
+  <link rel="stylesheet" href="/room-line-markdown.css" />
+  <link rel="stylesheet" href="/search-ui.css" /> <!-- [search ui] -->
+  <link rel="stylesheet" href="/light-mode.css" />
+</head>
+<body>
+  <!-- ONE CLI in ONE window (2026-07-07 rescope). -->
+  <div id="pane" class="pane fn-cli">
+    <!-- THE SESSION BAR (the design system window-chrome v21): project mark · project name
+         · session title … brand watermark · messages / handoff / links. Drawn
+         HERE only when this page is opened on its own; inside the window-host
+         shell the shell draws it under the tab row and this stays hidden (the
+         page reports the bar's data up instead). See solo.js paintBar(). -->
+    <div id="sbar" class="hwb-sbar" hidden></div>
+    <!-- Agent-submitted URL offers (Owner 2026-08-09): the deterministic route
+         for "open this link" — the agent POSTs /api/url-offer, this bar asks. -->
+    <div id="urlOffers" class="url-offers" hidden></div>
+    <!-- Room lines held back from this pane's input box, said where the box is
+         visible (the design notes §3.6; web/held-bar.mjs). -->
+    <div id="heldBar" class="held-bar" hidden></div>
+    <div class="pane-body">
+      <!-- Transient controls, shown only while they apply. -->
+      <div class="pane-float">
+        <!-- Shown only after "Just watch" on the control prompt: the reader's
+             way back to taking control, without the prompt covering the terminal. -->
+        <button id="viewBadge" class="pane-btn pane-viewbadge" type="button" hidden>👁 viewing · take control</button>
+        <button id="relaunchBtn" class="pane-btn" type="button" title="Relaunch this session (start the CLI again)" hidden>↻ Relaunch</button>
+        <button id="reloadBtn" class="pane-reload" type="button" title="Reload the app UI (picks up updates) WITHOUT dropping this CLI — your session and agent context survive. Dev-only; hidden unless debugUi is on." hidden>⟳</button>
+      </div>
+      <div id="paneLogo" class="pane-logo" style="display:none"></div>
+      <div id="term" class="pane-term"></div>
+    </div>
+  </div>
+
+  <!-- Handoff (Owner, phone, 2026-09-04): discrete labelled fields an agent
+       handed over, each with its own copy button. Selecting text out of a
+       terminal is unreliable on a touch screen — the pty reflows under the
+       finger — so structured data should never have to be selected at all. -->
+  <div id="handoffModal" class="close-modal" hidden>
+    <div class="close-modal-box handoff-box">
+      <p id="handoffTitle">Details from the agent</p>
+      <div id="handoffList" class="handoff-list"></div>
+      <div class="f-actions">
+        <button id="handoffDismiss" class="pane-btn close-danger">Dismiss</button>
+        <button id="handoffClose" class="pane-btn close-cancel">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fabric inbox (Stage 3, engine half). Read-only in Crawl: from / kind /
+       class / body, and Dismiss. `attention` colours the badge and nothing
+       else — no ladder, no timers, no escalation, and it never touches the
+       terminal's input (the design notes: never seize a draft). -->
+  <div id="fabricModal" class="close-modal" hidden>
+    <div class="close-modal-box handoff-box">
+      <p id="fabricTitle">Messages from other agents</p>
+      <div id="fabricList" class="fabric-list"></div>
+      <div class="f-actions">
+        <button id="fabricDismiss" class="pane-btn close-danger">Dismiss all</button>
+        <button id="fabricClose" class="pane-btn close-cancel">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Link sweep (Owner 2026-08-09): URLs the CLI hard-wrapped across lines,
+       reconstructed from the buffer — open whole or copy whole. -->
+  <div id="linksModal" class="close-modal" hidden>
+    <div class="close-modal-box links-box">
+      <p>Links in this session <span class="dim">(wrapped URLs reconstructed)</span></p>
+      <div id="linksList" class="links-list"></div>
+      <div class="f-actions"><button id="linksCloseBtn" class="pane-btn close-cancel">Close</button></div>
+    </div>
+  </div>
+
+  <!-- The places sheet (Owner 2026-10-02, room line [ref]): opened by the menu
+       button at the left of the phone session bar; filled by web/room-places.mjs.
+       Standalone phone only (see solo.js paintBar). -->
+  <div class="ph-scrim" id="phScrim" hidden></div>
+  <div class="ph-sheet" id="phSheet" role="dialog" aria-modal="true" aria-label="Workbench" hidden>
+    <div class="grab" aria-hidden="true"></div>
+    <div class="ph-sheet-b" id="phSheetBody"></div>
+  </div>
+
+  <script type="module" src="/solo.js"></script>
+</body>
+</html>

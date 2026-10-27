@@ -1,0 +1,12 @@
+{
+  "id": "shell",
+  "label": "Shell",
+  "binary": "",
+  "mark": "generic",
+  "color": "#5F6368",
+  "installUrl": "",
+  "seamVersion": 1,
+  "verifiedWith": "",
+  "resumable": false,
+  "settings": {}
+}

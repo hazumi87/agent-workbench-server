@@ -1,0 +1,6 @@
+/* PINNED - DOMPurify 3.2.4 (vendored 2026-10-01), Apache-2.0 OR MPL-2.0.
+   Source: https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.4/purify.min.js
+   (the same version the knowledge-base viewer loads from a CDN).
+   sha256 8eb41b658831fab175fad9bcd00fcb2d84e0ed3a25a55053d4ecd4444b8b43a0
+   Pre-built UMD; defines window.DOMPurify. Loaded lazily by web/room-doc-view.mjs.
+   Do not hand-edit; to update, re-fetch and replace wholesale. */

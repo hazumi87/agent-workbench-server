@@ -1,0 +1,12 @@
+bundle: window-chrome
+version: 35
+manifest: a53ac22468cc91ad7275ed9300bc8fb1ce04f3551b52bc85ce50c0649ff57cf7
+paths: web/aurora/window-chrome (solo/manager pin), web/assets/aurora/window-chrome (shell)
+
+bundle: brand-marks
+version: 1
+manifest: 668b50d31d4a4c325767f161d2eb368c3a1cbb758d5dcf37674b52252ac11cae
+paths: web/aurora/brand-marks
+
+synced: window-chrome v35 (comments, changelog and example text scrubbed; code unchanged)
+aurora: window-chrome v35; sha256sum -c MANIFEST.sha256 passes on both copies, 0 failures (brand-marks unchanged)

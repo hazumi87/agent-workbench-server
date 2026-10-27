@@ -1,0 +1,91 @@
+/* ==== ROOM CHARACTER (the design system room-character v1.1, the design system 9a21656) ============
+   [rooms/character] web/room-character.mjs. Loaded after room.css and the
+   room's other sheets.
+
+   ONE ROOM COLOUR (--room-c, set by room.js) drives the room's chrome:
+     - the PALETTE (pinned lightness, hue kept): tint L .30, edge L .45 and
+       ink L .82 are room.css's round-3 --rc-* tones (unchanged); this sheet
+       adds --room-accent L .80 C <= .14 (the JS guard drops the cap to .06
+       near coral / amber: --rm-cmax). The title bar is the bundle's own
+       .hwb-barwash (window-chrome v32), not a tone of ours.
+     - THE ACCENT RULE: every room-page site that used --teal reads
+       var(--room-accent, var(--teal)) (room.css and the room-* sheets). --teal
+       is never re-declared; --room-accent exists ONLY while the room colour is
+       SET, so an unset room is today's look exactly.
+     - NEVER room-coloured: coral / amber / sky / lime, seat status rings,
+       agents' project inks, MCP colours, app iframe insides.
+   ART: the line column is drawn like a terminal pane, with the EXISTING
+   helpers (renderLogo + paintWatermarkVars, logo-modal.mjs) and the art's own
+   stored settings; the only override is --wm-pc = the room colour.
+   ========================================================================== */
+
+/* ---- the palette: identity tones + the accent, only for a SET colour ---- */
+body[data-room-color="set"] {
+  /* the FLAT fallback first: a renderer without relative colour syntax gets
+     the raw room colour as its accent rather than an invalid value */
+  --room-accent: var(--room-c);
+}
+@supports (color: oklch(from red l c h)) {
+  body[data-room-color="set"] {
+    --room-accent: oklch(from var(--room-c) .80 clamp(.05, calc(c * .75), var(--rm-cmax, .14)) h);
+  }
+}
+/* THE TITLE BAR (window-chrome v32 .hwb-barwash, set on the headers in
+   room.html): the agent tab/bar wash, --pc = the room colour (room.js's --room-c:
+   the room's own, else the lead's, else neutral). Inside the shell it fans out
+   from the room tab (--bar-wash-x / --bar-wash-core, posted by the shell);
+   standalone it centres at 105px, like the bar. */
+.rm-top, .ph-hdr { --pc: var(--room-c); }
+/* your own bubble: a 7% breath of the accent over its raised neutral */
+body[data-room-color="set"] .entry.by-user .entry-bubble {
+  background: color-mix(in srgb, var(--room-accent) 7%, var(--surface3, var(--surface2)));
+}
+/* the composer's + takes the accent too (the design system: "every +"), Send already does */
+body[data-room-color="set"] .rm-attach { color: var(--room-accent); }
+/* the composer input's resting edge is the room edge (L .45); focus = the accent ring */
+body[data-room-color="set"] .rm-inputwrap textarea { border-color: var(--rc-edge); }
+
+/* ---- the header mark: 72px behind the room name (the v30 session-bar rule) ---- */
+.rm-top, .ph-hdr { position: relative; isolation: isolate; }
+.rc-hmark {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: -1;
+}
+.rc-hmark > span {
+  position: absolute; left: 4px; top: -16px; width: 72px; height: 72px; opacity: .14; color: var(--sb-ink, var(--rc-ink));
+}
+/* the mark draws with the ART's line style + glow (hwbMarkClass on the span) */
+.rc-hmark svg { width: 100%; height: 100%; display: block; fill: currentColor; }
+.rc-hmark > span:not(.wm-line-outline):not(.wm-line-blueprint) svg :is(path, circle, rect, polygon, ellipse, polyline, line, use) { fill: currentColor; }
+
+/* ---- the LINE: a terminal-style pane (.wm-pane from hwb-watermark.css) ---- */
+.rm-line.wm-pane { isolation: isolate; }
+/* the art host: the solo .pane-logo positioning (centred; width = the art's
+   own scale, set inline by renderLogo). A non-scrolling backdrop: it lives in
+   the column, not in the scroller, and sits under the feed and composer. */
+.rc-art {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  pointer-events: none; user-select: none; z-index: -1;
+}
+.rc-art svg { width: 100%; height: auto; display: block; }
+.rc-art svg.wm { fill: currentColor; }
+
+/* ---- phone: the header takes the wash + the mark; counts in the accent ---- */
+@media (max-width: 600px) {
+  body[data-room-color="set"] .ph-ib .n { background: var(--room-accent); color: var(--ink); }
+  .ph-hdr .rc-hmark > span { left: 2px; top: -10px; }
+  .ph-t, .ph-ib { position: relative; }
+}
+
+/* ---- the settings column's Art group ---- */
+.rc-artrow { display: flex; gap: 12px; align-items: center; }
+.rc-prev {
+  position: relative; flex: none; width: 72px; height: 72px; border-radius: 8px; overflow: hidden;
+  border: 1px solid var(--rc-edge, var(--border2)); isolation: isolate;
+}
+.rc-prev:not(.wm-pane) { background: var(--ink); }
+.rc-prev .rc-art { z-index: 0; }
+.rc-prev-none { position: absolute; inset: 0; display: grid; place-items: center; font-size: 11px; color: var(--dim); }
+.rc-artbtns { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; min-width: 0; }
+.rc-artname { font-size: 12px; color: var(--dim); overflow-wrap: anywhere; }
+.rc-from { margin: 10px 0 0; font-size: 12px; color: var(--dim); line-height: 1.5; }
+.rc-from a { color: var(--room-accent, var(--teal)); }

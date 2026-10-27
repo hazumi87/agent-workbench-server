@@ -1,0 +1,296 @@
+<!doctype html>
+<!-- class="phone-glass": the phone's bubble transparency (50%, no blur; the meta lift) [web/room-phone-7b],
+     ON by default; delete the class to turn it off (web/room-bubbles.css) -->
+<html lang="en" class="phone-glass">
+<head>
+  <!-- global color palette, first paint (hub V2): see web/palette-boot.js -->
+  <script src="/palette-boot.js"></script>
+  <meta charset="utf-8" />
+  <!-- No `maximum-scale` / `user-scalable=no` (see web/solo.html): with iOS
+       Display Zoom they lay the page out wider than the glass. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0C1014" />
+  <title>Workroom</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <!-- ENGINE-SIDE STAND-IN (the design notes §0.1 Q4, the web/workbench.js
+       precedent): this page proves the room seam by speaking the §2 vocabulary
+       exactly. It is not the final renderer; the design system room surface replaces it. -->
+  <link rel="stylesheet" href="/vendor/aurora-tokens.css" />
+  <link rel="stylesheet" href="/aurora/window-chrome/hwb-ring.css" />
+  <!-- .hwb-lift (window-chrome v31): the bar-free selected row -->
+  <link rel="stylesheet" href="/aurora/window-chrome/hwb-chrome.css" />
+  <link rel="stylesheet" href="/room.css" />
+  <link rel="stylesheet" href="/agent-profile-card.css" />
+  <link rel="stylesheet" href="/room-panel-menu.css" />
+  <!-- composer attachments [ticket]: its own sheet, after room.css -->
+  <link rel="stylesheet" href="/room-attach.css" />
+  <!-- the line filter button + menu (the design system room-filter-v1): its own sheet -->
+  <link rel="stylesheet" href="/room-filter.css" />
+  <!-- the resizable left column (the design system room-rail-resize-v1, web/room-rail.mjs):
+       its sheet, and the saved width read BEFORE the first paint (per device,
+       every room; key = room-rail.mjs RAIL_KEY) so the column never jumps -->
+  <link rel="stylesheet" href="/room-rail.css" />
+  <!-- reply to a line (the design system room-reply-v1, web/room-reply.mjs): its own sheet -->
+  <link rel="stylesheet" href="/room-reply.css" />
+  <!-- links in room lines (web/room-links.mjs): its own sheet -->
+  <link rel="stylesheet" href="/room-links.css" />
+  <!-- IMAGE LINKS IN LINES (web/room-image-links.mjs): after room-attach.css, whose boxes it reuses -->
+  <link rel="stylesheet" href="/room-image-links.css" />
+  <!-- ROOM CHARACTER (the design system room-character v1.1, web/room-character.mjs): the
+       line column is drawn like a terminal pane (hwb-watermark.css, which
+       hwb-chrome.css @imports since window-chrome v32), and the room colour
+       drives the accent. After every other room sheet. -->
+  <link rel="stylesheet" href="/room-character.css" />
+  <link rel="stylesheet" href="/room-hub.css" /> <!-- [hub-v2] tile layers, line wash range, Room settings rows -->
+  <!-- BUBBLES [rooms/bubbles]: the author wash + the fixed desktop bubble
+       transparency / blur (25% / 5px, [rooms/bubble-defaults]). After
+       room-character.css. -->
+  <link rel="stylesheet" href="/room-bubbles.css" />
+  <!-- LINE HALO [rooms/line-halo]: the chrome halo on text that sits on the line's art -->
+  <link rel="stylesheet" href="/room-line-halo.css" />
+  <link rel="stylesheet" href="/room-tool-links.css" />
+  <!-- APP DIALOG [ticket]: a panel asks for its own app in a modal -->
+  <link rel="stylesheet" href="/room-app-dialog.css" />
+  <link rel="stylesheet" href="/asset-picker.css" />
+  <!-- FULL PAGE [ticket]: the cell's "Open full page" control -->
+  <link rel="stylesheet" href="/room-app-page.css" />
+  <link rel="stylesheet" href="/room-notes.css" />
+  <!-- WORKGROUPS (Owner 2026-10-04): family rows, crumb, notice, cross-posts -->
+  <link rel="stylesheet" href="/room-workgroups.css" />
+  <link rel="stylesheet" href="/search-ui.css" /> <!-- [search ui] the search popover / sheet -->
+  <!-- THE ROOM TOAST (hub v2): one toast, under the title bar -->
+  <link rel="stylesheet" href="/room-toast.css" />
+  <link rel="stylesheet" href="/room-doc-view.css" />
+  <link rel="stylesheet" href="/room-brief.css" /> <!-- [room brief] the info flyout -->
+  <link rel="stylesheet" href="/room-scratchpad.css" />
+  <link rel="stylesheet" href="/edition.css" />
+  <link rel="stylesheet" href="/room-site-bar.css" />
+  <link rel="stylesheet" href="/room-line-markdown.css" /> <!-- [line markdown] chat lines as Markdown --> <!-- [basic] the Preview / Public bar --> <!-- [basic] what a Basic instance hides -->
+  <link rel="stylesheet" href="/phone-menu.css" /> <!-- [phone menu] Workbench / room rows of the one menu --> <!-- [scratchpad] the Scratchpad lists and one-item views -->
+  <link rel="stylesheet" href="/light-mode.css" />
+  <script>try { var rw = parseInt(localStorage.getItem('hwb.room.railWidth'), 10); if (rw > 272) { document.documentElement.style.setProperty('--rail-pref', rw + 'px'); } } catch (e) { /* no storage: the default */ }</script>
+  <!-- each seat's PROJECT colour as --pc, written by room.js (data, never painted raw) -->
+  <style id="seatTones"></style>
+</head>
+<body data-push="pending">
+  <!-- .hwb-barwash (window-chrome v32): the agent tab/bar wash, from the room colour -->
+  <header class="rm-top hwb-barwash">
+    <span class="rm-name" id="roomName">Workroom</span>
+    <span class="rm-state" id="roomState" hidden></span>
+    <span class="rm-push" id="pushNote" hidden>live push unavailable — polling</span>
+    <!-- THE LINE FILTER (the design system room-filter-v1, web/room-filter.mjs): the phone's
+         glyph + dot, immediately left of the gear; its menu holds the choices -->
+    <!-- SEARCH [search ui] (the design system §1.K): the magnifier, left of the filter; Ctrl/Cmd+F opens it on a PC -->
+    <button type="button" class="rf-btn sr-btn" id="searchBtn" title="Search this room (Ctrl+F)" aria-label="Search this room" aria-haspopup="dialog" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4"/></svg>
+    </button>
+    <button type="button" class="rf-btn" id="filterBtn" title="Filter the chat" aria-label="Filter the chat">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span class="rf-dot" aria-hidden="true"></span>
+    </button>
+    <!-- ROOM SETTINGS (round 3, the design system room-round3-v1 §3): opens in the preview column -->
+    <button type="button" class="rm-gear" id="gearBtn" title="Room settings" aria-label="Room settings" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </header>
+
+  <main class="rm-main" id="main">
+    <aside class="rm-roster" aria-label="Roster">
+      <!-- ROOM CELLS v1 (the design system room-cells-v1, ticket): the column is a stack
+           of collapsible CELLS: the seats first, then one per room panel. -->
+      <!-- THE RAIL SPLIT [rail split] (Owner 2026-10-05, the design system [ref]): the ROOM cell first
+           (the room row + the workgroup tree, with their unread badges), then the SEATS
+           cell for the selected room. -->
+      <section class="cell" data-cell="room">
+      <div class="cell-hw">
+      <button type="button" class="cell-h" aria-expanded="true">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2.5"/><path d="M4 10h16"/></svg>
+        <span class="tt">Room</span><span class="chev" aria-hidden="true">▾</span>
+      </button>
+      <button type="button" class="cell-hadd" id="roomAddBtn" title="Add a workgroup or an app" aria-label="Add a workgroup or an app">+</button>
+      </div>
+      <div class="cell-b">
+      <ol class="rm-seats" id="roomList" role="listbox" aria-label="The room and its workgroups"></ol>
+      </div>
+      </section>
+      <section class="cell" data-cell="seats">
+      <div class="cell-hw">
+      <button type="button" class="cell-h" aria-expanded="true">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="10" r="2.4"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M14.5 19.5c.3-2.4 2-4 4.3-4"/></svg>
+        <span class="tt" id="seatsTt">Seats</span><span class="rm-lead-none" id="noLead" hidden>no lead</span>
+        <span class="n" id="seatCount"></span><span class="chev" aria-hidden="true">▾</span>
+      </button>
+      <!-- ADD (Owner 2026-09-27, room line [ref]): a compact "+" in the seats
+           header; it opens the room's + sheet (the design system room-add-sheet-v1) -->
+      <!-- RECONNECT (Owner 2026-10-02, room line [ref]): opening a disconnected room
+           never wakes its agents; this button, left of the "+", does. Shown only
+           while the engine offers `reconnect` [ticket]. -->
+      <button type="button" class="cell-hadd cell-hrec" id="reconnectBtn" hidden title="Reconnect room" aria-label="Reconnect room">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9M20 4v5h-5"/></svg>
+      </button>
+      <button type="button" class="cell-hadd" id="addBtn" title="Add or move a seat" aria-label="Add or move a seat">+</button>
+      </div>
+      <div class="cell-b">
+      <!-- ROOM NAV v3 (Owner 2026-09-26, the design system room-nav-v3): the ROOM row
+           first, then every seat. Selecting a row swaps the right column. -->
+      <ol class="rm-seats" id="roster" role="listbox" aria-label="The selected room's seats"></ol>
+      </div>
+      </section>
+      <!-- THE iPAD KEYS [ipad keys] (Owner 2026-10-05): the CLI's special keys as a cell under Seats, on a touch tablet
+           only (html.touch-wide). They go to the CLI of the seat open in the right column; disabled when none is. -->
+      <section class="cell tw-keys" data-cell="keys" id="twKeys" aria-label="Keys for the open CLI">
+      <div class="cell-hw">
+      <span class="cell-h">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/></svg>
+        <span class="tt">Keys</span>
+      </span>
+      </div>
+      <div class="cell-b">
+      <div class="tw-keys-grid" id="twKeysGrid" role="group" aria-label="CLI keys"></div>
+      <p class="tw-keys-note" id="twKeysNote" role="status"></p>
+      </div>
+      </section>
+      <div id="panelCells"></div>
+      <!-- THE SCRATCHPAD [scratchpad] (the design system BUILD-HANDOFF 1.C, V2.1; Owner 2026-10-07): ONE cell where Assets was, two signal lines and
+           nothing else (no thumbnails): "Assets ● 3 new of 43 ›" and "Notes ● 1 new of 6 ›". A line opens that list in the preview column;
+           the open line is tinted; the same line again closes it. The room's Assets panel stays registered (uploads and notes ride on it)
+           but its rail cell is hidden (web/room-scratchpad.mjs). -->
+      <section class="cell cell-pad" data-cell="scratchpad" id="padCell" data-tone="green" hidden>
+        <div class="cell-hw">
+          <button type="button" class="cell-h" id="padHead" aria-expanded="true">
+            <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="16" rx="2"/><path d="M8.5 9h7M8.5 12.5h7M8.5 16h4"/></svg>
+            <span class="tt">Scratchpad</span><span class="n" id="padCount"></span><span class="chev" aria-hidden="true">▾</span>
+          </button>
+        </div>
+        <div class="cell-b">
+          <button type="button" class="pad-line" id="padAssets" data-kind="assets" aria-label="Assets"><span class="pk">Assets</span><span class="pn" id="padAssetsN"></span><span class="pc" aria-hidden="true">›</span></button>
+          <button type="button" class="pad-line" id="padNotes" data-kind="notes" aria-label="Notes"><span class="pk">Notes</span><span class="pn" id="padNotesN"></span><span class="pc" aria-hidden="true">›</span></button>
+        </div>
+      </section>
+    </aside>
+
+    <!-- ROOM ON PHONE v1 (the design system room-phone-v1, ≤600px only): the LINE is home.
+         This header + jump strip belong to home; apps and agents are layers. -->
+    <div class="ph-home" id="phHome">
+      <div class="ph-hdr hwb-barwash">
+        <!-- THE RAIL TOGGLE [phone rail] (Owner 2026-10-08, the design system [ref]): the four-square button shows / hides the jump strip (Workbench, the other rooms,
+             this room's apps, its seats); hidden by default, not remembered. The people button opens the in-room sheet (Scratchpad, Rooms, Seats). -->
+        <button type="button" class="ph-ib" id="phLine" title="Show rooms, apps &amp; seats" aria-label="Show rooms, apps &amp; seats" aria-pressed="false" aria-controls="phStrip">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>
+          <span class="vbadge" id="phVoice" hidden></span></button>
+        <b class="ph-name" id="phName"></b>
+        <span class="ph-brief" id="phBrief"></span> <!-- [room brief] the (i), row 1 right -->
+        <span class="ph-g" id="phGlyph"></span>
+        <button type="button" class="ph-ib" id="phAgents" title="Agents" aria-label="Agents" aria-haspopup="dialog">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="10" r="2.4"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M14.5 19.5c.3-2.4 2-4 4.3-4"/></svg>
+          <span class="dot" id="phAgentsDot" hidden></span></button>
+        <small class="ph-meta" id="phMeta"></small>
+        <button type="button" class="ph-ib" id="phSearch" title="Search this room" aria-label="Search this room" aria-haspopup="dialog">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4"/></svg></button>
+        <button type="button" class="ph-ib" id="phFilter" title="Filter the chat" aria-label="Filter the chat">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+          <span class="dot on" id="phFilterDot" hidden></span></button>
+        <button type="button" class="ph-ib" id="phGear" title="Room settings" aria-label="Room settings" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+      </div>
+      <div class="ph-strip" id="phStrip" role="list" aria-label="Jump to" hidden></div>
+    </div>
+
+    <!-- A LAYER over the line (phone) / the right column (desktop): an agent's
+         solo page, or (phone only) an app full width. On desktop this wrapper
+         is display:contents and its bar is hidden. -->
+    <div class="rm-layer" id="layer">
+      <div class="ly-bar" id="layerBar">
+        <button type="button" class="ly-back" id="lyBack" aria-label="Back to the room">‹ Room <span class="n" id="lyMissed" hidden></span></button>
+        <span class="ly-g" id="lyGlyph" aria-hidden="true"></span>
+        <span class="ly-t"><b id="lyTitle"></b><small id="lySub"></small></span>
+        <!-- Add file for an upload app (Owner 2026-09-27, room line [ref]: the bar is gone) -->
+        <button type="button" class="ph-ib ly-add" id="lyAdd" title="Add file" aria-label="Add file" hidden>+</button>
+        <button type="button" class="ph-ib" id="lySwitch" title="Switch" aria-label="Switch">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg></button>
+      </div>
+      <!-- A SEAT selected: its solo page, framed as-is (session bar, MCP strip,
+           held line, control prompt). One frame per seat, kept while the page
+           lives, so switching back does not reattach. -->
+      <section class="rm-seatview" id="seatView" aria-label="Seat" hidden>
+        <div class="rm-seatnone" id="seatNone" hidden></div>
+      </section>
+      <section class="rm-appview" id="appView" aria-label="App" hidden></section>
+      <div class="ly-edge" id="lyEdge" aria-hidden="true"></div>
+    </div>
+
+    <section class="rm-line" id="roomLine" aria-label="Room chat">
+      <!-- the kind / seat filter strip is gone: the room bar's filter button
+           (the design system room-filter-v1, web/room-filter.mjs) holds those choices -->
+      <div class="rm-scroll" id="lineScroll">
+        <button type="button" class="rm-older" id="olderBtn">load older</button>
+        <!-- THE FILTER HID EVERY LOADED LINE [feed empty] (Owner 2026-10-06, application on iPhone: "load older" and nothing else):
+             name the filter and offer the way out. Shown only while no loaded line is visible. -->
+        <p class="rm-feednote" id="feedNote" role="status" hidden><span id="feedNoteText"></span> <button type="button" class="rm-older" id="feedShowAll">Show all</button></p>
+        <p class="rm-start" id="lineStart" hidden>start of the chat</p>
+        <!-- ctx-aggregate with no lead: the line's glyphs say WHO and never
+             move (a line of spinners is the blinking wall; the seat rows animate) -->
+        <ol class="rm-entries ctx-aggregate" id="line"></ol>
+      </div>
+
+      <div class="rm-reply" id="reply" hidden></div>
+      <button type="button" class="rm-newer-draft" id="newerDraft" hidden>Newer draft on another device. Use it</button>
+      <p class="rm-delivery" id="delivery" role="status" hidden></p>
+      <!-- PHONE [web/room-phone-7]: the same report as each addressed seat's
+           live chip (the strip's), so its activity can be watched after Send -->
+      <div class="rm-dchips" id="deliveryChips" role="list" aria-label="Your last message reached" hidden></div>
+      <div class="rm-help" id="help" hidden></div>
+
+      <div class="rm-compose" id="compose" role="form" aria-label="Room chat">
+        <!-- COMPOSER ATTACHMENTS [ticket] (the design system room-attach-v1; web/room-attach.mjs
+             + room-attach.css): the note and the draft tray take full rows above
+             the input (the form wraps), the + sits left of it. Held in the
+             person's server scratchpad until Send. -->
+        <p class="rm-attnote" id="attNote" hidden></p>
+        <div class="rm-tray" id="attTray" role="list" aria-label="Attachments (draft)" hidden></div>
+        <button type="button" class="rm-attach" id="attBtn" title="Attach files (or paste, or drop)" aria-label="Attach files"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+        <input type="file" id="attFile" multiple hidden />
+        <div class="rm-inputwrap">
+          <ul class="rm-complete" id="complete" role="listbox" hidden></ul>
+          <span class="rm-sr" id="cmdLive" aria-live="polite"></span>
+          <!-- CHAR LIMIT [ticket]: mirrors the textarea so characters past the
+               4000-char send cap can be shown coral (a textarea can't color
+               part of its own text) -->
+          <div class="rm-inputhi" id="inputHi" aria-hidden="true" hidden></div>
+          <textarea id="input" role="combobox" aria-haspopup="listbox" aria-controls="complete" aria-autocomplete="list" aria-expanded="false" rows="1" placeholder="Message the lead, @handle a seat, or /help"
+                    spellcheck="false" autocomplete="off" autocorrect="on" autocapitalize="sentences" aria-label="Room chat input"></textarea>
+        </div>
+        <button type="button" class="rm-send" id="sendBtn" aria-label="Send" title="Send (Enter)">&rarr;</button>
+      </div>
+      <!-- composer attachments [ticket]: drag-over outlines the whole line column -->
+      <div class="rm-drop" aria-hidden="true"><div>
+        <svg viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
+        <div class="t">Drop to attach</div>
+        <div class="s">Nothing is shared until you Send</div>
+      </div></div>
+    </section>
+
+    <!-- THE PREVIEW COLUMN (round 3, the design system room-round3-v1 §2; room-preview.mjs):
+         a third column that shrinks the main one; a full-screen layer on a phone -->
+    <aside id="preview" hidden></aside>
+  </main>
+
+  <div class="rm-picker" id="picker" hidden>
+    <h2 class="rm-h">Rooms</h2>
+    <ol class="rm-rooms" id="roomList"></ol>
+  </div>
+
+  <!-- PHONE sheets (the library's bottom sheet): Apps, Agents, ⇄ Switch -->
+  <div class="ph-scrim" id="phScrim" hidden></div>
+  <div class="ph-sheet" id="phSheet" role="dialog" aria-modal="true" hidden>
+    <div class="grab" aria-hidden="true"></div>
+    <div class="ph-sheet-b" id="phSheetBody"></div>
+  </div>
+
+  <!-- a panel's full-size view breaks out of its frame through the host -->
+  <div class="rm-lb" id="lightbox" role="dialog" aria-modal="true" hidden>
+    <figure class="rm-lb-fig"><div id="lbBody"></div><figcaption id="lbCap"></figcaption></figure>
+  </div>
+
+  <script type="module" src="/room.js"></script>
+</body>
+</html>

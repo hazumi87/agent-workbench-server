@@ -1,0 +1,85 @@
+# Security gates for the agent-workbench-server repository. Every job is read-only; actions are pinned by commit SHA.
+# `gate` is the one aggregate check to require on main (Settings -> Branches -> Branch protection rules).
+# This repository needs no dependency secret: the engine's pty-broker dependency is `file:../pty-broker`, inside this checkout.
+name: scan
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '17 4 * * 1' # Mondays: a new advisory or licence change shows up without a push
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: scan-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  deps:
+    name: known-vulnerable dependencies (osv-scanner)
+    timeout-minutes: 15
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: google/osv-scanner-action/osv-scanner-action@456ceb78310755116e0a3738121351006286b797 # v2.2.1
+        with:
+          scan-args: |-
+            --recursive
+            ./
+  licences:
+    name: licence allowlist (fails on copyleft or unknown)
+    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22.23.1
+      - run: bash ci/licences.sh
+  leaks:
+    name: secrets in the tree and its history (gitleaks)
+    timeout-minutes: 15
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read # a pull_request run lists the PR's commits
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: "false"
+          GITLEAKS_CONFIG: .gitleaks.toml
+  sast:
+    name: static analysis (semgrep, errors fail)
+    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - run: pipx run semgrep==1.182.1 scan --config p/javascript --config p/typescript --config p/nodejs --severity ERROR --error --metrics off --exclude node_modules --exclude test --exclude vendor .
+  sbom:
+    name: SBOM (CycloneDX)
+    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22.23.1
+      - run: bash ci/sbom.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: sbom
+          path: sbom/
+  gate:
+    name: gate (require this one)
+    if: always()
+    timeout-minutes: 5
+    needs: [deps, licences, leaks, sast, sbom]
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          echo '${{ toJSON(needs) }}' | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          echo '${{ toJSON(needs) }}' | jq -e 'all(.[]; .result == "success")' >/dev/null

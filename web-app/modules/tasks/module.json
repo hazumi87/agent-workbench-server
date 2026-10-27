@@ -1,0 +1,24 @@
+{
+  "id": "tasks",
+  "name": "Tasks",
+  "version": "0.1.0",
+  "description": "The room's tasks: a card in each room's rail with its % done and activity, and a side view with the list and the timeline.",
+  "class": "tool",
+  "icon": "task_alt",
+  "main": "index.js",
+  "provides": [
+    "room.tasks"
+  ],
+  "role": "tasks",
+  "contexts": [
+    "workroom"
+  ],
+  "actions": "actions.json",
+  "permissions": [
+    "ui.railCard",
+    "ui.side",
+    "ui.window",
+    "rooms.tasks.read",
+    "rooms.tasks.write"
+  ]
+}

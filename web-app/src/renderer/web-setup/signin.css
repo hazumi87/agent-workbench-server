@@ -1,0 +1,37 @@
+.web-signin {
+  box-sizing: border-box;
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  overflow: auto;
+  padding: 24px;
+  border: 0;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+}
+.web-signin[open] { display: grid; place-items: center; }
+.web-signin-column { width: 100%; max-width: 380px; text-align: center; }
+.web-signin-icon { display: block; margin-bottom: 8px; font-size: 40px; color: var(--md-sys-color-primary); }
+.web-signin[data-state="unavailable"] .web-signin-icon { color: var(--md-sys-color-on-surface-variant); }
+.web-signin::backdrop { background: var(--md-sys-color-surface); }
+.web-signin h1 { margin: 0 0 1rem; font-size: 1.5rem; }
+.web-signin p { text-wrap: balance; margin: 0 0 1.5rem; color: var(--md-sys-color-on-surface-variant); }
+.web-signin a, .web-signin button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: .5rem 1.5rem;
+  border: 0;
+  border-radius: 2rem;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  text-decoration: none;
+  font: inherit;
+}
+.web-signin [hidden] { display: none !important; }
+.web-signin :focus-visible { outline: 2px solid var(--md-sys-color-on-surface); outline-offset: 3px; }

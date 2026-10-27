@@ -1,0 +1,12 @@
+# Installed dependency trees; web-app runtime assets remain tracked.
+/node_modules/
+/briefing-table/node_modules/
+/pty-broker/node_modules/
+/web-ui/node_modules/
+/web-ui/build-tools/node_modules/
+/sbom/
+/coverage/
+*.log
+.env
+.env.*
+!.env.example

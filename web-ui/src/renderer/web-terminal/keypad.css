@@ -1,0 +1,26 @@
+/* s12: one person-controlled key row, above the visual viewport's keyboard. */
+.wb-terminal-keypad[hidden], .wb-terminal-keys-bar[hidden] { display: none !important; }
+.wb-terminal-keypad {
+  position: fixed; z-index: 90; box-sizing: border-box; display: flex; gap: 4px;
+  padding: 4px; overflow-x: auto; overscroll-behavior-x: contain;
+  background: var(--md-sys-color-surface-container); color: var(--md-sys-color-on-surface);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+.wb-terminal-keypad button, .wb-terminal-keys-toggle {
+  flex: 0 0 auto; min-width: 48px; min-height: 48px; box-sizing: border-box;
+  border: 1px solid var(--md-sys-color-outline); border-radius: 8px;
+  background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface);
+  font: inherit; cursor: pointer; touch-action: manipulation;
+}
+.wb-terminal-keypad button { width: 48px; height: 48px; padding: 0; }
+.wb-terminal-keypad button[data-terminal-key="interrupt"] { width: 72px; }
+.wb-terminal-keypad button[aria-pressed="true"] { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.wb-terminal-keypad button:disabled { opacity: .45; cursor: default; }
+.wb-terminal-keypad button:focus-visible, .wb-terminal-keys-toggle:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 2px; }
+.wb-terminal-keys-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 8px; }
+.wb-terminal-keys-bar { display: flex; justify-content: flex-end; }
+.term.wb-terminal-has-keys { padding-bottom: 58px; box-sizing: border-box; }
+.term.active:has(> .wb-terminal-keys-bar:not([hidden])), .pane-body .term:has(> .wb-terminal-keys-bar:not([hidden])) { display: flex; flex-direction: column; }
+.term.active:has(> .wb-terminal-keys-bar:not([hidden])) > .xterm, .pane-body .term:has(> .wb-terminal-keys-bar:not([hidden])) > .xterm { flex: 1 1 auto; min-height: 0; }
+
+.pane-h:has(> .wb-terminal-keys-toggle) { min-height: 56px; flex-basis: 56px; }

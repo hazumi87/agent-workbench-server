@@ -1,0 +1,18 @@
+/* IMAGE LINKS IN ROOM LINES (web/room-image-links.mjs, Owner 2026-09-28).
+   The thumbnails ARE the attachments' boxes (room-attach.css: .entry-att,
+   .att-img, .att-img.one — the design system A1); this sheet only adds what a link set
+   has and an attachment set does not. Loaded AFTER room-attach.css. */
+
+/* the set sits under the body (and under any attachments) */
+.ril-set { margin-top: 6px; }
+.ril-set[hidden] { display: none; }
+.att-img.ril-thumb[hidden] { display: none; }
+.att-img.ril-thumb { cursor: zoom-in; }
+/* "+N": the images past the fourth; they are links in the text above */
+.att-img.ril-more {
+  display: grid; place-items: center; cursor: default;
+  font: 600 18px var(--font); color: var(--dim);
+}
+/* a fact (a centred room line): the set centres under its text */
+.entry.by-room > .ril-set { justify-content: center; }
+.entry.by-room[data-side] > .ril-set { justify-content: flex-start; }

@@ -1,0 +1,5 @@
+{
+ "header": "default-src 'self'; script-src 'self'; frame-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' ws: wss:; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
+ "meta": "default-src 'self'; script-src 'self'; frame-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' ws: wss:; base-uri 'self'; form-action 'self'",
+ "note": "Derived from the desktop CSP (src/renderer/index.html): file: and wbmod: dropped (no file pages, no module scheme), connect-src added for same-origin fetch and the /pty and /term sockets, frame-ancestors only as a header (a meta tag ignores it). The header and the meta tag are the SAME policy apart from frame-ancestors."
+}

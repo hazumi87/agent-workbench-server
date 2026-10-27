@@ -1,0 +1,11 @@
+{
+  "id": "repo-shell",
+  "title": "Repo Shell",
+  "class": "cli",
+  "fn": "cli",
+  "descriptor": {
+    "binary": "powershell.exe",
+    "args": [],
+    "cwd": "C:\\Code\\briefing-table"
+  }
+}

@@ -1,0 +1,5 @@
+# src/table/ — the SQLite mapping table, ALWAYS behind an endpoint (Seam C2,
+# decision 5). Empty at M0: no sessions to map with zero components. Lands when
+# the first component needs paneid -> server -> vendor -> agent -> session_id +
+# state. Never let callers open the db file directly — endpoint indirection is
+# what keeps the table's location a config flip, not a rewrite.

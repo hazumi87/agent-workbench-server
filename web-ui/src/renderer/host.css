@@ -1,0 +1,46 @@
+/* host.css (the design notes §5): the ONE stylesheet the host attaches to any frame it
+ * gives a tool, before the tool's own `style` file. Roles, not values: every colour is a
+ * --md-sys-color-* custom property the host sets on :root from the shell's own palette (and keeps
+ * current through the `theme` message), so there is no second copy of the palette to drift. The
+ * type scale, the shape scale and the base components the shell already draws follow. */
+:root {
+  --md-sys-typescale-body-font: 'Roboto Flex', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --md-sys-typescale-mono-font: 'Roboto Mono', ui-monospace, Menlo, Consolas, monospace;
+  --md-sys-typescale-body-medium: 400 14px/20px var(--md-sys-typescale-body-font);
+  --md-sys-typescale-body-large: 400 16px/24px var(--md-sys-typescale-body-font);
+  --md-sys-typescale-label-large: 500 14px/20px var(--md-sys-typescale-body-font);
+  --md-sys-typescale-title-medium: 500 16px/24px var(--md-sys-typescale-body-font);
+  --md-sys-typescale-headline-small: 400 24px/32px var(--md-sys-typescale-body-font);
+  --md-sys-shape-corner-extra-small: 4px;
+  --md-sys-shape-corner-small: 8px;
+  --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-large: 16px;
+  --md-sys-shape-corner-extra-large: 28px;
+  --md-sys-shape-corner-full: 999px;
+  color-scheme: light dark;
+}
+html, body { margin: 0; }
+body { background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); font: var(--md-sys-typescale-body-medium); }
+h1 { font: var(--md-sys-typescale-headline-small); margin: 0 0 8px; }
+h2 { font: var(--md-sys-typescale-title-medium); margin: 0 0 6px; }
+a { color: var(--md-sys-color-primary); }
+code, pre { font-family: var(--md-sys-typescale-mono-font); }
+/* button: filled, tonal (.tonal), text (.text) */
+button, .md-button { height: 40px; padding: 0 24px; border: 0; border-radius: var(--md-sys-shape-corner-full); font: var(--md-sys-typescale-label-large);
+  background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); cursor: pointer; }
+button.tonal { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+button.text { background: transparent; color: var(--md-sys-color-primary); padding: 0 12px; }
+button:disabled { background: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent); color: color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent); cursor: default; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--md-sys-color-secondary); outline-offset: 2px; }
+/* text field (outlined) */
+input[type="text"], input[type="number"], input[type="email"], textarea, select { height: 40px; padding: 0 12px; border: 1px solid var(--md-sys-color-outline); border-radius: var(--md-sys-shape-corner-extra-small);
+  background: transparent; color: var(--md-sys-color-on-surface); font: var(--md-sys-typescale-body-large); }
+textarea { height: auto; padding: 10px 12px; }
+input:focus, textarea:focus, select:focus { border-color: var(--md-sys-color-primary); outline: 1px solid var(--md-sys-color-primary); }
+/* list item */
+.md-list { list-style: none; margin: 0; padding: 0; }
+.md-list > li { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 16px; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+.md-list > li:last-child { border-bottom: 0; }
+/* chip (assist / filter) */
+.md-chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 1px solid var(--md-sys-color-outline); border-radius: var(--md-sys-shape-corner-small); font: var(--md-sys-typescale-label-large); color: var(--md-sys-color-on-surface-variant); }
+.md-chip.selected { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); border-color: transparent; }

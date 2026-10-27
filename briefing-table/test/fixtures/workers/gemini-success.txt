@@ -1,0 +1,42 @@
+Loaded cached credentials.
+{
+  "session_id": "00000000-0000-0000-0000-000000000000",
+  "response": "No findings: the plan is sound.",
+  "stats": {
+    "models": {
+      "gemini-2.5-pro": {
+        "api": {
+          "totalRequests": 1,
+          "totalErrors": 0,
+          "totalLatencyMs": 4210
+        },
+        "tokens": {
+          "input": 1180,
+          "prompt": 1200,
+          "candidates": 340,
+          "total": 1790,
+          "cached": 20,
+          "thoughts": 250,
+          "tool": 0
+        }
+      }
+    },
+    "tools": {
+      "totalCalls": 0,
+      "totalSuccess": 0,
+      "totalFail": 0,
+      "totalDurationMs": 0,
+      "totalDecisions": {
+        "accept": 0,
+        "reject": 0,
+        "modify": 0,
+        "auto_accept": 0
+      },
+      "byName": {}
+    },
+    "files": {
+      "totalLinesAdded": 0,
+      "totalLinesRemoved": 0
+    }
+  }
+}

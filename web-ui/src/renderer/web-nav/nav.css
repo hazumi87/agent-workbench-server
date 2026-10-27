@@ -1,0 +1,88 @@
+/* Web build only (this file is in web/mounts.json, nothing loads it on the desktop). The desktop window chrome has no
+   meaning in a page: no Minimize / Maximize / Close window, no hamburger menu, no updater chip, and no Servers
+   (one person per server). Display:none also takes them out of the Tab order. */
+html[data-wb-web] .hwb-caps,
+html[data-wb-web] #burger,
+html[data-wb-web] #updChip,
+html[data-wb-web] #gsServers { display: none !important; }
+
+/* Stacking layers for a gated page: the gate host, then EVERY modal a gated page opens (the folder picker, dialogs) above it. */
+:root { --wb-z-gate: 900; --wb-z-modal: 1000; }
+/* The first-use gate (router.registerGate): the shell is hidden and inert behind this until every gate passes. */
+.wb-gate { position: fixed; inset: 0; z-index: var(--wb-z-gate, 900); overflow: auto; display: grid; place-items: center; padding: 16px;
+  background: var(--md-sys-color-surface, #fff); color: var(--md-sys-color-on-surface, #1b1b1f); }
+.wb-gate[hidden], .wb-gate-status[hidden], .wb-gate-body:empty { display: none; }
+.wb-gate-status { text-align: center; font: 500 16px/24px var(--font, system-ui, sans-serif); }
+.wb-gate-status p { margin: 0 0 12px; }
+.wb-gate-status button { min-height: 44px; padding: 0 24px; border: 0; border-radius: 22px; cursor: pointer; font: 500 14px var(--font, system-ui, sans-serif);
+  background: var(--md-sys-color-primary, #3b5ba9); color: var(--md-sys-color-on-primary, #fff); }
+
+/* ---- Navigation (the design, section 6): the top bar, the account button, the skip link, the bottom bar, the focus ring ---- */
+html[data-wb-web] { --wb-bar-h: 56px; }
+html[data-wb-web] .hwb-bar { height: 56px; padding: 0 8px 0 8px; gap: 4px; }
+
+/* one ring everywhere: 2 px, the primary colour, a 2 px gap (quality item 13) */
+html[data-wb-web] :focus-visible { outline: 2px solid var(--md-sys-color-primary) !important; outline-offset: 2px !important; }
+
+/* skip link: first in the page, visible on focus */
+.wb-skip { position: fixed; left: 8px; top: -80px; z-index: 2147483001; padding: 12px 16px; border-radius: 8px; background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary); font: 500 14px/20px var(--font, system-ui, sans-serif); text-decoration: none; }
+.wb-skip:focus { top: 8px; }
+
+/* the mark (the name shows from 840 px) */
+.wb-mark { display: flex; align-items: center; gap: 8px; padding: 0 8px 0 4px; flex: none; color: var(--md-sys-color-primary); }
+.wb-mark-svg { display: grid; place-items: center; width: 24px; height: 24px; }
+.wb-name { display: none; font: 500 16px/24px var(--font, system-ui, sans-serif); color: var(--md-sys-color-on-surface); }
+@media (min-width: 840px) { .wb-name { display: inline; } }
+
+/* back arrow and title (phone, one level down) */
+.wb-back { display: none; width: 48px; height: 48px; border: 0; border-radius: 50%; background: none; color: var(--md-sys-color-on-surface); cursor: pointer; place-items: center; flex: none; }
+.wb-back .ms { font-size: 24px; }
+.wb-title { display: none; flex: 1 1 auto; min-width: 0; font: 500 18px/24px var(--font, system-ui, sans-serif); color: var(--md-sys-color-on-surface); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* the account button: a round initial, a 48 px target (a 40 px disc inside it), and its menu */
+.wb-acct-wrap { position: relative; flex: none; margin-left: 4px; }
+.wb-acct { width: 48px; height: 48px; padding: 4px; border: 0; border-radius: 50%; background: var(--md-sys-color-primary); background-clip: content-box; color: var(--md-sys-color-on-primary);
+  font: 600 18px/1 var(--font, system-ui, sans-serif); cursor: pointer; display: grid; place-items: center; }
+.wb-acct-menu { position: absolute; right: 0; top: 52px; z-index: 70; min-width: 220px; padding: 8px 0; border-radius: 12px;
+  background: var(--md-sys-color-surface-container, #fff); color: var(--md-sys-color-on-surface); box-shadow: 0 4px 16px rgb(0 0 0 / 0.25); }
+.wb-acct-menu[hidden] { display: none; }
+.wb-acct-who { padding: 12px 16px; font: 400 14px/20px var(--font, system-ui, sans-serif); color: var(--md-sys-color-on-surface-variant); }
+.wb-acct-out { display: block; width: 100%; min-height: 48px; padding: 0 16px; border: 0; background: none; text-align: left; cursor: pointer;
+  color: var(--md-sys-color-on-surface); font: 500 14px var(--font, system-ui, sans-serif); }
+.wb-acct-out:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+
+/* Settings is open: the Settings tab is the active one, whatever surface is underneath */
+html[data-wb-settings="open"] .hwb-apps .hwb-apptab.is-active { background: transparent; color: inherit; }
+
+/* the bottom bar: hidden from 600 px and on a sub-page */
+.wb-bnav { display: none; }
+@media (min-width: 600px) { .wb-bnav, .wb-back, .wb-title { display: none !important; } }
+@media (max-width: 599.98px) {
+  html[data-wb-web] .hwb-apps, html[data-wb-web] #wbNavSettings { display: none !important; }
+  html[data-wb-web] .wb-bnav { display: flex; flex: 0 0 68px; height: 68px; border-top: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-surface-container); padding-bottom: env(safe-area-inset-bottom, 0); }
+  html[data-wb-nav="sub"] .wb-bnav { display: none; }
+  .wb-bni { flex: 1 1 0; min-width: 0; min-height: 68px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    border: 0; background: none; cursor: pointer; color: var(--md-sys-color-on-surface-variant); font: 400 12px/16px var(--font, system-ui, sans-serif); }
+  .wb-bni.is-active { color: var(--md-sys-color-on-surface); font-weight: 700; }
+  .wb-pill { position: relative; width: 56px; height: 28px; border-radius: 14px; display: grid; place-items: center; }
+  .wb-bni.is-active .wb-pill { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+  .wb-bni .ms { font-size: 24px; font-variation-settings: 'FILL' 0; }
+  .wb-bni.is-active .ms { font-variation-settings: 'FILL' 1; }
+  .wb-badge { position: absolute; top: -6px; left: calc(50% + 6px); min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; box-sizing: border-box;
+    background: var(--md-sys-color-error); color: var(--md-sys-color-on-error); font: 600 10px/16px var(--font, system-ui, sans-serif); text-align: center; }
+  .wb-badge[hidden] { display: none; }
+  /* one level down: back arrow and title replace the mark */
+  html[data-wb-nav="sub"] .wb-back { display: grid; }
+  html[data-wb-nav="sub"] .wb-title { display: block; }
+  html[data-wb-nav="sub"] .wb-mark { display: none; }
+  /* Settings on a phone is a full page, with the bar under it on the top-level page */
+  html[data-wb-web] #settingsPop { left: 0; width: auto; border-radius: 0; }
+  html[data-wb-nav="top"][data-wb-settings="open"] #settingsPop { bottom: 68px; }
+}
+.wb-acct-link { display: flex; flex-direction: column; justify-content: center; min-height: 48px; padding: 4px 16px; text-decoration: none; color: var(--md-sys-color-on-surface); font: 400 14px/20px var(--font, system-ui, sans-serif); }
+.wb-acct-link:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+.wb-acct-link:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: -2px; }
+.wb-acct-ln { font-weight: 500; }
+.wb-acct-ls { font-size: 12px; color: var(--md-sys-color-on-surface-variant); }

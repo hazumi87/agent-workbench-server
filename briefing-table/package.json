@@ -1,0 +1,40 @@
+{
+  "name": "briefing-table",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Workbench server engine and browser application.",
+  "scripts": {
+    "dev": "tsx watch src/server/index.ts",
+    "start": "tsx src/server/index.ts",
+    "broker": "tsx node_modules/pty-broker/src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node scripts/run-tests.mjs",
+    "basic:scratch": "tsx scripts/basic-scratch-instance.ts",
+    "basic:scratch:reap": "tsx scripts/basic-scratch-reap.ts"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.10.0",
+    "@types/ws": "^8.18.1",
+    "playwright": "^1.60.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "@simplewebauthn/server": "^14.0.2",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/addon-web-links": "^0.12.0",
+    "@xterm/headless": "6.0.0",
+    "@xterm/xterm": "^6.0.0",
+    "argon2": "^0.45.1",
+    "better-sqlite3": "^12.10.0",
+    "nats": "^2.29.3",
+    "node-pty": "^1.1.0",
+    "pty-broker": "file:../pty-broker",
+    "sharp": "^0.35.4",
+    "svgo": "^4.1.0",
+    "ws": "^8.21.0"
+  }
+}

@@ -1,0 +1,46 @@
+.wb-room-files{padding:24px;max-width:100%;box-sizing:border-box;min-width:0;color:var(--md-sys-color-on-surface);background:var(--md-sys-color-surface);overflow:auto;height:100%}
+.wb-room-files [hidden]{display:none!important}
+.wb-room-files button,.wb-room-files input{font:inherit;min-height:44px}
+.wb-room-files button{color:var(--md-sys-color-primary);background:var(--md-sys-color-surface-container);border:1px solid var(--md-sys-color-outline-variant);border-radius:12px;padding:8px 14px;cursor:pointer}
+.wb-room-files button:disabled{opacity:.6;cursor:default}
+.wb-room-files button:focus-visible,.wb-room-files textarea:focus-visible,.wb-room-files:focus-visible{outline:2px solid var(--md-sys-color-primary);outline-offset:3px}
+.wb-room-files__title{font-size:24px;margin:0 0 8px}
+.wb-room-files__room,.wb-room-files__subtitle,.wb-room-files__hint,.wb-room-files__size{color:var(--md-sys-color-on-surface-variant);overflow-wrap:anywhere}
+.wb-room-files__tabs{display:flex;gap:8px;margin-block:20px}
+.wb-room-files__tab[aria-selected=true]{color:var(--md-sys-color-on-secondary-container);background:var(--md-sys-color-secondary-container)}
+.wb-room-files__list{list-style:none;padding:0;margin:16px 0}
+.wb-room-files__row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--md-sys-color-outline-variant);padding:12px 0;min-width:0}
+.wb-room-files__name{flex:1 1 180px;min-width:0;overflow-wrap:anywhere}
+.wb-room-files__size{font-size:12px}
+.wb-room-files__status,.wb-room-files__note-status{white-space:pre-wrap;overflow-wrap:anywhere;min-height:24px}
+.wb-room-files__editor{padding:16px;border:1px solid var(--md-sys-color-outline-variant);border-radius:16px}
+.wb-room-files__note-text{display:block;width:100%;box-sizing:border-box;min-height:240px;resize:vertical;background:var(--md-sys-color-surface-container);color:var(--md-sys-color-on-surface);font:14px/1.6 monospace;border:1px solid var(--md-sys-color-outline);border-radius:8px;padding:12px}
+.wb-room-files__note-title{overflow-wrap:anywhere}
+.wb-room-files__editor button{margin:4px}
+@media(max-width:599px){.wb-room-files{padding:16px}.wb-room-files__row{gap:6px}.wb-room-files__editor{padding:12px}.wb-room-files__tabs{flex-wrap:wrap}}
+/* This stylesheet is mounted only by the browser build. Hide the personal
+   folder row before init as well as after createPage's DOM guard. */
+#gsScratchpad{display:none!important}
+
+/* Notes and file controls share the same field roles and spacing. */
+.wb-room-files__tools,.wb-room-files__card-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.wb-room-files__tools{margin-block:8px}
+.wb-room-files__new-note-form{display:flex;flex-wrap:wrap;align-items:end;gap:8px;margin-block:16px}
+.wb-room-files__new-note-label{display:flex;flex-direction:column;gap:8px;max-width:100%}
+.wb-room-files__new-note-name{box-sizing:border-box;max-width:100%;padding:10px 12px;border:1px solid var(--md-sys-color-outline);border-radius:8px;background:var(--md-sys-color-surface-container);color:var(--md-sys-color-on-surface)}
+.wb-room-files__new-note-name:focus-visible{outline:2px solid var(--md-sys-color-primary);outline-offset:3px}
+
+/* the app's own confirmation (confirm-dialog.js): a centred card, a bottom sheet under 600 px; buttons 44 px (48 on a phone) */
+.web-confirm { border: 0; border-radius: 28px; padding: 24px; max-width: min(420px, calc(100vw - 32px)); background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface); font: 400 14px/20px var(--font); box-shadow: 0 8px 32px rgba(0,0,0,.3); }
+.web-confirm::backdrop { background: rgba(0,0,0,.4); }
+.web-confirm h2 { margin: 0 0 8px; font: 500 20px/28px var(--font); }
+.web-confirm p { margin: 0 0 16px; color: var(--md-sys-color-on-surface-variant); }
+.web-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.web-confirm-actions button { min-height: 44px; padding: 0 20px; border: 0; border-radius: 22px; background: none; color: var(--md-sys-color-primary); font: 500 14px/20px var(--font); cursor: pointer; }
+.web-confirm-actions .web-confirm-yes { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.web-confirm-actions button:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 2px; }
+@media (max-width: 600px) {
+  .web-confirm { position: fixed; inset: auto 0 0 0; margin: 0; max-width: none; width: 100%; box-sizing: border-box; border-radius: 28px 28px 0 0; padding: 24px 16px 20px; }
+  .web-confirm-actions { flex-direction: column-reverse; }
+  .web-confirm-actions button { min-height: 48px; width: 100%; }
+}

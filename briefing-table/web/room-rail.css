@@ -1,0 +1,78 @@
+/* ==== THE RESIZABLE COLUMNS (the design system room-rail-resize-v1, web/room-rail.mjs) ====
+   Loaded after room.css. --rail-pref / --pv-pref are the saved widths (set on
+   <html> by room.html's <head> script and by room-rail.mjs). The clamps are
+   HERE, at render.
+   The rail: min = default = 272; NO fixed max (rooms/rail-max, Owner
+   2026-09-28) — the only ceiling is "never more than leaves the line 480"
+   (+ the preview's width while open).
+   The preview (Owner 2026-09-30 [ticket]; the design system 2026-10-07: min 320, preferred 370): default 370, min 320, max 720, and
+   never more than leaves the line 480 beside the rail's 272 MINIMUM — so a
+   narrowing window takes width from the rail first. --pv-w is resolved where
+   it is used (the 100% is the grid's), so both tracks share one expression.
+   A narrow window takes width back and nothing is written back. */
+.rm-main { grid-template-columns: clamp(272px, var(--rail-pref, 272px), 100% - 480px) minmax(0, 1fr); }
+.rm-main.has-pv {
+  --pv-w: clamp(320px, min(var(--pv-pref, 370px), 720px), 100% - 752px);
+  grid-template-columns: clamp(272px, var(--rail-pref, 272px), 100% - 480px - var(--pv-w)) minmax(0, 1fr) var(--pv-w);
+}
+
+/* THE PREVIEW AS A DRAWER [pv drawer] (Owner 2026-10-07: the preview column squeezed the chat; the design system numbers). Chat minimum 480, preview
+   minimum 320: while rail + 480 + 320 does not fit, the preview is NOT a column but a drawer over the chat, anchored right, 370px or the
+   window less 56px, with the room's scrim behind it; the rail stays visible. room-rail.mjs mountPreviewDrawer sets `.pv-drawer` on .rm-main
+   from the window and the rail's real width, and it only moves the panel: the open list, its scroll and its place are untouched. */
+.rm-main.has-pv.pv-drawer { grid-template-columns: clamp(272px, var(--rail-pref, 272px), 100% - 480px) minmax(0, 1fr); }
+.rm-main.pv-drawer .rm-pv {
+  position: absolute; z-index: 30; top: 0; right: 0; bottom: 0; grid-column: auto; width: min(370px, 100% - 56px);
+  box-shadow: -18px 0 36px -10px rgba(0, 0, 0, .6);
+}
+.rm-main.pv-drawer .rr-grip.is-pv { display: none; }
+.pv-scrim { position: absolute; z-index: 25; inset: 0; background: color-mix(in srgb, var(--ink) 55%, transparent); }
+.pv-scrim[hidden] { display: none; }
+@media (max-width: 600px) { .pv-scrim { display: none; } } /* the phone's layer needs none */
+
+/* the handle: a 12px transparent strip centred ON the column's 1px edge (the
+   edge itself stays the plain --border), a 4x36 grip pill.
+   SHOWN ONLY WHEN WANTED (Owner 2026-09-30 [ticket]): invisible at rest (the
+   hit strip stays), fades in over 150ms on hover, full while dragging or
+   keyboard-focused, and fades out ~2s after the pointer leaves or the drag
+   ends. A transition runs with the DESTINATION state's timing, so the rest
+   state carries the slow, delayed fade-out and the shown states the quick in. */
+.rr-grip {
+  grid-column: 1; grid-row: 1; justify-self: end; align-self: stretch; position: relative; z-index: 6;
+  width: 12px; margin-right: -6px; cursor: col-resize; touch-action: none; outline: none;
+  opacity: 0; transition: opacity .3s ease 1.7s;
+}
+.rr-grip:hover, .rr-grip.is-drag, .rr-grip:focus-visible { opacity: 1; transition: opacity .15s ease; }
+.rr-grip::before {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 4px; height: 36px; transform: translate(-50%, -50%);
+  border-radius: 2px; background: var(--border2); transition: background .12s, height .12s;
+}
+.rr-grip:hover::before { background: color-mix(in oklab, var(--dim) 65%, var(--border2)); height: 48px; } /* the design system 2026-09-30: a quiet hover, so hover → drag (grey → accent) stays a clear step */
+.rr-grip.is-drag::before { background: var(--room-accent, var(--teal)); height: 48px; }
+.rr-grip:focus-visible::before { background: var(--room-accent, var(--teal)); height: 48px; box-shadow: 0 0 0 3px color-mix(in srgb, var(--room-accent, var(--teal)) 30%, transparent); }
+/* the width readout, beside the grip while dragging or focused */
+.rr-tip {
+  position: absolute; left: 12px; top: calc(50% - 11px); display: none; white-space: nowrap; pointer-events: none;
+  font: 500 11px var(--mono); color: var(--text); background: var(--surface3, var(--surface2));
+  border: 1px solid var(--border2); border-radius: 4px; padding: 3px 6px;
+}
+.rr-grip.is-drag .rr-tip, .rr-grip:focus-visible .rr-tip { display: block; }
+/* the preview's grip: the same splitter on that column's LEFT edge, readout
+   over the line; only while the column is open */
+.rr-grip.is-pv { grid-column: 3; justify-self: start; margin-right: 0; margin-left: -6px; }
+.rr-grip.is-pv .rr-tip { left: auto; right: 12px; }
+.rm-main:not(.has-pv) .rr-grip.is-pv { display: none; }
+/* while dragging: no text selection, and no frame may swallow the pointer */
+body.rr-resizing { cursor: col-resize; user-select: none; }
+body.rr-resizing iframe { pointer-events: none; }
+
+/* touch-only (a tablet at desktop width): there is no hover to reveal it, so
+   the grip stays drawn as it always was */
+@media (hover: none) {
+  .rr-grip { opacity: 1; transition: none; }
+}
+/* phone: nothing changes (the columns are layers there) */
+@media (max-width: 600px) {
+  .rr-grip { display: none; }
+}
+/* ==== end THE RESIZABLE COLUMNS ==== */

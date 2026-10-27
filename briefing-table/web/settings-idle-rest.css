@@ -1,0 +1,27 @@
+/* AGENTS - rest (web/settings-idle-rest.mjs): Rest (level 1) + Disconnect (level 2). The Settings page's pv-*
+   classes carry labels, notes, inputs and the Save button; this covers the
+   period rows and the switch rows only. Tokens only. 16px inputs on a phone. */
+.irs { display: grid; gap: 4px; font: 400 13px var(--font); color: var(--text); min-width: 0; }
+.irs-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 12px; }
+.irs-check { display: flex; align-items: flex-start; gap: 7px; margin-top: 12px; color: var(--text); }
+.irs-row .irs-check { margin-top: 0; align-items: center; }
+.irs-check input { margin-top: 3px; flex: none; }
+.irs-row .irs-check input { margin-top: 0; }
+.irs-words { display: grid; gap: 2px; }
+.irs-words .pv-note { margin: 0; }
+.irs-num { width: 84px; box-sizing: border-box; font-family: var(--mono); }
+.irs-num:disabled, .irs-unit:disabled { opacity: .5; }
+.irs-hint { margin: 0; }
+.irs-h { margin: 14px 0 0; font: 600 13px var(--font); color: var(--text); }
+.irs-h:first-of-type { margin-top: 8px; }
+.irs-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 12px; }
+.irs-acts .pv-msg { margin: 0; }
+@media (max-width: 600px) {
+  .irs-num, .irs-unit { font-size: 16px; }
+}
+.irs-guard { min-height: 44px; align-items: center; }
+.irs-guard input { margin-top: 0; width: 20px; height: 20px; }
+.irs-guard-msg { margin: 0; }
+@media (max-width: 600px) {
+  .irs-guard { min-height: 48px; }
+}

@@ -1,0 +1,18 @@
+/* Global color palette group (web/settings-palette.mjs); the design system v2.js SET_CSS. The
+   shared pieces (.tb-sw, .tb-bar) live in settings.css. */
+.gp-first { margin-top: 0; }
+.gp-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.gp-sel { width: auto; margin: 0; flex: 1 1 200px; }
+.gp-chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-top: 10px; }
+.gp-chip { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--dim); }
+.gp-chip input { width: 24px; height: 24px; padding: 0; border: 1px solid var(--border2); border-radius: 4px; background: none; }
+.gp-chip input:disabled { opacity: .85; cursor: default; }
+.gp-strip { display: flex; height: 14px; border-radius: 3px; overflow: hidden; border: 1px solid var(--border2); margin-top: 10px; }
+.gp-strip i { flex: 1; }
+.pv-seg2 { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--border2); border-radius: 8px; }
+.pv-seg2 button { min-height: 28px; padding: 0 12px; border-radius: 6px; border: 1px solid transparent; background: none; color: var(--dim); cursor: pointer; font-size: 12.5px; }
+.pv-seg2 button[aria-pressed="true"] { background: var(--surface3); border-color: var(--border2); color: var(--text); }
+.pv-seg2 button:disabled { opacity: .5; cursor: default; }
+.pv-seg2 button:focus-visible { outline: 2px solid var(--room-accent, var(--teal)); outline-offset: 1px; }
+.tb-list { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: center; margin-top: 8px; font-size: 13px; }
+.gp-fixed { margin: 0; }

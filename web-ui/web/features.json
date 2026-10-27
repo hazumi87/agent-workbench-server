@@ -1,0 +1,10 @@
+{
+ "argv": [],
+ "note": "the feature flags the desktop passes as argv to the preload (--wb-local-setup, --wb-starter-workrooms, --wb-agent-setup, --wb-room-templates); a slice that needs one turns it on here; \"modules\" lists the bundled modules the web build ships (their catalog is built at build time); usage is not shipped in the pilot (a reviewer #N: its data needs NATS, which the pilot does not run; it returns when the engine reads usage locally)",
+ "modules": [
+  "cli-manager",
+  "workrooms",
+  "tasks",
+  "image-viewer"
+ ]
+}

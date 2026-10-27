@@ -1,0 +1,70 @@
+{
+  "source": "chan-probe r6 (claude-code 2.1.282, server pty via python pty + pyte, 140x50, synthetic probe text only)",
+  "cols": 140,
+  "rows": 50,
+  "marks": [
+    {
+      "t": 1790340422,
+      "expect": {
+        "composer": "unknown",
+        "surface": "dialog",
+        "evidence": "cc.veto.pointer"
+      },
+      "note": "dev-channels warning"
+    },
+    {
+      "t": 1790340428,
+      "expect": {
+        "composer": "clean",
+        "surface": "composer",
+        "evidence": "cc.composer.dim"
+      },
+      "note": "placeholder"
+    },
+    {
+      "t": 1790340445,
+      "expect": {
+        "composer": "draft",
+        "surface": "composer",
+        "evidence": "cc.composer.nonDim"
+      },
+      "note": "single-line draft"
+    },
+    {
+      "t": 1790340450,
+      "expect": {
+        "composer": "clean",
+        "surface": "composer",
+        "evidence": "cc.composer.blank"
+      },
+      "note": "after Ctrl-U"
+    },
+    {
+      "t": 1790340460,
+      "expect": {
+        "composer": "unknown",
+        "surface": "dialog",
+        "evidence": "cc.veto.pointer"
+      },
+      "note": "permission dialog"
+    },
+    {
+      "t": 1790340480,
+      "expect": {
+        "composer": "clean",
+        "surface": "composer",
+        "evidence": "cc.composer.blank"
+      },
+      "note": "bare box after a turn"
+    },
+    {
+      "t": 1790340486.5,
+      "expect": {
+        "composer": "draft",
+        "surface": "composer",
+        "evidence": "cc.composer.nonDim"
+      },
+      "note": "/exit typed, slash menu open"
+    }
+  ]
+}

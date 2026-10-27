@@ -1,0 +1,11 @@
+{
+  "actions": [
+    {
+      "name": "open",
+      "title": "Open the pictures",
+      "provides": "image.view",
+      "output": { "kind": "text" },
+      "contexts": ["message-attachment"]
+    }
+  ]
+}

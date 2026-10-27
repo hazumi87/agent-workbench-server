@@ -1,0 +1,1 @@
+{ "id": "dotdot-actions", "name": "Dotdot actions", "version": "0.1.0", "class": "tool", "provides": ["dot.tool"], "contexts": ["dashboard"], "actions": "../actions.json" }

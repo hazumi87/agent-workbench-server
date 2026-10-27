@@ -1,0 +1,60 @@
+{"t": 0.267, "dir": "out", "data": "\u001b7\u001b[r\u001b8\u001b[?25h"}
+{"t": 0.278, "dir": "out", "data": "\u001b[?25l"}
+{"t": 0.278, "dir": "out", "data": "\u001b[?2004h\u001b[?2031h\u001b[?1004h"}
+{"t": 0.297, "dir": "out", "data": "\u001b[>0q\u001b[?u"}
+{"t": 0.297, "dir": "out", "data": "\u001b[c"}
+{"t": 0.562, "dir": "out", "data": "\u001b[>4m\u001b[<u\u001b[?1004l\u001b[?2031l\u001b[?2004l"}
+{"t": 0.661, "dir": "out", "data": "\u001b[?2004h\u001b[?2031h\u001b[?1004h"}
+{"t": 0.671, "dir": "out", "data": "\u001b]0;✳ Claude Code\u0007"}
+{"t": 0.697, "dir": "out", "data": "\u001b[38;5;174m ▐\u001b[48;5;16m▛███▛█\u001b[12G\u001b[39m\u001b[49m\u001b[1mClaude\u001b[19GCode\u001b[24G\u001b[22m\u001b[38;5;246mv2.1.285\u001b[39m\r\r\n\u001b[38;5;174m▝▜\u001b[48;5;16m█████\u001b[49m█▀\u001b[12G\u001b[38;5;246mHaiku\u001b[18G4.5\u001b[22G·\u001b[24GClaude\u001b[31GMax\u001b[39m\r\r\n\u001b[38;5;174m ▝▝\u001b[7G▝▝\u001b[12G\u001b[38;5;246m/…/ccprobe/proj\u001b[39m\r\r\n\r\r\n\r\r\n\u001b[38;5;244m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\u001b[39m\r\r\n❯ \u001b[2mTry\u001b[7G\"refactor\u001b[17G<filepath>\"\u001b[22m\r\r\n\u001b[38;5;244m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\u001b[39m\r\r\n\u001b[3G\u001b[38;5;246m⏸\u001b[5Gmanual\u001b[12Gmode\u001b[17Gon\u001b[20G·\u001b[22G?\u001b[24Gfor\u001b[28Gshortcuts\u001b[38G·\u001b[40G←\u001b[42Gfor\u001b[46Gagents\u001b[39m\r\r\n\u001b[2C\u001b[3A\u001b[?25h"}
+{"t": 0.833, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[3B\r\u001b[41C\u001b[1A\u001b[38;5;246m2 agents\u001b[39m\u001b[K\r\r\n\u001b[2C\u001b[3A\u001b[?25h"}
+{"t": 0.85, "dir": "out", "data": "\u001b[>0q\u001b[?u\u001b[c"}
+{"t": 1.17, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[3B\u001b[3G\u001b[38;5;220mYou've\u001b[10Gused\u001b[15GNN%\u001b[19Gof\u001b[22Gyour\u001b[27Gweekly\u001b[34Glimit\u001b[40G·\u001b[42Gresets\u001b[49GOct\u001b[53G3,\u001b[56G8pm\u001b[60G(America/Los_Angeles)\u001b[82G·\u001b[84G/usage-credits\u001b[99Gto\u001b[102Gkeep\u001b[107Gusing\u001b[113GClaud…\u001b[39m\r\r\n\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 3.174, "dir": "in", "data": "Use the AskUserQuestion tool to ask me one question: do I prefer red or blue? Offer those two options."}
+{"t": 3.192, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[2C\u001b[4AUse the AskUserQuestion tool\u001b[32Gto\u001b[35Gask\u001b[39Gme\u001b[42Gone\u001b[46Gquestion:\u001b[56Gdo\u001b[59GI\u001b[61Gprefer\u001b[68Gred\u001b[72Gor\u001b[75Gblue?\u001b[81GOffer\u001b[87Gthose\u001b[93Gtwo\u001b[97Goptions.\r\u001b[18C\u001b[2B\u001b[K\r\r\n\r\n\u001b[104C\u001b[4A\u001b[?25h"}
+{"t": 5.595, "dir": "in", "data": "\r"}
+{"t": 5.77, "dir": "out", "data": "\u001b]0;◐ Claude Code\u0007"}
+{"t": 5.785, "dir": "out", "data": "\u001b[?25l\u001b[104D\u001b[4B\r\u001b[5A\u001b[48;5;237m\u001b[38;5;239m❯ \u001b[38;5;246mUse the AskUserQuestion tool to ask me one question: do I prefer red or blue? Offer those two options.\u001b[39m                \r\u001b[1B\u001b[49m\u001b[K\r\u001b[1B\u001b[38;5;174m✶\u001b[39m \u001b[38;5;174mHyperspacing… \u001b[39m\u001b[K\r\u001b[2C\u001b[1B\u001b[K\r\u001b[1B\u001b[38;5;244m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\u001b[39m\r"}
+{"t": 5.785, "dir": "out", "data": "\r\n"}
+{"t": 5.785, "dir": "out", "data": "\u001b[38;5;246m❯ \u001b[39m\r"}
+{"t": 5.785, "dir": "out", "data": "\r\n"}
+{"t": 5.785, "dir": "out", "data": "\u001b[38;5;244m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\u001b[39m\r"}
+{"t": 5.785, "dir": "out", "data": "\r\n"}
+{"t": 5.785, "dir": "out", "data": "\u001b[3G\u001b[38;5;246m⏸\u001b[5Gmanual\u001b[12Gmode\u001b[17Gon\u001b[20G·\u001b[22Gesc\u001b[26Gto\u001b[29Ginterrupt\u001b[39G·\u001b[41G←\u001b[43G2\u001b[45Gagents\u001b[39m\r"}
+{"t": 5.785, "dir": "out", "data": "\r\n"}
+{"t": 5.785, "dir": "out", "data": "\u001b[3G\u001b[38;5;220mYou've\u001b[10Gused\u001b[15GNN%\u001b[19Gof\u001b[22Gyour\u001b[27Gweekly\u001b[34Glimit\u001b[40G·\u001b[42Gresets\u001b[49GOct\u001b[53G3,\u001b[56G8pm\u001b[60G(America/Los_Angeles)\u001b[82G·\u001b[84G/usage-credits\u001b[99Gto\u001b[102Gkeep\u001b[107Gusing\u001b[113GClaud…\u001b[39m\r"}
+{"t": 5.785, "dir": "out", "data": "\r\n"}
+{"t": 5.785, "dir": "out", "data": "\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 5.877, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[7A\u001b[38;5;174m*\u001b[39m\r\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 6.002, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[7A\u001b[38;5;174m✢\u001b[39m\r"}
+{"t": 6.003, "dir": "out", "data": "\r\n"}
+{"t": 6.003, "dir": "out", "data": "\r\n"}
+{"t": 6.003, "dir": "out", "data": "\r\n"}
+{"t": 6.003, "dir": "out", "data": "\r\n"}
+{"t": 6.003, "dir": "out", "data": "\r\n"}
+{"t": 6.003, "dir": "out", "data": "\r\n"}
+{"t": 6.003, "dir": "out", "data": "\r\n"}
+{"t": 6.003, "dir": "out", "data": "\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 6.107, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[7A\u001b[38;5;174m·\u001b[39m\r\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 6.28, "dir": "out", "data": "\u001b]0;◐ Red or blue preference\u0007"}
+{"t": 6.415, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[2C\u001b[9A\u001b[48;5;237m\u001b[38;5;231mUse the AskUserQuestion tool to ask me one question: do I prefer red or blue? Offer those two options.\r\u001b[2C\u001b[2B\u001b[49m\u001b[38;5;174mBoondoggl\u001b[39m\r\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 6.43, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[16C\u001b[7A\u001b[38;5;246m(0s · \u001b[38;5;247mthinking\u001b[38;5;246m)\u001b[39m\r\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 6.562, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[7A\u001b[38;5;174m✢\u001b[23G\u001b[38;5;246mthinking\u001b[39m\r\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 6.675, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[7A\u001b[38;5;174m*\u001b[18G\u001b[38;5;246m1\u001b[39m\r\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 6.73, "dir": "out", "data": "\u001b]0;◑ Red or blue preference\u0007"}
+{"t": 6.886, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[7A\u001b[38;5;174m✶\u001b[39m\r\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 7.003, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[7A\u001b[38;5;174m✻\u001b[39m\r\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 7.131, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[7A\u001b[38;5;174m✽\u001b[23G\u001b[38;5;247mthinking\u001b[39m\r\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 7.341, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[22C\u001b[7A\u001b[38;5;248mthinking\u001b[39m\r\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 7.566, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[7A\u001b[38;5;174m✻\u001b[23G\u001b[38;5;249mthinking\u001b[39m\r\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 7.678, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[7A\u001b[38;5;174m✶\u001b[18G\u001b[38;5;246m2\u001b[39m\r\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 7.69, "dir": "out", "data": "\u001b]0;◐ Red or blue preference\u0007"}
+{"t": 7.789, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[7A\u001b[38;5;174m*\u001b[23G\u001b[38;5;246m↓\u001b[39m \u001b[38;5;246m25 tokens · \u001b[38;5;249mthinking\u001b[38;5;246m)\u001b[39m\r"}
+{"t": 7.789, "dir": "out", "data": "\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 7.899, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[24C\u001b[7A\u001b[38;5;246m50\u001b[39m\r\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 8.024, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[7A\u001b[38;5;174m✢\u001b[25G\u001b[38;5;246m88\u001b[39m\r\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 8.128, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[7A\u001b[38;5;174m·\u001b[25G\u001b[38;5;246m113 tokens · \u001b[38;5;248mthinking\u001b[38;5;246m)\u001b[39m\r\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 8.24, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[25C\u001b[7A\u001b[38;5;246m38\u001b[39m\r\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 8.355, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[25C\u001b[7A\u001b[38;5;246m63\u001b[38G\u001b[38;5;247mthinking\u001b[39m\r\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u001b[2C\u001b[4A\u001b[?25h"}
+{"t": 8.467, "dir": "out", "data": "\u001b]0;✳ Red or blue preference\u0007"}
+{"t": 8.477, "dir": "out", "data": "\u001b[?25l\u001b[2D\u001b[4B\r\u001b[8A\u001b[38;5;246m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\r\u001b[1B\u001b[48;5;153m\u001b[38;5;16m ☐ Color \u001b[39m\u001b[49m\u001b[K\r\u001b[2B\u001b[38;5;231m\u001b[1mDo you prefer red or blue?\u001b[22m\u001b[39m\u001b[K\r\u001b[1B\u001b[K\r\u001b[1B\u001b[38;5;153m❯\u001b[39m \u001b[38;5;246m1.\u001b[39m \u001b[38;5;153mRed\u001b[39m\u001b[K\r\u001b[2C\u001b[1B   \u001b[38;5;246mThe col\u001b[14Gr red\u001b[39m\u001b[K\r\u001b[2C\u001b[1B\u001b[38;5;246m2.\u001b[39m Blue\u001b[K\r\r\n\u001b[6G\u001b[38;5;246mThe\u001b[10Gcolor\u001b[16Gblue\u001b[39m\r\r\n\u001b[3G\u001b[38;5;246m3.\u001b[6GType\u001b[11Gsomething.\u001b[39m\r\r\n\u001b[38;5;246m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\u001b[39m\r\r\n\u001b[3G4.\u001b[6GChat\u001b[11Gabout\u001b[17Gthis\r\r\n\r\r\n\u001b[38;5;246mEnter\u001b[7Gto\u001b[10Gselect\u001b[17G·\u001b[19G↑/↓\u001b[23Gto\u001b[26Gnavigate\u001b[35G·\u001b[37GEsc\u001b[41Gto\u001b[44Gcancel\u001b[39m\r\r\n\u001b[9A"}

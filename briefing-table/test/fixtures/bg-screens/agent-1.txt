@@ -1,0 +1,25 @@
+# claude 2.1.299 (Claude Code) | model haiku | +10s after prompt
+# ---- rendered screen (140x45, trimmed) ----
+ ▐▛███▛█   Claude Code v2.1.299
+▝▜██████▀  Haiku 5.5 · Claude Max
+ ▝▝   ▝▝   /tmp/bgcap-4lSP4M
+
+
+❯ Use the Agent tool to spawn a general-purpose subagent that runs sleep 60 with Bash and reports done. Reply only "spawned" after
+  launching it.
+
+● Agent(Run sleep 60 and report)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+● spawned
+
+✻ Waiting for 1 background agent to finish
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ check on the agent
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  svc-ops@homeserver:/tmp/bgcap-4lSP4M
+  ⏵⏵ auto mode on (shift+tab to cycle) · ← 2 agents
+
+  ● main
+  ◯ general-purpose  Run sleep 60 and report                                                                           6s · ↓ 50.5k tokens

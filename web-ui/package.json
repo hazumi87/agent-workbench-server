@@ -1,0 +1,152 @@
+{
+  "name": "workbench-app",
+  "productName": "Workbench",
+  "version": "0.24.0",
+  "description": "Standalone tabbed CLI workbench",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:codex-connector": "node scripts/build-codex-connector.cjs",
+    "check:codex-connector": "node scripts/build-codex-connector.cjs --check",
+    "predist:win": "npm run build:codex-connector",
+    "predist:linux": "npm run build:codex-connector",
+    "dist:win": "electron-builder --win nsis portable --config.npmRebuild=false",
+    "dist:linux": "electron-builder --linux AppImage deb",
+    "test": "electron . ",
+    "selftest": "node scripts/selftest-isolated.cjs",
+    "test:selftest-isolation": "node --test test/selftest-isolation.test.mjs test/selftest-home-boundary.test.mjs",
+    "test:unit": "node --test test/*.test.mjs",
+    "test:vendors": "node --test vendors/claude-code/test/*.test.js",
+    "test:codex-connector": "node --test test/codex-*.test.mjs",
+    "test:broker-viewers": "node --test test/broker-viewers.integration.mjs",
+    "package:engine": "node scripts/package-engine.mjs --out engine-package"
+  },
+  "author": "Agent Workbench contributors",
+  "license": "Apache-2.0",
+  "private": true,
+  "dependencies": {
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/addon-serialize": "^0.14.0",
+    "@xterm/xterm": "^6.0.0",
+    "node-pty": "^1.1.0",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "electron": "^44.7.2",
+    "electron-builder": "^26.15.3",
+    "esbuild": "0.28.0"
+  },
+  "build": {
+    "appId": "com.example.workbench",
+    "productName": "Workbench",
+    "protocols": [
+      {
+        "name": "Workbench",
+        "schemes": [
+          "workbench"
+        ]
+      }
+    ],
+    "files": [
+      "src/**",
+      "assets/**",
+      "node_modules/**",
+      "!node_modules/node-pty/prebuilds/darwin-*/**",
+      "connectors/codex/dist/**",
+      "connectors/codex/package.json",
+      {
+        "from": "connectors/codex/node_modules/ws",
+        "to": "connectors/codex/node_modules/ws",
+        "filter": [
+          "**/*"
+        ]
+      },
+      "package.json"
+    ],
+    "asarUnpack": [
+      "**/node_modules/node-pty/**"
+    ],
+    "extraResources": [
+      {
+        "from": "modules",
+        "to": "modules"
+      },
+      {
+        "from": "vendors",
+        "to": "vendors",
+        "filter": [
+          "**/*",
+          "!**/test/**"
+        ]
+      },
+      {
+        "from": "engine-package",
+        "to": "engine"
+      }
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "files": [
+        "!node_modules/node-pty/prebuilds/win32-arm64/**",
+        "!node_modules/node-pty/third_party/conpty/**/win10-arm64/**",
+        "!node_modules/node-pty/deps/winpty/**/*.bat",
+        "!node_modules/node-pty/deps/winpty/**/*.ps1",
+        "!engine-package/**",
+        "!test/**",
+        "!docs/**",
+        "!scripts/**",
+        "!review/**",
+        "!TASKS.md"
+      ],
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "linux": {
+      "category": "Utility",
+      "icon": "assets/icon.png",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Workbench-Setup-${version}.${ext}",
+      "include": "build/installer.nsh",
+      "packElevateHelper": false,
+      "uninstallDisplayName": "Agent Workbench"
+    },
+    "portable": {
+      "artifactName": "Workbench-${version}-portable.${ext}"
+    }
+  },
+  "workbench": {
+    "updateFeed": "",
+    "accountExample": "realm.example.com",
+    "roomsServer": "",
+    "roomsServerName": "",
+    "updateKeys": [
+      "",
+      ""
+    ],
+    "localEngine": {
+      "enabled": true,
+      "limits": {
+        "softBytes": 1073741824,
+        "rssBytes": 1610612736,
+        "memoryBytes": 2147483648
+      },
+      "brokerLimits": {
+        "fraction": 0.5,
+        "minBytes": 2147483648,
+        "maxBytes": 8589934592
+      },
+      "note": "Engine 1024 MB soft ceiling and 1536 MB outside limit are measured (a reviewer, 10-minute load); the 2 GiB Job cap is a safety margin. brokerLimits is a RULE, computed from the machine's RAM when the app starts: half of it, at least 2 GiB, at most 8 GiB, or the size in BROKER_MEMORY_LIMIT. It bounds the broker's Job together with every agent under it; reaching it makes allocations fail inside an agent, it is not a tidy restart, and it is a last resort. The numbers are UNMEASURED with real agent panes.",
+      "starterWorkrooms": true
+    }
+  }
+}

@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Image viewer</title>
+<!-- The Image Viewer page (the design notes §16, the design's styleguide/mockups/workbench-image-markup).
+     One page for the preview column and, expanded, the larger view. Data only through the bridge port the host
+     hands over (the design notes); the module CSP has no inline styles and no network. -->
+<link rel="stylesheet" href="viewer.css">
+</head>
+<body>
+<main id="app" class="vw" tabindex="0" aria-label="Image viewer">
+  <p class="wait">Loading…</p>
+</main>
+<script type="module" src="viewer.js"></script>
+</body>
+</html>
