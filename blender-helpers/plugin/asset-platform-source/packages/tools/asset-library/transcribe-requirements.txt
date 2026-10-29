@@ -1,0 +1,8 @@
+# asset-transcribe-sidecar (transcribe_sidecar.py, PM2, :8267) — CPU whisper, never the GPU.
+# Rebuild (as service):
+#   python3 -m venv <venv>
+#   <venv>/bin/pip install -r transcribe-requirements.txt
+# then pm2_register ecosystem.config.cjs (save=true). Python 3.12 (the sidecar uses `cgi`).
+# the venv and the PM2 entry were both found missing; rebuilt from this list.
+faster-whisper==1.2.1
+soundfile

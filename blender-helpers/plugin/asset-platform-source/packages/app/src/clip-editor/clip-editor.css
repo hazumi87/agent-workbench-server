@@ -1,0 +1,128 @@
+/* Clip Editor — Aurora vocabulary (tokens.css --ce-* family, v22; styleguide "Clip editor").
+   Buttons mirror the styleguide's .btn / .btn.primary (coral — the page's ONE accented button)
+   / .btn.strong (neutral verbs). The app's own :root overrides --text/--border, so this page
+   uses the Aurora names it does not shadow (--ink, --surface*, --border2, --dim*). */
+.ce-root{height:100%;overflow:auto;background:var(--ink);color:#e6edf3;font-family:var(--font,system-ui,sans-serif);font-size:14px;}
+.ce-root .dim{color:var(--dim);} .ce-root .small{font-size:.78rem;} .ce-root .clip{color:var(--ce-clip);}
+.ce-head{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;min-width:0;min-height:48px;padding:0 12px;border-bottom:1px solid var(--border2);background:var(--surface);position:sticky;top:0;z-index:5;}
+/* The full-page app frame (Aurora fullpage-apps-v1.2 §3A/D): 48px header, ← (icon + "Library";
+   phone: icon only), the draft chip = a 7px lime dot + --dim .72rem. */
+.ce-back{display:flex;align-items:center;gap:6px;color:var(--text);background:none;border:0;font:600 .82rem var(--font);cursor:pointer;padding:6px 8px;border-radius:var(--corner);flex:none;}
+.ce-back:hover{background:var(--ghost-fill-hover);}
+.ce-back svg{width:18px;height:18px;}
+.ce-name-src{color:var(--dim);font-weight:400;}
+.ce-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--lime);margin-right:6px;vertical-align:1px;}
+.ce-short{display:none;}
+@media (max-width:700px){ .ce-back-lbl,.ce-long{display:none;} .ce-short{display:inline;} }
+.ce-name{font-family:var(--display,inherit);font-weight:700;font-size:1.05rem;max-width:34ch;min-width:6ch;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ce-head .ce-chip{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;}
+.ce-chip{font-family:var(--mono,monospace);font-size:.68rem;letter-spacing:.04em;color:var(--dim);border:1px solid var(--border2);border-radius:6px;padding:3px 7px;background:transparent;white-space:nowrap;}
+.ce-chip.dashed{border-style:dashed;}
+.ce-chip.toggle{cursor:pointer;} .ce-chip.toggle.on{color:var(--ce-keep);border-color:color-mix(in srgb,var(--ce-keep) 55%,transparent);}
+.ce-save{font-size:.72rem;color:var(--dim2);min-width:12ch;} .ce-save.saved{color:var(--dim);} .ce-save.error{color:var(--ce-clip);}
+.ce-spacer{flex:1 1 0;min-width:0;}
+.ce-head .ce-btn,.ce-durs,.ce-back{flex:0 0 auto;}
+.ce-durs{font-family:var(--mono,monospace);font-size:.8rem;color:#e6edf3;white-space:nowrap;}
+.ce-status{padding:48px 24px;color:var(--dim);}
+
+.ce-btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--font,inherit);font-size:.8rem;font-weight:600;border-radius:8px;padding:7px 12px;
+  border:1px solid var(--border2);background:var(--surface2);color:#e6edf3;cursor:pointer;white-space:nowrap;line-height:1;transition:filter .14s,background .14s,border-color .14s;}
+.ce-btn:hover{background:var(--surface3);}
+.ce-btn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none;}
+.ce-btn:focus-visible{outline:none;box-shadow:0 0 0 2px var(--ink),0 0 0 4px var(--teal);}
+/* Create = the go action → teal (coral is the destructive/error function; Aurora) */
+.ce-btn.primary{background:var(--teal);border-color:var(--teal);color:var(--ink);} .ce-btn.primary:hover{filter:brightness(1.08);}
+.ce-btn.strong{background:var(--surface3);border-color:var(--border2);font-weight:700;}
+.ce-btn.strong:hover{background:color-mix(in srgb,var(--surface3) 70%,var(--border2));}
+.ce-btn kbd{font-family:var(--mono,monospace);font-size:.64rem;font-weight:400;color:var(--dim);margin-left:2px;}
+.ce-btn.toggle{background:transparent;color:var(--dim);font-family:var(--mono,monospace);font-weight:500;font-size:.74rem;}
+.ce-btn.toggle.on{color:var(--ce-keep);border-color:color-mix(in srgb,var(--ce-keep) 55%,transparent);background:color-mix(in srgb,var(--ce-keep) 8%,transparent);}
+.ce-btn.icon{width:36px;height:36px;justify-content:center;padding:0;font-size:.95rem;}
+.ce-btn.icon.play{width:44px;}
+.ce-btn.wide{width:100%;justify-content:center;padding:10px;}
+.ce-mini{background:transparent;border:1px solid var(--border2);color:var(--dim);border-radius:6px;padding:2px 7px;font-size:.72rem;cursor:pointer;text-decoration:none;}
+.ce-mini:hover{color:#e6edf3;border-color:var(--dim2);}
+
+.ce-body{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;padding:14px 16px 32px;}
+@media (max-width:1359px){ .ce-body{grid-template-columns:minmax(0,1fr);} }
+.ce-main{min-width:0;display:flex;flex-direction:column;gap:8px;}
+.ce-stage{border:1px solid var(--border2);border-radius:10px;overflow:hidden;background:var(--ink);}
+.ce-tabs{display:flex;align-items:center;gap:6px;padding:6px 8px;border-bottom:1px solid var(--border2);background:var(--surface);}
+/* View | Audio = a lifted segmented control (no accent underline: ruled out) */
+.ce-tab{background:transparent;border:1px solid transparent;border-radius:var(--corner);color:var(--dim);font-weight:600;font-size:.84rem;padding:5px 12px;cursor:pointer;}
+.ce-tab.on{color:var(--text);background:var(--surface3);border-color:var(--border2);}
+.ce-tab:disabled{color:var(--dim3);cursor:not-allowed;}
+.ce-canvas{display:block;touch-action:none;user-select:none;}
+.ce-canvas.strip,.ce-canvas.over{border:1px solid var(--border2);border-radius:8px;}
+.ce-canvas.over{cursor:grab;}
+.ce-transport{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.ce-time{font-family:var(--mono,monospace);font-size:.92rem;color:var(--ce-playhead);min-width:19ch;padding:0 6px;}
+.ce-time .dim{color:var(--dim);}
+.ce-seg2{display:inline-flex;border:1px solid var(--border2);border-radius:8px;overflow:hidden;}
+.ce-seg2 button{background:transparent;border:0;color:var(--dim);font-size:.76rem;font-weight:600;padding:8px 11px;cursor:pointer;}
+.ce-seg2 button.on{background:var(--surface3);color:#e6edf3;}
+.ce-rung{font-family:var(--mono,monospace);font-size:.74rem;color:var(--dim);display:inline-flex;gap:8px;}
+.ce-rung span:first-child{min-width:11ch;text-align:right;} .ce-rung span:last-child{min-width:10ch;}
+.ce-hint{font-size:.72rem;color:var(--dim2);}
+
+.ce-side{display:flex;flex-direction:column;gap:12px;}
+.ce-box{border:1px solid var(--border2);border-radius:10px;background:var(--surface);padding:12px;}
+.ce-box h3{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:10px;display:flex;justify-content:space-between;gap:8px;}
+.ce-box h3 .dim{letter-spacing:.02em;text-transform:none;font-weight:400;color:var(--dim2);}
+.ce-kv{display:grid;grid-template-columns:7ch 1fr;gap:4px 8px;font-family:var(--mono,monospace);font-size:.82rem;margin-bottom:10px;}
+.ce-kv dt{color:var(--dim);} .ce-kv dd.sel{color:var(--ce-sel);}
+.ce-box p{margin-bottom:10px;}
+.ce-verbs{display:flex;flex-wrap:wrap;gap:6px;}
+.ce-segs{max-height:320px;overflow:auto;display:flex;flex-direction:column;}
+.ce-segrow{display:grid;grid-template-columns:3ch 1fr auto auto 26px;gap:8px;align-items:center;font-family:var(--mono,monospace);font-size:.76rem;padding:5px 6px;border-radius:6px;cursor:pointer;border-left:2px solid transparent;}
+.ce-segrow:hover{background:var(--surface2);}
+.ce-segrow.here{border-left-color:var(--ce-playhead);background:var(--surface2);}
+.ce-segrow .n{color:var(--ce-keep);} .ce-segrow .st{color:var(--dim2);font-size:.68rem;} .ce-segrow .d{color:var(--dim);}
+.ce-segrow.removed .n,.ce-segrow.removed .t{color:var(--dim2);} .ce-segrow.removed .t{text-decoration:line-through;}
+.ce-joinrow{display:flex;align-items:center;gap:8px;font-size:.72rem;color:var(--dim);padding:3px 6px 3px 8px;}
+.ce-joinrow .n{color:var(--ce-keep);width:3ch;} .ce-joinrow.cut .n{color:var(--ce-cut);}
+.ce-joinrow select{margin-left:auto;}
+.ce-root select,.ce-input{background:var(--surface2);color:#e6edf3;border:1px solid var(--border2);border-radius:6px;padding:4px 6px;font-size:.76rem;font-family:var(--mono,monospace);}
+.ce-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.8rem;color:var(--dim);margin-bottom:8px;}
+.ce-row input[type=checkbox]{accent-color:var(--teal);width:16px;height:16px;}
+.ce-created{margin-top:12px;display:flex;flex-direction:column;gap:6px;}
+.ce-createdrow{display:flex;align-items:center;gap:8px;font-size:.78rem;}
+.ce-createdrow a:first-child{color:#e6edf3;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ce-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface3);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;display:flex;gap:12px;align-items:center;font-size:.86rem;box-shadow:0 10px 30px -10px #000;z-index:10;}
+.ce-toast a{color:var(--teal);font-weight:700;} .ce-toast.err{border-color:var(--ce-clip);}
+/* interim chooser (?app=clip-editor), replaced by Aurora's mini picker — task */
+.ce-choose{max-width:720px;margin:0 auto;padding:16px;}
+.ce-choose h2{font-size:1.05rem;margin:4px 0 12px;}
+.ce-choose-search{width:100%;font-size:16px;padding:10px 12px;margin-bottom:10px;font-family:inherit;}
+.ce-choose-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;}
+.ce-choose-list a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:8px 12px;border:1px solid var(--border2);
+  border-radius:6px;background:var(--surface);color:#e6edf3;text-decoration:none;}
+.ce-choose-list a:hover{border-color:var(--teal);}
+.ce-choose-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* Full-page app overlay (task, Aurora fullpage-apps-v1.2 §3): fixed over the still-mounted library;
+   above the phone tab bar (600), under the edge-back tab (640) and sheets/dialogs (700+). */
+.fp-app{position:fixed;inset:0;z-index:620;background:var(--nav);display:flex;flex-direction:column;overscroll-behavior:none;}
+.fp-app>.ce-root{flex:1;min-height:0;}
+.fp-empty{flex:1;display:grid;place-items:center;text-align:center;color:var(--dim);padding:18px;min-height:calc(100% - 48px);}
+.fp-empty-box{border:1px dashed var(--border);border-radius:var(--corner);padding:34px 40px;max-width:440px;}
+.fp-empty-box h4{font-family:var(--display);color:var(--text);font-size:1.1rem;margin:10px 0 6px;}
+.fp-empty-box p{font-size:.82rem;margin:0 0 14px;line-height:1.5;}
+.fp-btn{background:var(--ghost-fill);border:1px solid var(--border);color:var(--text);border-radius:var(--corner);padding:7px 12px;font:600 .8rem var(--font);cursor:pointer;display:inline-flex;gap:6px;align-items:center;}
+.fp-btn:hover{background:var(--ghost-fill-hover);}
+.fp-btn.teal{background:var(--teal);border-color:var(--teal);color:var(--ink);}
+.fp-recents{display:flex;gap:6px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
+.fp-chip{border:1px solid var(--border);border-radius:99px;padding:3px 10px;font-size:.72rem;color:var(--dim);background:none;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+.fp-chip:hover{color:var(--text);border-color:var(--border2);}
+.fp-toast{position:fixed;left:50%;bottom:calc(74px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:900;background:var(--surface);border:1px solid var(--teal);border-radius:var(--corner);padding:7px 12px;font-size:.76rem;white-space:nowrap;color:var(--text);}
+/* Phone (≤700): the one header keeps ← + title on its first row; the actions wrap to a second row
+   instead of running off-screen. The info chips give way. */
+@media (max-width:700px){
+  .ce-head{flex-wrap:wrap;row-gap:6px;padding:6px 10px;}
+  .ce-head .ce-name{flex:1 1 60%;max-width:none;}
+  .ce-head .ce-chip,.ce-head .ce-durs,.ce-head .ce-spacer{display:none;}
+}
+@media (max-width:700px) and (pointer:coarse){ .ce-head .ce-btn,.ce-head .ce-back{min-height:44px;min-width:44px;justify-content:center;} }
+/* Insert silence : the verb + its length; a silence row in the segment list. */
+.ce-silence{display:inline-flex;align-items:center;gap:4px;}
+.ce-joinrow.silence{color:var(--text);}

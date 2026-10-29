@@ -1,0 +1,8 @@
+packages:
+  - 'packages/*'
+  - 'packages/tools/*'
+
+# esbuild ships a platform-native binary fetched by its postinstall script.
+# pnpm 10+ blocks dependency build scripts by default; Vite needs esbuild's binary, so allow it.
+onlyBuiltDependencies:
+  - esbuild

@@ -1,0 +1,13 @@
+{
+  "blender": "app/blender-4.5.4-linux-x64/blender",
+  "stepTimeoutS": 900,
+  "libraryUrl": "http://127.0.0.1:8260/asset-management/library",
+  "shareUrl": "http://127.0.0.1:8215",
+  "shareDir": "rooms/<room>/blender-studio",
+  "room": {
+    "id": "<room-id>",
+    "name": "<room-name>"
+  },
+  "agent": "blender-agent",
+  "tokenHashFile": "/path/to/bearer.sha256"
+}

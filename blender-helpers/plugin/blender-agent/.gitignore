@@ -1,0 +1,17 @@
+# the app (portable Blender), downloads, stock inputs, per-job state — never in git
+app/
+downloads/
+stock/
+work/
+status/*
+!status/README.md
+*.tmp
+node_modules/
+config.local.json
+.claude/settings.local.json
+__pycache__/
+tools/
+secrets/
+
+# a locally supplied rig template (not shipped)
+scripts/lib/rig/template.json

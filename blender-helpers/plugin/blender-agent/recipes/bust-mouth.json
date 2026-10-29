@@ -1,0 +1,194 @@
+{
+  "id": "bust-mouth",
+  "title": "Bust: mouth + head rig + idle",
+  "template": true,
+  "about": "A head-and-shoulders bust -> decimate, UVs, mouth cut from face landmarks (teeth, tongue), shape keys jawOpen/mouthWide/mouthPucker/mouthPress, head/neck rig, 6 s idle, GLB + FBX + meshopt.",
+  "input": {
+    "kind": "mesh",
+    "formats": [
+      "glb"
+    ]
+  },
+  "gpu": false,
+  "host": "gpu-host",
+  "params": {
+    "target_tris": {
+      "type": "integer",
+      "minimum": 10000,
+      "maximum": 80000,
+      "default": 40000,
+      "title": "Triangle budget",
+      "bind": [
+        [
+          "decimate",
+          "target_tris"
+        ]
+      ]
+    },
+    "rest_open": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 0.6,
+      "default": 0.2,
+      "title": "Mouth open at rest",
+      "bind": [
+        [
+          "mouth_keys",
+          "rest_open"
+        ]
+      ]
+    },
+    "jaw_deg": {
+      "type": "number",
+      "minimum": 8,
+      "maximum": 30,
+      "default": 18,
+      "title": "Jaw open angle (deg)",
+      "bind": [
+        [
+          "mouth_keys",
+          "jaw_deg"
+        ]
+      ]
+    },
+    "uv_mode": {
+      "type": "string",
+      "enum": [
+        "keep_if_present",
+        "smart"
+      ],
+      "default": "keep_if_present",
+      "title": "UVs (keep the model own, or re-unwrap)",
+      "bind": [
+        [
+          "uv_unwrap",
+          "mode"
+        ]
+      ]
+    }
+  },
+  "steps": [
+    {
+      "step": "import_mesh",
+      "params": {
+        "src": "{input_path}"
+      }
+    },
+    {
+      "step": "cleanup",
+      "params": {
+        "merge_distance": 0.00002,
+        "min_part_ratio": 0.01
+      }
+    },
+    {
+      "step": "decimate",
+      "params": {
+        "target_tris": 40000
+      }
+    },
+    {
+      "step": "uv_unwrap",
+      "params": {
+        "mode": "keep_if_present"
+      }
+    },
+    {
+      "step": "render_front",
+      "params": {
+        "z_from": 0.25,
+        "z_to": 1,
+        "res": 1024
+      }
+    },
+    {
+      "step": "face_landmarks",
+      "params": {}
+    },
+    {
+      "step": "mouth_cut",
+      "params": {
+        "landmarks": "{job_dir}/landmarks.json",
+        "camera": "{job_dir}/front_clay.camera.json"
+      }
+    },
+    {
+      "step": "mouth_keys",
+      "params": {
+        "jaw_deg": 18,
+        "rest_open": 0.2
+      }
+    },
+    {
+      "step": "preview_keys",
+      "params": {}
+    },
+    {
+      "step": "rig_bust",
+      "params": {}
+    },
+    {
+      "step": "skin",
+      "params": {}
+    },
+    {
+      "step": "anim_bust",
+      "params": {
+        "seconds": 6
+      }
+    },
+    {
+      "step": "export",
+      "params": {
+        "name": "{name}",
+        "formats": [
+          "glb",
+          "fbx"
+        ]
+      }
+    },
+    {
+      "step": "validate",
+      "params": {
+        "max_bones": 16,
+        "max_tris": 80000,
+        "clips": [
+          "Idle"
+        ],
+        "shape_keys": [
+          "jawOpen",
+          "mouthWide",
+          "mouthPucker",
+          "mouthPress"
+        ]
+      }
+    },
+    {
+      "step": "meshopt",
+      "params": {
+        "animations": [
+          "Idle"
+        ],
+        "morphs": [
+          "jawOpen",
+          "mouthWide",
+          "mouthPucker",
+          "mouthPress"
+        ]
+      }
+    },
+    {
+      "step": "preview",
+      "params": {
+        "res": 384,
+        "samples": 16,
+        "frames": [
+          1,
+          46
+        ]
+      }
+    }
+  ],
+  "op": "mesh-shape-keys",
+  "est_seconds": 120
+}

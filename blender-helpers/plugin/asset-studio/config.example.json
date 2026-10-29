@@ -1,0 +1,15 @@
+{
+  "imageGenUrl": "http://127.0.0.1:8260/asset-management/tools/image-gen/api",
+  "libraryUrl": "http://127.0.0.1:8260/asset-management/library/api",
+  "libraryWebUrl": "http://127.0.0.1:8260/asset-management/library",
+  "shareUrl": "http://127.0.0.1:8215",
+  "port": 0,
+  "engineUrl": "http://127.0.0.1:8201",
+  "engineTokenFile": "/path/to/engine.token",
+  "defaultBudget": 12,
+  "libraryStaging": "/path/to/library-staging/.asset-studio",
+  "coreUrl": "http://127.0.0.1:8260/asset-management/tools/model-studio/api",
+  "watchBase": "http://127.0.0.1:8215/raw/rooms/<room>/model-studio-live",
+  "defaultModelBudget": 5,
+  "playwright": ""
+}

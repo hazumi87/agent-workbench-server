@@ -1,0 +1,8 @@
+vtracer==0.6.15
+# remove_bg (rembg + onnxruntime CPU); models are NOT pip packages — pre-download them with
+#   U2NET_HOME=<IMAGE_OPS_MODEL_DIR> <venv>/bin/python3 remove_bg.py --fetch birefnet-general birefnet-general-lite isnet-general-use u2net
+rembg==2.0.86
+onnxruntime==1.30.0
+pillow==13.0.0
+# face_match needs no extra pip packages (onnxruntime, numpy and pillow come with rembg). Its InsightFace buffalo_l models (NON-COMMERCIAL weights) are fetched with
+#   IMAGE_OPS_MODEL_DIR=<IMAGE_OPS_MODEL_DIR> <venv>/bin/python3 face_match.py --fetch      (~290 MB to <model dir>/insightface/buffalo_l)

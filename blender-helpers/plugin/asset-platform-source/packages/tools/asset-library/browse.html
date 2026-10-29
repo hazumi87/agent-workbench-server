@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Asset Library — Audio</title>
+  <link rel="stylesheet" href="/asset-tools/asset-library/picker.css" />
+  <style>
+    :root{ --bg:#0e1014; --panel:#13161b; --line:#222731; --text:#e8eaf0; --muted:#6b7280; --accent:#34d399; }
+    *{ box-sizing:border-box; }
+    body{ margin:0; background:var(--bg); color:var(--text); font-family:'IBM Plex Sans',system-ui,sans-serif; }
+    /* leave room for the fixed right-side AssetPicker panel on wide screens */
+    @media (min-width:701px){ body{ padding-right:340px; } }
+    nav{ background:var(--panel); border-bottom:1px solid var(--line); padding:0.6rem 1.25rem; display:flex; align-items:center; gap:1rem; font-family:'IBM Plex Mono',monospace; font-size:0.72rem; }
+    nav a{ color:var(--muted); text-decoration:none; letter-spacing:0.04em; }
+    nav a:hover{ color:var(--text); }
+    nav .sep{ color:#3d4452; }
+    .wrap{ max-width:760px; margin:0 auto; padding:2.5rem 1.5rem; }
+    h1{ font-weight:400; font-size:1.6rem; margin:0 0 .4rem; letter-spacing:.01em; }
+    .sub{ color:var(--muted); font-size:.92rem; margin:0 0 2rem; line-height:1.5; }
+    .tiers{ display:grid; gap:1rem; }
+    .tier{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:1.1rem 1.25rem; }
+    .tier h2{ font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent); margin:0 0 .35rem; font-family:'IBM Plex Mono',monospace; }
+    .tier p{ margin:0; color:var(--muted); font-size:.86rem; line-height:1.5; }
+    .hint{ margin-top:2rem; color:var(--muted); font-size:.8rem; line-height:1.55; border-top:1px solid var(--line); padding-top:1.25rem; }
+    code{ font-family:'IBM Plex Mono',monospace; color:var(--text); background:#1a1e25; padding:.1rem .35rem; border-radius:4px; font-size:.82em; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/">← localhost</a>
+    <span class="sep">·</span>
+    <a href="/asset-tools/">asset-tools</a>
+    <span class="sep">·</span>
+    <span style="color:var(--text)">Asset Library</span>
+  </nav>
+
+  <div class="wrap">
+    <h1>Asset Library — Audio</h1>
+    <p class="sub">The durable, searchable home for audio assets. Browse, audition, rename, upload, and delete in the panel on the right →
+      Every asset has a stable id and tracks its lineage (what it was derived from). Files live on the 11&nbsp;TB drive; the index is queried by id.</p>
+
+    <div class="tiers">
+      <div class="tier">
+        <h2>Scratch — working tier</h2>
+        <p>Transient clips: YouTube rips, filter/separation outputs. Manual cleanup — they stay until you clear them. This is what the panel shows.</p>
+      </div>
+      <div class="tier">
+        <h2>Curated — samples &amp; voices</h2>
+        <p>Promoted, kept assets: <code>audio/samples</code> (clips) and <code>audio/voices</code> (refined neutts voices). Promote from scratch when a clip is worth keeping.</p>
+      </div>
+    </div>
+
+    <p class="hint">The panel is the same control embedded in every audio tool (Voice Filter, Vocal Separation, yt-audio, Audio Normalize) — pick a clip there to flow it into a tool, or manage the library here. Upload a file via the panel's upload button to add a new source asset.</p>
+  </div>
+
+  <script src="/asset-tools/asset-library/picker.js"></script>
+  <script>
+    // Mount the shared AssetPicker against the library. This is the same right-side
+    // control the tools embed; here it IS the page's working surface. No onSelect
+    // action needed — on a standalone browse page, selecting just highlights.
+    if (window.AssetPicker) {
+      window.AssetPicker.mount({
+        base: '/asset-tools/asset-library',
+        title: 'Asset Library',
+      });
+    }
+  </script>
+</body>
+</html>

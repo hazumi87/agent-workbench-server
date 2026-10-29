@@ -1,0 +1,13 @@
+<!doctype html>
+<!-- lineage: asset-platform/@asset/kit — created by domain-development (agent-user) — task -->
+<!-- 1b acceptance fixture, served BY the mock server (same origin as the API), so
+     the component's relative `base` fetches hit the mock with no CORS — mirroring
+     production behind the gateway (page + /api share one origin). -->
+<html lang="en">
+<head><meta charset="utf-8"><title>asset-clipboard acceptance</title></head>
+<body>
+  <!-- base is relative → same-origin as this page (the mock). No port hardcoded. -->
+  <asset-clipboard id="cb" base="/asset-tools/asset-clipboard"></asset-clipboard>
+  <script src="/asset-kit.js"></script>
+</body>
+</html>

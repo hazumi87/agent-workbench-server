@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Tool Handoff"
+  short_description: "Request and accept Blender tool capabilities"
+  default_prompt: "Use $blender-tool-handoff to turn this blocked modelling step into a reproducible developer request."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Fire Preparation"
+  short_description: "Prepare flame anchors and independently baked glow"
+  default_prompt: "Use $blender-fire-handoff to prepare this fire asset, flame anchor and controllable glow for the runtime owner."

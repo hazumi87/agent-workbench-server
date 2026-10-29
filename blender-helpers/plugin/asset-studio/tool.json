@@ -1,0 +1,783 @@
+{
+  "contract": "tool/draft-0",
+  "name": "Asset Studio",
+  "slug": "asset-studio",
+  "version": "0.1.0",
+  "description": "Asset Studio — the room's agent-driven asset work in ONE app: images (Krea via image-gen: generate, edit, refs, folders), models (the 3D core: image-to-mesh, Blender jobs, Watch) and ONE review queue for both (per-image ratings, numbers, marks, the user's references). Replaces Image Studio + Model Studio.",
+  "authority": "own",
+  "operator": "resident",
+  "access": "exclusive",
+  "host_capabilities": [
+    "pick"
+  ],
+  "needs": {
+    "host": "server",
+    "gpu": false,
+    "runtime": "node>=20",
+    "downstream": "asset-platform image-gen (gateway :8260) — its GPU engine runs on the GPU host and is started by a human, never by this tool"
+  },
+  "jobs": true,
+  "move_notes": [
+    "The old room keeps its history, favorites, settings and budget; moving back restores it exactly.",
+    "This room starts with its own budget, or picks up where it left off if Asset Studio worked here before.",
+    "Library images are never touched by a move.",
+    "The old room's panel says \"working in another room\" until you move it back."
+  ],
+  "lifecycle": {
+    "entry": "scripts/start.sh",
+    "pulse": "scripts/status.sh",
+    "stop": "scripts/stop.sh",
+    "exit": {
+      "of": "pulse",
+      "field": "lastExit",
+      "values": [
+        "clean",
+        "fault",
+        null
+      ]
+    },
+    "status": "status/widget.json",
+    "bind": {
+      "script": "scripts/bind.sh <room>",
+      "http": "POST /bind"
+    }
+  },
+  "endpoint": {
+    "bind": "127.0.0.1",
+    "discover": "status/app.json#port"
+  },
+  "links": {
+    "review/:n": {
+      "label": "Review item",
+      "view": "GET /rooms/:roomId/review/:n"
+    },
+    "watch/:job": {
+      "label": "Watch",
+      "view": "GET /rooms/:roomId/watch/:job"
+    },
+    "@meta": "GET /rooms/:roomId/links"
+  },
+  "verbs": [
+    {
+      "name": "get_state",
+      "class": "read",
+      "call": {
+        "http": "GET /rooms/:roomId/state",
+        "script": "scripts/studio.sh get_state <room>"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{settings, refs:[{id, file_url}], budget:{max_images, used, left}, running:[jobId], latest, feedback:[{n, v, status, image, image_id, verdict, comment, at, sent_at}] — each rated image's latest SENT rating on its item's current version (image 1-based; no image = a whole-item rating from before per-image ratings), unsent_ratings:[{n, v, image, image_id, verdict, comment, at}] — per-image ratings the user saved but has not sent yet (not for you to act on until they arrive in a 'reviewed …' line)}"
+      }
+    },
+    {
+      "name": "list_models",
+      "class": "read",
+      "call": {
+        "http": "GET /rooms/:roomId/models",
+        "script": "scripts/studio.sh list_models <room>"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{models:[{model_type, name, refs, defaults}]}"
+      }
+    },
+    {
+      "name": "history",
+      "class": "read",
+      "call": {
+        "http": "GET /rooms/:roomId/history",
+        "script": "scripts/studio.sh history <room>"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{history:[{job_id, at, state, error, settings, refs, count, draft, assets:[{id, file_url, thumb_url, seed, width, height}]}]}"
+      }
+    },
+    {
+      "name": "job_status",
+      "class": "read",
+      "call": {
+        "http": "GET /rooms/:roomId/jobs/:jobId",
+        "script": "scripts/studio.sh job_status <room> <job-id>"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{job:{job_id, state: running|done|error|cancelled|lost, progress, assets, error}}"
+      }
+    },
+    {
+      "name": "room_images",
+      "class": "read",
+      "call": {
+        "http": "GET /rooms/:roomId/room-images",
+        "script": "scripts/studio.sh room_images <room>"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{images:[{name, type, size, added_by, added_at, asset_id|null}]} — the room's Assets that are images; asset_id once it's one of this room's Library images"
+      }
+    },
+    {
+      "name": "list_images",
+      "class": "read",
+      "call": {
+        "http": "GET /rooms/:roomId/images",
+        "script": "scripts/studio.sh list_images <room>"
+      },
+      "input": {
+        "bin": "query ?bin=renders|favorites|recycle (omit = all)"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{images:[{id, gen, index, of, label, bin, draft, seed, width, height, share_path, file_url}]} — newest first"
+      }
+    },
+    {
+      "name": "set_model",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/model",
+        "script": "scripts/studio.sh set_model <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "model_type": "string, one of list_models"
+      }
+    },
+    {
+      "name": "set_prompt",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/prompt",
+        "script": "scripts/studio.sh set_prompt <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "prompt": "string <= 4000",
+        "negative_prompt": "string? <= 2000"
+      }
+    },
+    {
+      "name": "set_params",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/params",
+        "script": "scripts/studio.sh set_params <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "aspect": "'auto' | ratio | 'W:H'?",
+        "width": "int 256-2048?",
+        "height": "int 256-2048?",
+        "seed": "int | null (random)?",
+        "num_inference_steps": "int 1-100 | null?",
+        "guidance_scale": "0-20 | null?",
+        "draft": "bool? (half size, for iterating)",
+        "count": "int 1-4?",
+        "label": "string <= 40? — a short name for this batch (\"man-left\"): in file names and the panel"
+      }
+    },
+    {
+      "name": "set_ref",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/refs",
+        "script": "scripts/studio.sh set_ref <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "asset_id": "a Library id this room made or brought in",
+        "slot": "0 (main subject) | 1?"
+      }
+    },
+    {
+      "name": "clear_ref",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/refs/clear",
+        "script": "scripts/studio.sh clear_ref <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "slot": "0 | 1? (omit = clear both)"
+      }
+    },
+    {
+      "name": "import_ref",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/refs/import",
+        "script": "scripts/studio.sh import_ref <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "name": "a room asset name (room_images) — PNG, JPEG or WebP",
+        "slot": "0 (main subject) | 1?"
+      },
+      "note": "a photo dropped into the room goes into the Library (deduped) and becomes this room's reference. A large photo may outrun a 10 s caller timeout — call again: it's idempotent (the import is remembered, the upload is deduped)"
+    },
+    {
+      "name": "generate",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/generate",
+        "script": "scripts/studio.sh generate <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "count": "int 1-4? (default: the setting)",
+        "draft": "bool? (default: the setting)",
+        "for": "\"user\" | \"<handle>\"? — who asked (briefing-table §2.8): its batch line goes to them. \"user\" ONLY when the user directly asked; default = the bound agent"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "202 {job, budget} — answers at once; follow with job_status. Outputs are posted to the room's Assets and announced there. 429 when the budget is spent (reason 'budget') or its time is up ('budget-time'); 503 {reason:'engine-offline'}. Images a job never made are refunded"
+      }
+    },
+    {
+      "name": "cancel",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/jobs/:jobId/cancel",
+        "script": "scripts/studio.sh cancel <room> <job-id>"
+      }
+    },
+    {
+      "name": "reload_recipe",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/recipe",
+        "script": "scripts/studio.sh reload_recipe <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "asset_id": "an image this room made"
+      }
+    },
+    {
+      "name": "move_image",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/images/move",
+        "script": "scripts/studio.sh move_image <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "asset_id": "one of this room's generated images",
+        "asset_ids": "or 1-50 of them",
+        "to": "renders | favorites | recycle"
+      },
+      "note": "favorites: promoted into the curated Library (+ the room share's asset-studio/favorites/); recycle: the Library bin (purges after 48 h — the room share keeps the file, so it can always come back); renders: back to the working set. Any direction, any time"
+    },
+    {
+      "name": "color_match",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/images/colormatch",
+        "script": "scripts/studio.sh color_match <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "asset_id": "the image to fix (one of this room's)",
+        "ref_id": "the image whose colours are right (e.g. the front view)",
+        "lift_dark": "bool? (default true) — lift blue-black/dead-black hair to a warm grey first",
+        "for": "\"user\" | \"<handle>\"?"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{image:{id, gen, index, label: '<label>-cm', bin, file_url, …}} — a NEW image; no GPU, no budget"
+      },
+      "note": "hair, skin and clothing are matched separately, so a set of views reads as one character (a 3D generator bakes colour into the texture). Lineage: Library derived_op {op:'colormatch', target, ref} + origin"
+    },
+    {
+      "name": "to_art",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/images/art",
+        "script": "scripts/studio.sh to_art <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "asset_id": "any Library image (bold, high-contrast, on white or transparent)",
+        "name": "the art's name in the Art library"
+      },
+      "output": "{logo:{id,name}, key:'lib:<id>', paths, bytes}: the art is in briefing-table's Art library; rooms and recipes pick it by key",
+      "note": "Traced to a single-colour currentColor SVG by briefing-table's icon-lab (trace @512 + SVGO); sent downscaled to ≤1024 px. Every call makes a NEW Art entry (no delete in the API, no dedupe): after a timeout, check the Art library before retrying. A name clash comes back as \"name (2)\" — use the returned name. No GPU."
+    },
+    {
+      "name": "crop_region",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/images/crop",
+        "script": "scripts/studio.sh crop_region <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "asset_id": "one of this room's images",
+        "x": "int px",
+        "y": "int px",
+        "w": "int px",
+        "h": "int px",
+        "long_edge": "int 256-2048? (default 1024) — the crop is upscaled to this",
+        "canvas": "{w, h, fit_h?, bg?: black|white|0xRRGGBB}? — instead of long_edge: the region scaled to fit_h px tall, centred on a w x h canvas (cut a view out of a turnaround sheet at the other views' scale)"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{image:{id, label:'<label>-crop', …}} — a new image; set_ref it and edit"
+      },
+      "note": "region edits: crop → set_ref + generate (edit the crop) → paste_region. For local fixes (eyes, hands) a whole-image prompt can't reach. No GPU, no budget"
+    },
+    {
+      "name": "paste_region",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/images/paste",
+        "script": "scripts/studio.sh paste_region <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "base_id": "the image to fix",
+        "patch_id": "the edited crop",
+        "x": "int",
+        "y": "int",
+        "w": "int",
+        "h": "int — the SAME region the crop came from",
+        "feather": "int px? (default 16)",
+        "feather_edges": "'left,right,top,bottom'? — don't fade a side that touches the image edge"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{image:{id, label:'<label>-fix', …}} — a new image; no GPU, no budget"
+      }
+    },
+    {
+      "name": "release_gpu",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/gpu/release",
+        "script": "scripts/studio.sh release_gpu <room> <<< '{}'"
+      },
+      "input": {},
+      "output": {
+        "kind": "application/json",
+        "shape": "{released:true, freed_mib, free_vram_mb} | {released:false, busy:true, reason}"
+      },
+      "note": "unload the image engine NOW when you're done generating (e.g. before a Model Studio mesh job) instead of waiting for the GPU cop's 60 s idle reclaim. An idle engine keeps only ~0.3 GB; during a job it answers busy (not an error). Never starts anything."
+    },
+    {
+      "name": "set_budget",
+      "class": "control",
+      "call": {
+        "http": "POST /rooms/:roomId/budget",
+        "script": "scripts/studio.sh set_budget <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "max_images": "int 1-5000",
+        "minutes": "int 1-1440 | null? — a time limit from now (null clears it); omit to keep",
+        "reset": "bool? — true zeroes the used count",
+        "for": "\"user\" (default) | \"<handle>\"? — who the announce line is for"
+      },
+      "note": "the USER's budget: set it only on their word. The resident's settings require a human approval for it; every change is announced in the room. control = never exposed through app_call"
+    },
+    {
+      "name": "model_state",
+      "class": "read",
+      "call": {
+        "http": "GET /rooms/:roomId/models/state",
+        "script": "scripts/studio.sh model_state <room>"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{budget:{max_jobs, used, left, since, until}, assets:[{id, label, category, format, view: glb|image|thumb, via: import|output, job_id}], running:[jobId], latest:{job_id, label, at, asset}|null, feedback:[{n, v, status, image, image_id, verdict, comment, at, sent_at}] — each rated image's latest SENT rating on its item's current version (image 1-based; no image = a whole-item rating from before per-image ratings), unsent_ratings:[{n, v, image, image_id, verdict, comment, at}] — per-image ratings the user saved but has not sent yet (not for you to act on until they arrive in a 'reviewed …' line)}"
+      }
+    },
+    {
+      "name": "model_ops",
+      "class": "read",
+      "call": {
+        "http": "GET /rooms/:roomId/models/ops",
+        "script": "scripts/studio.sh model_ops <room> [category]"
+      },
+      "input": {
+        "category": "query ?category=mesh|image|… — only ops with an asset input of that category (omit = all)"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{ops:[{provider, op, id, label, inputs:[{name, kind, category, required, arity}], outputs, params (JSON Schema), est, gpu_need_mb, license, availability: ready|waiting-gpu|offline}]} — the core's catalogue, unchanged"
+      }
+    },
+    {
+      "name": "model_history",
+      "class": "read",
+      "call": {
+        "http": "GET /rooms/:roomId/models/history",
+        "script": "scripts/studio.sh model_history <room>"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{history:[{job_id, provider, id, label, inputs, params, at, state, phase, pct, error, outputs:[asset id], for, ended_at?, refunded?}]} — this room's jobs, newest first"
+      }
+    },
+    {
+      "name": "model_job_status",
+      "class": "read",
+      "call": {
+        "http": "GET /rooms/:roomId/models/jobs/:jobId",
+        "script": "scripts/studio.sh model_job_status <room> <job-id>"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{job:{job_id, state: queued|running|done|error|cancelled|lost, phase, pct, error, outputs}} — this room's jobs only (404 otherwise)"
+      }
+    },
+    {
+      "name": "model_import",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/models/import",
+        "script": "scripts/studio.sh model_import <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "asset_id": "a Library asset id (a mesh, an image, …)",
+        "for": "\"user\" | \"<handle>\"? — who the announce line is for (default: the bound agent)"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{asset:{id, label, category, format, view, via:'import'}, already?: true}"
+      },
+      "note": "brings a Library asset into this room's set — run's inputs and review items take only ids in the set. Announced in the room. Idempotent"
+    },
+    {
+      "name": "model_run",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/models/run",
+        "script": "scripts/studio.sh model_run <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "provider": "string — a provider from list_ops",
+        "id": "string — the operation id from list_ops",
+        "inputs": "{<input name>: asset id | [asset ids]} — every id must be in this room's set",
+        "params": "object? — the operation's params (the core validates them against its schema; unknown keys are refused)",
+        "for": "\"user\" | \"<handle>\"? — who asked: its result line goes to them. \"user\" ONLY when the user directly asked; default = the bound agent"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "202 {job, budget} — answers within 10 s; follow with job_status. Outputs join the room's set and are announced. 400 bad input / an id outside the set (reason 'not-in-room'); 409 {reason:'waiting-gpu'} for a GPU op until the traffic cop is live; 429 when the budget is spent ('budget') or its time is up ('budget-time'); 503 {reason:'core-down'}. A job that produces nothing is refunded"
+      }
+    },
+    {
+      "name": "model_cancel",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/models/jobs/:jobId/cancel",
+        "script": "scripts/studio.sh model_cancel <room> <job-id>"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{job} — this room's jobs only (404 otherwise)"
+      }
+    },
+    {
+      "name": "model_set_budget",
+      "class": "control",
+      "call": {
+        "http": "POST /rooms/:roomId/models/budget",
+        "script": "scripts/studio.sh model_set_budget <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "max_jobs": "int 1-1000",
+        "minutes": "int 1-1440 | null? — a time limit from now (null clears it); omit to keep",
+        "reset": "bool? — true zeroes the used count",
+        "for": "\"user\" (default) | \"<handle>\"? — who the announce line is for"
+      },
+      "note": "the USER's budget, counted per job: set it only on their word. The resident's settings require a human approval for it; every change is announced in the room. control = never exposed through app_call"
+    },
+    {
+      "name": "review_add",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/reviews",
+        "script": "scripts/studio.sh review_add <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "title": "string 1-80 — what is under review (\"the Example Character\", \"her shoes\")",
+        "note": "string? <= 2000 — what to look at, what changed",
+        "images": "1-12 Library image or mesh ids (any Library image or mesh, not only this room's; a mesh opens in the 3D viewer, marked '3D' among the views). A package of named views can have 8 or more",
+        "captions": "{<image id>: \"Overview\"}? — a short name (<= 80) for a view, shown under its tile; ids must be among images",
+        "alternatives": "[{label: string <= 40, images: [ids from images]}]? up to 6 — the candidates a Vote picks between, lettered A, B, C … by position; each lists the views (and the model) of that candidate, an image in at most one. The user answers with a PICK (Pick A · Warm / Pick B · Cool / Neither) in the request box; per-view thumbs are for reviews without alternatives",
+        "scopes": "['layout'|'geometry'|'color'|'scale'|'materials'|'other', …]? — what a whole-result approval can be about; the user sees a row of Approve / Changes per scope. A thumbs-up on one view never approves the whole result",
+        "purpose": "'status' | 'feedback' | 'vote'? — what kind of answer this asks for, shown on every row and heading the submission: Status (nothing is asked; never counts as needing a response), Feedback requested (comments and thumbs), Vote (pick between the views). Default: feedback",
+        "summary": "string? <= 600 — \"What changed\" in THIS version, read first on the submission. It belongs to one version and never carries over: a later version has none unless you give one",
+        "ask": "string? <= 200 — the request in one sentence (\"Pick the layout you like.\"); default by purpose",
+        "limits": "string? <= 800 — what the reviewer should know is estimated or unfinished; a Limitations fold",
+        "files": "[{role?: 'blend'|'model'|'manifest'|'images'|'other', label?: string <= 80, library: <Library asset id> | share: <path on the file share>}]? up to 12 — downloads beside the views (the Blender file you worked in, a manifest …). Each is checked when you publish (a missing one fails the call, naming it) and its name, type and size are recorded; the user's device downloads it from the panel (Editable Blender source is the main button)",
+        "for": "\"<handle>\"? — the agent that ASKED for this review (briefing-table §2.8; default = the bound agent). Its user's Send review goes to that agent: the panel shows \"Send review to @<handle> (N)\". Not \"user\"",
+        "compare": "Library image id? — the ORIGINAL the images are judged against (e.g. the source photo of a restoration). Shown as an \"Original\" thumbnail at the end of the strip; not rated. Use the true original, not an interim image ()"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{n, announced: bool, item:{n, title, note, status:'waiting', agent: <the requester's handle>, versions:[{v:1, images, note, purpose?, summary?, ask?, limits?, files?:[{id, role, label?, name, type, size, href}], at}], at, updated_at}}"
+      },
+      "note": "n counts up per room and is never reused. Link it in a room line as review/<n> (tool.json links): it opens GET /rooms/:roomId/review/:n. The item shows in the panel's Review tab as Waiting. Posts a tool line FOR the requester: 'Review #n ready: <title> (k images)' (with a purpose: 'Vote #n: <title> (k views, m downloads)' / 'Feedback wanted #n: …' / 'Status #n: …') linked to review/<n> — the engine routes the user's Send review to that agent only after such a line; announced=false = it didn't post (the send would then go to the lead)"
+    },
+    {
+      "name": "review_update",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/reviews/update",
+        "script": "scripts/studio.sh review_update <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "n": "int — the item",
+        "images": "1-12 Library image or mesh ids?",
+        "note": "string? <= 2000",
+        "captions": "{<image id>: name}? — replaces the version's names; omitted = carried over for the images that remain",
+        "alternatives": "[{label, images}]? — as review_add; [] drops them; omitted = carried over while every image they name remains (else the call is refused: send them again)",
+        "scopes": "[...]? — as review_add; omitted = carried over",
+        "purpose": "'status' | 'feedback' | 'vote'?",
+        "summary": "string? <= 600 — this version's \"What changed\"; omitted = none for the new version (it does not carry over)",
+        "ask": "string? <= 200 (null clears it)",
+        "limits": "string? <= 800 (null clears it)",
+        "files": "[...]? the same as review_add: the whole list; [] removes them; omitted = the last version's carry over",
+        "title": "string? 1-80",
+        "compare": "Library image id | null? — set, replace or (null) remove the item's Original; not a new version"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{item, new_version: bool, announced?: bool}"
+      },
+      "note": "new images, a new note, or any change to purpose, summary, ask, limits, files, alternatives, captions or scopes = a NEW version (v+1; earlier versions kept, reachable as ?v=, each with its own files) and the item is Waiting again; omitted fields carry over from the latest version (except summary). A title change is in place (no version). A new version posts 'Review #n vK ready: …' for the item's requester (announced)"
+    },
+    {
+      "name": "review_list",
+      "class": "read",
+      "call": {
+        "http": "GET /rooms/:roomId/reviews",
+        "script": "scripts/studio.sh review_list <room>"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{items:[{n, title, status, purpose: status|feedback|vote, needs: bool (true = a Vote or Feedback still waiting on the user; a Status never), agent, at, updated_at, versions:<count>, latest:{v, images, note, purpose?, summary?, ask?, limits?, files?, at, feedback?:[{image, image_id, verdict: up|down|null, comment, at, sent_at}]}, unsent:{v, ratings:[{image, image_id, verdict, comment, at}]}|null}], unsent_ratings:[{n, v, image, image_id, verdict, comment, at}]} — newest first. Ratings are PER IMAGE: image = 1-based position in that version's images (\"img 2\"), image_id its Library id; a rating with no image is a whole-item one from before per-image ratings. feedback[] = what the user SENT (verdict null = a comment-only rating; the last entry per image is its current rating); unsent = saved in the panel, not sent yet"
+      }
+    },
+    {
+      "name": "review_status",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/reviews/status",
+        "script": "scripts/studio.sh review_status <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "n": "int",
+        "status": "'waiting' | 'replied' | 'resolved'"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{item}"
+      },
+      "note": "mark an item replied once you have answered the user's feedback, resolved when they are happy with it. A new version sets it back to waiting by itself"
+    },
+    {
+      "name": "review_remove",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/reviews/remove",
+        "script": "scripts/studio.sh review_remove <room> <<'JSON' … JSON"
+      },
+      "input": {
+        "n": "int"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{removed: n}"
+      },
+      "note": "removes one item; the others keep their numbers and n is never reused. A room line's link to it then reads \"Review #n was removed\""
+    },
+    {
+      "name": "review_feedback",
+      "class": "mutate",
+      "panel": true,
+      "agentCallable": false,
+      "call": {
+        "http": "POST /rooms/:roomId/reviews/:n/feedback"
+      },
+      "input": {
+        "verdict": "up|down? — a rating needs a verdict or a comment",
+        "comment": "string? <= 2000",
+        "image": "int (a number or a numeric string) — which image of the item's current version this rating is for, 1-based (1..its image count). REQUIRED for a rating; a pick or a scope decision takes none",
+        "pick": "'a'|'b'|… | 'none' | ''? — the user's PICK between the version's alternatives (comment = why); '' takes it back. Not with image, verdict or scope",
+        "scope": "string? — one of the version's scopes: a decision on whole-result acceptance (with decision)",
+        "decision": "'approve'|'changes'|''? — with scope; '' takes it back"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{item, image, draft:{image, image_id, verdict, comment, at}|null, unsent:{v, ratings:[…]}|null, discarded?: bool, unsent_count} — for a pick or scope: {item, unsent, unsent_count}; an unsent entry is {pick, comment?, at} or {scope, decision, at}"
+      },
+      "note": "the USER's 👍/👎 and/or comment on ONE image, from the panel's review large view (a panel action; not the agent's to call). SAVES that image's UNSENT rating on the item's current version (re-rating an image replaces only that image's draft) — no room line, no status change. A comment alone is a rating; neither a verdict nor a comment = discard that image's draft. image out of range = 400. unsent_count = rated images not sent yet, across all items. Nothing reaches the room until review_submit"
+    },
+    {
+      "name": "review_mark",
+      "class": "mutate",
+      "panel": true,
+      "agentCallable": false,
+      "call": {
+        "http": "POST /rooms/:roomId/reviews/:n/marks"
+      },
+      "input": {
+        "image": "string? — add: the id of one of the item's NUMBERED images (a review image, the Original, a ref, a batch image or one of the user's own references)",
+        "label": "string? — move or remove: the mark's label (A, B … Z, AA, AB …)",
+        "x": "number 0–1 — fraction of the image's width from the left (add, move)",
+        "y": "number 0–1 — fraction of its height from the top (add, move)",
+        "remove": "true? — with label: remove that mark",
+        "mesh": "string? — a pin on a model: the Library id of the model (one of the item's images)",
+        "point": "string? — the pin's point on the model's visible solid surface, \"x,y,z\" in the GLB's scene frame (glTF: Y up, metres)",
+        "local": "string? — the same point in the mesh's own frame, \"x,y,z\" (defaults to point)",
+        "normal": "string? — the surface normal there, \"x,y,z\"",
+        "node": "string? — the glTF node's name under the point",
+        "path": "string? — the node's ancestry, names joined with |",
+        "triangle": "string? — the triangle index hit",
+        "bary": "string? — barycentric coordinates in that triangle, \"u,v,w\"",
+        "cam": "string? — the camera when it was placed, \"px,py,pz,tx,ty,tz,fov\" (position, target, field of view in degrees)",
+        "hidden": "string? — names of the parts that were hidden, joined with |",
+        "comment": "string? — a pin's note (≤500 chars); with label alone it sets the note of that pin"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{n, label?, marks:[{label, image: <its number>, image_id, x, y} | {label, kind:'3d', mesh, point, local, normal, node, path, triangle, bary, camera:{position,target,fov}, hidden:[…], comment?, blender: null}]}"
+      },
+      "note": "the USER's marks on a review's images (a panel action; not the agent's to call — ): on the focus page he drags a mark onto a spot of the large image; labels run A…Z, AA, AB … across the whole item (the next follows the highest). Saved on the item at once, no room line. review_submit sends the item's marks in roomLine.data.reviews[].marks = [{label, image: <number>, x, y}] with images = {<number>: <image id>}, so 'make holes A, B transparent' or 'like #3 B' resolves to an image id and a point (x, y fractions from the top left). Apply them with image-ops (e.g. its fill op seeded at the mark's point). A PIN on a 3D model (kind '3d') is added with {mesh, point, normal, cam, …} — where the user dropped it on the model's visible solid surface (nothing under the point = nothing placed) — and keeps the camera and the parts hidden when it was placed; it shares the A, B, C labels with picture marks, and a label is never reused. Pin points are in the GLB's scene frame; `blender` stays null (\"mapping missing\") until a model's <glb>.glb.map.json is applied."
+    },
+    {
+      "name": "review_marks",
+      "class": "read",
+      "call": {
+        "http": "GET /rooms/:roomId/reviews/:n/marks",
+        "script": "scripts/studio.sh review_marks <room> <n>"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{n, title, status, marks:[…every mark in full: picture marks {label, image, image_id, x, y} and 3D pins {label, kind:'3d', v, mesh, point, local, normal, node, path, triangle, bary, camera, hidden, comment, blender: null}], note}"
+      },
+      "note": "Every mark of one review in full. The review's own response (review_list, the room line's data) carries pins as a summary that shrinks under the 4096-byte cap; read them here when a pin matters."
+    },
+    {
+      "name": "review_look",
+      "class": "mutate",
+      "call": {
+        "http": "POST /rooms/:roomId/reviews/:n/look",
+        "script": "scripts/studio.sh review_look <room> <n> <<'JSON' … JSON"
+      },
+      "input": {
+        "widths": "[int, int]? — one or two widths in px, 320–1400 (default [370, 900]: phone and desktop)",
+        "mode": "dark|light? (default dark)",
+        "views": "[list|summary|focus]? — which pages (default all three)",
+        "image": "int? — the view to focus, from 0 in the review's image order (default: the 3D model if there is one, else the first view)",
+        "pin_at": "string? — \"x,y\" fractions of the 3D view (0–1) where to try a pin, e.g. \"0.5,0.6\"; no mouse needed",
+        "save": "true? — keep the pin that pin_at places (default: tried, reported, not saved)",
+        "big_model": "true? — also open a big model (viewer copy over 10 MB) in 3D; needs 6 GB of free memory (default: skipped, said in notes)"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{run, mode, pictures:[{view: list|summary|focus|aim|pin|pin-unsaved, width, file, path, url}], pin: null | {saved, mesh, point, local, normal, node, path, triangle, bary, cam}, notes:[…]}"
+      },
+      "note": "Opens the review the way the user sees it, in headless Chromium, and returns pictures to look at (fetch each url, then read it as an image): the review list, its summary, the focused view with the 3D model, and — with pin_at — the aim and the pin. One look at a time (409 if one is running), 90 s at most; the last five runs are kept. 503 no-browser when the app has no browser configured. The panel is shown as the app serves it, not inside the room's own frame. Only a model that loads in the panel is pinned; a point with no surface places nothing. Memory guard: 503 low-memory before the browser starts when under 2.5 GB is free (the answer names the numbers), and a browser that runs the box below 1 GB is killed with the same reason; a model over 10 MB is not opened in 3D unless big_model is true."
+    },
+    {
+      "name": "review_ref",
+      "class": "mutate",
+      "panel": true,
+      "call": {
+        "http": "POST /rooms/:roomId/reviews/:n/refs",
+        "script": "scripts/studio.sh review_ref <room> <n> <<'JSON' … JSON"
+      },
+      "input": {
+        "name": "string? — a room image (PNG, JPEG or WebP), imported into the Library once",
+        "image": "string? — a Library image id",
+        "remove": "string? — an image id: take that reference off (its number stays given)"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{n, ref:{id, num}, user_refs:[{id, at}]} | {n, removed, user_refs}"
+      },
+      "note": "the USER's own references on a review item ('paste a reference that gets added to references with a number'): the focus page pastes or drops an image into the room, then calls this with no input = the newest room image added in the last 10 minutes. Each gets the item's next image number (every image an item shows is numbered for good: its images, the Original, refs, batch, then these). An agent may add one too ({image} or {name}). At most 24 per item."
+    },
+    {
+      "name": "review_note",
+      "class": "mutate",
+      "panel": true,
+      "agentCallable": false,
+      "call": {
+        "http": "POST /rooms/:roomId/reviews/:n/note"
+      },
+      "input": {
+        "note": "string <= 1500 — the user's overall note on this review; empty discards the draft"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{n, note_draft|null, note_sent|null}"
+      },
+      "note": "the USER's overall note on ONE review (a panel action, v3 nav): saved as they type on the review's summary, sent with its Submit (review_send). No room line."
+    },
+    {
+      "name": "review_send",
+      "class": "mutate",
+      "panel": true,
+      "agentCallable": false,
+      "call": {
+        "http": "POST /rooms/:roomId/reviews/:n/send"
+      },
+      "input": {
+        "note": "string? <= 1500 — the overall note (default: the item's saved note draft)"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{submitted, items: 1, requester, summary, note?, roomLine:{text, links, to, data}}"
+      },
+      "note": "the USER's Submit on ONE review's summary (v3 nav, Aurora 13f29fb; not the agent's to call): that review's unsent per-image ratings and the user's overall note as ONE room line to the agent that asked for it (roomLine.to = its requester, roomLine.data as review_submit's: numbers, images, marks). 400 when there is nothing to send (no rating, no new note). The item turns replied; sent = {to, at}.",
+      "postsToRoom": {
+        "to": "requester",
+        "data": true
+      }
+    },
+    {
+      "name": "review_submit",
+      "class": "mutate",
+      "panel": true,
+      "agentCallable": false,
+      "call": {
+        "http": "POST /rooms/:roomId/reviews/submit/:requester"
+      },
+      "output": {
+        "kind": "application/json",
+        "shape": "{submitted: <image ratings>, items, requester, summary, note?, roomLine:{text, links:[{label, path}], to: <requester>, data:{app, note?, reviews:[{n, v, title?, ratings:[{image?, verdict: up|down|null, comment?}]}], more?, truncated?}}}"
+      },
+      "note": "the USER's \"Send review to @<requester> (N)\" (a panel action; not the agent's to call), with the user's optional note (one box above Send instead of a separate Reply in chat — the line reads '… — note: “…”', the whole note in roomLine.data.note). ONE submit per REQUESTER (, briefing-table task): :requester = the handle of the agent that asked for the items (review_add `for`; [A-Za-z0-9_-]{1,64}); only THAT agent's unsent per-image ratings are sent — each joins its version's feedback[] (with its image), those items turn replied, and ONE line is posted — one item: 'reviewed #2 — img 1 👍, img 2 👍, img 3 👎 (comments on img 2, img 3)'; several: 'reviewed 3 items, 7 images — 5 👍, 2 👎 (comments on #2·img2, #5·img1)' — linked to the rated items (at most 8: those with a 👎 or a comment first). The engine posts it as the user (\"via Asset Studio\") ADDRESSED to the requester (roomLine.to; the lead is not typed to) with roomLine.data = the ratings as JSON (<= 4096 bytes; comments cut shorter with truncated:true when over). A requester the engine can't route to (not live, no tool line for it in 14 days) → the line goes to the lead with a warning. 400 when that requester has nothing unsent. The bare POST /rooms/:roomId/reviews/submit still answers while every unsent rating has ONE requester, else 409 'several requesters'.",
+      "postsToRoom": {
+        "to": "requester",
+        "data": true
+      },
+      "input": {
+        "note": "string? <= 1500 — the user's one note or instructions for the requester, sent in the same line as the ratings (the panel's \"Note or instructions\" box above Send)"
+      }
+    }
+  ],
+  "panels": [
+    {
+      "title": "Asset Studio",
+      "icon": "image",
+      "view": "GET /rooms/:roomId/view",
+      "scripts": true,
+      "register": "scripts/register-panel.sh <room>",
+      "note": "view only (Aurora room-asset-studio-v1): Studio · Favorites · Recycle · Review tabs; running job, latest generation, current settings, refs, earlier generations, budget; a thumbnail opens the host preview column (in-panel at ≥1000 px); a Review card opens the item large in the frame. Reflows by the frame's own width",
+      "uploads": true
+    }
+  ],
+  "readiness": {
+    "command": "scripts/preflight.sh",
+    "steps": [
+      {
+        "name": "app",
+        "check": "GET /health on the endpoint answers"
+      },
+      {
+        "name": "image-gen",
+        "target": "asset-platform image-gen",
+        "check": "GET <imageGenUrl>/health — engine.ok",
+        "config": "config.local.json#imageGenUrl"
+      },
+      {
+        "name": "room",
+        "check": "status/binding.json names the room (scripts/bind.sh)"
+      }
+    ]
+  }
+}

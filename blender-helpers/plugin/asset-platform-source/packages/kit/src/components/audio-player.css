@@ -1,0 +1,9 @@
+/* lineage: asset-platform/@asset/kit — created by domain-development (agent-user) — task (Track A A3) */
+/* Shared audio player — parity with the vanilla picker.css inline player
+   (.ap-row audio: width 100%, height 30px, block). Token-driven where relevant;
+   the native control chrome is the browser's. */
+.ap-audio {
+  width: 100%;
+  height: 30px;
+  display: block;
+}

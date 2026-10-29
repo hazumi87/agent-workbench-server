@@ -1,0 +1,14 @@
+# runtime outputs and run files — never in git
+work/
+status/*
+!status/README.md
+*.pid
+*.tmp
+node_modules/
+
+# host-specific config (copy config.example.json)
+config.local.json
+
+# per-machine Claude Code grants
+.claude/settings.local.json
+.claude/skills/

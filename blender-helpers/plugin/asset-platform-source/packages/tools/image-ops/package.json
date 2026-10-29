@@ -1,0 +1,17 @@
+{
+  "name": "image-ops",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Image ops — deterministic raster edits (crop/trim/flip/rotate/resize/pad/threshold/invert) and raster→SVG tracing (potrace mono, layered potrace, vtracer) over Library images. Every output is a NEW transient Library image with a replayable derived_op. Runtime deploy target: <runtime-root>/image-ops/.",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "potrace": "^2.1.8",
+    "sharp": "^0.35.4",
+    "svgo": "^4.1.0"
+  }
+}

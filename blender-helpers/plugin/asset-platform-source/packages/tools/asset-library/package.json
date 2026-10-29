@@ -1,0 +1,14 @@
+{
+  "name": "@asset-tools/asset-library",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Asset library service — SQLite index + file store, clipboard-compatible API, AssetReference v1 mint. Consolidated into the monorepo (Track A A5). Runtime deploy target: <runtime-root>/asset-library/.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "multer": "^2.5.0"
+  }
+}

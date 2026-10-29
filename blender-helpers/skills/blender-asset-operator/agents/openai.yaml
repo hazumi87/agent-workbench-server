@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Asset Operator"
+  short_description: "Operate Blender jobs, review assets, route work"
+  default_prompt: "Use $blender-asset-operator to plan and operate this asset job through documented Blender verbs."

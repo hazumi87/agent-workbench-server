@@ -1,0 +1,252 @@
+{
+ "about": "Finger mapping from the video-to-3d capture's 127 MHR joints (zero-based index into the capture's motion archive joints_*[frame]) to the target finger bones (names without the rig prefix). A bone's captured direction is joint[tail] - joint[head]. Positions only: no twist. Indices follow the capture bundle's joint hierarchy; thumb0 / pinky0 (indices 60,96,43,79) are palm/metacarpal support and are not mapped. Estimates from body inference, not validated finger capture.",
+ "rows": [
+  {
+   "target": "RightHandThumb1",
+   "parent": "RightHand",
+   "head": 61,
+   "tail": 62,
+   "head_name": "r_thumb1",
+   "tail_name": "r_thumb2"
+  },
+  {
+   "target": "RightHandThumb2",
+   "parent": "RightHandThumb1",
+   "head": 62,
+   "tail": 63,
+   "head_name": "r_thumb2",
+   "tail_name": "r_thumb3"
+  },
+  {
+   "target": "RightHandThumb3",
+   "parent": "RightHandThumb2",
+   "head": 63,
+   "tail": 64,
+   "head_name": "r_thumb3",
+   "tail_name": "r_thumb_null"
+  },
+  {
+   "target": "RightHandIndex1",
+   "parent": "RightHand",
+   "head": 56,
+   "tail": 57,
+   "head_name": "r_index1",
+   "tail_name": "r_index2"
+  },
+  {
+   "target": "RightHandIndex2",
+   "parent": "RightHandIndex1",
+   "head": 57,
+   "tail": 58,
+   "head_name": "r_index2",
+   "tail_name": "r_index3"
+  },
+  {
+   "target": "RightHandIndex3",
+   "parent": "RightHandIndex2",
+   "head": 58,
+   "tail": 59,
+   "head_name": "r_index3",
+   "tail_name": "r_index_null"
+  },
+  {
+   "target": "RightHandMiddle1",
+   "parent": "RightHand",
+   "head": 52,
+   "tail": 53,
+   "head_name": "r_middle1",
+   "tail_name": "r_middle2"
+  },
+  {
+   "target": "RightHandMiddle2",
+   "parent": "RightHandMiddle1",
+   "head": 53,
+   "tail": 54,
+   "head_name": "r_middle2",
+   "tail_name": "r_middle3"
+  },
+  {
+   "target": "RightHandMiddle3",
+   "parent": "RightHandMiddle2",
+   "head": 54,
+   "tail": 55,
+   "head_name": "r_middle3",
+   "tail_name": "r_middle_null"
+  },
+  {
+   "target": "RightHandRing1",
+   "parent": "RightHand",
+   "head": 48,
+   "tail": 49,
+   "head_name": "r_ring1",
+   "tail_name": "r_ring2"
+  },
+  {
+   "target": "RightHandRing2",
+   "parent": "RightHandRing1",
+   "head": 49,
+   "tail": 50,
+   "head_name": "r_ring2",
+   "tail_name": "r_ring3"
+  },
+  {
+   "target": "RightHandRing3",
+   "parent": "RightHandRing2",
+   "head": 50,
+   "tail": 51,
+   "head_name": "r_ring3",
+   "tail_name": "r_ring_null"
+  },
+  {
+   "target": "RightHandPinky1",
+   "parent": "RightHand",
+   "head": 44,
+   "tail": 45,
+   "head_name": "r_pinky1",
+   "tail_name": "r_pinky2"
+  },
+  {
+   "target": "RightHandPinky2",
+   "parent": "RightHandPinky1",
+   "head": 45,
+   "tail": 46,
+   "head_name": "r_pinky2",
+   "tail_name": "r_pinky3"
+  },
+  {
+   "target": "RightHandPinky3",
+   "parent": "RightHandPinky2",
+   "head": 46,
+   "tail": 47,
+   "head_name": "r_pinky3",
+   "tail_name": "r_pinky_null"
+  },
+  {
+   "target": "LeftHandThumb1",
+   "parent": "LeftHand",
+   "head": 97,
+   "tail": 98,
+   "head_name": "l_thumb1",
+   "tail_name": "l_thumb2"
+  },
+  {
+   "target": "LeftHandThumb2",
+   "parent": "LeftHandThumb1",
+   "head": 98,
+   "tail": 99,
+   "head_name": "l_thumb2",
+   "tail_name": "l_thumb3"
+  },
+  {
+   "target": "LeftHandThumb3",
+   "parent": "LeftHandThumb2",
+   "head": 99,
+   "tail": 100,
+   "head_name": "l_thumb3",
+   "tail_name": "l_thumb_null"
+  },
+  {
+   "target": "LeftHandIndex1",
+   "parent": "LeftHand",
+   "head": 92,
+   "tail": 93,
+   "head_name": "l_index1",
+   "tail_name": "l_index2"
+  },
+  {
+   "target": "LeftHandIndex2",
+   "parent": "LeftHandIndex1",
+   "head": 93,
+   "tail": 94,
+   "head_name": "l_index2",
+   "tail_name": "l_index3"
+  },
+  {
+   "target": "LeftHandIndex3",
+   "parent": "LeftHandIndex2",
+   "head": 94,
+   "tail": 95,
+   "head_name": "l_index3",
+   "tail_name": "l_index_null"
+  },
+  {
+   "target": "LeftHandMiddle1",
+   "parent": "LeftHand",
+   "head": 88,
+   "tail": 89,
+   "head_name": "l_middle1",
+   "tail_name": "l_middle2"
+  },
+  {
+   "target": "LeftHandMiddle2",
+   "parent": "LeftHandMiddle1",
+   "head": 89,
+   "tail": 90,
+   "head_name": "l_middle2",
+   "tail_name": "l_middle3"
+  },
+  {
+   "target": "LeftHandMiddle3",
+   "parent": "LeftHandMiddle2",
+   "head": 90,
+   "tail": 91,
+   "head_name": "l_middle3",
+   "tail_name": "l_middle_null"
+  },
+  {
+   "target": "LeftHandRing1",
+   "parent": "LeftHand",
+   "head": 84,
+   "tail": 85,
+   "head_name": "l_ring1",
+   "tail_name": "l_ring2"
+  },
+  {
+   "target": "LeftHandRing2",
+   "parent": "LeftHandRing1",
+   "head": 85,
+   "tail": 86,
+   "head_name": "l_ring2",
+   "tail_name": "l_ring3"
+  },
+  {
+   "target": "LeftHandRing3",
+   "parent": "LeftHandRing2",
+   "head": 86,
+   "tail": 87,
+   "head_name": "l_ring3",
+   "tail_name": "l_ring_null"
+  },
+  {
+   "target": "LeftHandPinky1",
+   "parent": "LeftHand",
+   "head": 80,
+   "tail": 81,
+   "head_name": "l_pinky1",
+   "tail_name": "l_pinky2"
+  },
+  {
+   "target": "LeftHandPinky2",
+   "parent": "LeftHandPinky1",
+   "head": 81,
+   "tail": 82,
+   "head_name": "l_pinky2",
+   "tail_name": "l_pinky3"
+  },
+  {
+   "target": "LeftHandPinky3",
+   "parent": "LeftHandPinky2",
+   "head": 82,
+   "tail": 83,
+   "head_name": "l_pinky3",
+   "tail_name": "l_pinky_null"
+  }
+ ],
+ "auxiliary": {
+  "right_pinky0": 43,
+  "left_pinky0": 79,
+  "right_thumb0": 60,
+  "left_thumb0": 96
+ },
+ "qualification": "Body inference skipped dedicated hand decoders; these are unvalidated model-estimated positions, not per-finger local rotations/confidence."
+}

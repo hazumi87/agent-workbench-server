@@ -1,0 +1,4 @@
+[
+  { "id": "blender", "url": "http://<gpu-host-tailnet-ip>:<registry-port>", "bearer_file": "blender.bearer", "enabled": true },
+  { "id": "mesh-studio", "url": "http://<gpu-host-tailnet-ip>:<registry-port>", "bearer_file": "mesh-studio.bearer", "enabled": false }
+]

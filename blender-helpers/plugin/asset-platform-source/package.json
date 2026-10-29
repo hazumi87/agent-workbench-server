@@ -1,0 +1,16 @@
+{
+  "name": "asset-platform",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Asset Platform monorepo \u2014 React 19 component kit served as Web Components (light DOM) behind the asset-tools gateway, alongside the existing vanilla picker.js kit.",
+  "scripts": {
+    "build": "pnpm --filter @asset/kit build",
+    "test": "pnpm --filter @asset/kit test"
+  },
+  "pnpm": {
+    "overrides": {
+      "phin": "3.7.1"
+    }
+  },
+  "packageManager": "pnpm@9.15.9"
+}

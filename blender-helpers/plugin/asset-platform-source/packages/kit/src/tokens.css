@@ -1,0 +1,130 @@
+/* lineage: asset-platform/@asset/kit — default theme created (1a), token schema locked + override surface (A2, task) by domain-development (agent-user) */
+/*
+ * ============================================================================
+ * Asset Platform design-token schema  (Track A Step A2 — the override surface)
+ * ============================================================================
+ *
+ * A THEME IS A SET OF CSS CUSTOM-PROPERTY VALUES. Components never hardcode
+ * colors/spacing/type — they read `var(--ap-*)`. To re-skin the kit you override
+ * the `--ap-*` tokens; you do NOT touch component code. (This is the whole reason
+ * the WC boundary is LIGHT DOM, the design notes — tokens cascade in.)
+ *
+ * THE TOKEN SCHEMA (the contract a theme overrides):
+ *   Surfaces:    --ap-bg --ap-bg-card --ap-bg-hover --ap-border
+ *   Text:        --ap-text-primary --ap-text-secondary --ap-text-muted
+ *   Accents:     --ap-accent (+ semantic --ap-accent-audio/-voice/-rip/-clip),
+ *                --ap-danger --ap-success
+ *   Typography:  --ap-font-sans --ap-font-mono --ap-fs-xs/-sm/-base/-lg
+ *   Spacing:     --ap-space-1..5   Radius: --ap-radius --ap-radius-sm
+ *
+ * HOW TO APPLY A THEME (two equivalent ways, no component edit either way):
+ *   1. Set `data-ap-theme="<name>"` on any ANCESTOR of the kit element
+ *      (or on the element itself). The matching block below re-binds --ap-*.
+ *   2. Or override the --ap-* vars yourself in your own stylesheet under any
+ *      scope you like. A theme block is just that, pre-packaged.
+ *
+ * Per-game themes live as additional `[data-ap-theme="..."]` blocks (here or in
+ * a host stylesheet). The default (`:root`) is PARITY with the current
+ * asset-tools / landing look (values from _gateway/hub.html + picker.css).
+ * ============================================================================
+ */
+:root {
+  /* Surfaces (hub.html) */
+  --ap-bg: #0d0f12;
+  --ap-bg-card: #13161b;
+  --ap-bg-hover: #1a1e25;
+  --ap-border: #222731;
+
+  /* Text (hub.html) */
+  --ap-text-primary: #e8eaf0;
+  --ap-text-secondary: #6b7280;
+  --ap-text-muted: #3d4452;
+
+  /* Accents (hub.html per-tool accent set) */
+  --ap-accent: #a78bfa;          /* default = audio accent */
+  --ap-accent-audio: #a78bfa;
+  --ap-accent-voice: #4caf88;
+  --ap-accent-rip: #f87171;
+  --ap-accent-clip: #e0a857;
+  --ap-danger: #f87171;
+  --ap-success: #4caf88;
+
+  /* Functional-role accents (Aurora palette). Keyed by an asset's FUNCTION, not
+   * bare media-type: voice ≠ raw clip is a real role split (the design notes).
+   * Consumed by the Asset Viewer's class·sub-class title. Aurora hexes per
+   * the design-token file (teal/coral/indigo/sky/lime/amber). */
+  --ap-role-voice: #FF2D78;   /* magenta — a usable clone source (teal is reserved for the focus ring) */
+  --ap-role-clip:  #FF5C4D;   /* coral — raw audio material */
+  --ap-role-audio: #5B6CF0;   /* indigo — audio, unspecified subtype */
+  --ap-role-video: #38BDF8;   /* sky */
+  --ap-role-mesh:  #C6F24E;   /* lime */
+  --ap-role-image: #FBBF24;   /* amber */
+
+  /* Typography (hub.html — IBM Plex) */
+  --ap-font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --ap-font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+  --ap-fs-xs: 0.65rem;
+  --ap-fs-sm: 0.72rem;
+  --ap-fs-base: 0.85rem;
+  --ap-fs-lg: 1.1rem;
+
+  /* Spacing (4px base) */
+  --ap-space-1: 4px;
+  --ap-space-2: 8px;
+  --ap-space-3: 12px;
+  --ap-space-4: 16px;
+  --ap-space-5: 24px;
+
+  /* Radius */
+  --ap-radius: 8px;
+  --ap-radius-sm: 5px;
+}
+
+/*
+ * Compatibility aliases — the component CSS reads bare var(--border)/--surface/
+ * --text/--text-muted/--accent/--bg-hover (ported from the vanilla picker.css).
+ * They DERIVE from the --ap-* set, so overriding --ap-* re-skins these too.
+ * Declared in their own block so they re-resolve under any theme scope below.
+ */
+:root,
+[data-ap-theme] {
+  --border: var(--ap-border);
+  --surface: var(--ap-bg-card);
+  --text: var(--ap-text-primary);
+  --text-muted: var(--ap-text-secondary);
+  --bg-hover: var(--ap-bg-hover);
+  --accent: var(--ap-accent);
+}
+
+/*
+ * ---- Example second theme: "light" -----------------------------------------
+ * Demonstrates the override surface (A2 acceptance: a 2nd token set re-skins the
+ * clipboard WITHOUT touching component code). A light/paper palette — only the
+ * --ap-* values change; every component restyles automatically via the aliases.
+ */
+[data-ap-theme='light'] {
+  --ap-bg: #f7f8fa;
+  --ap-bg-card: #ffffff;
+  --ap-bg-hover: #eef0f4;
+  --ap-border: #d6dae2;
+
+  --ap-text-primary: #1a1d24;
+  --ap-text-secondary: #5a6273;
+  --ap-text-muted: #9aa1b0;
+
+  --ap-accent: #6d4ad8;
+  --ap-accent-audio: #6d4ad8;
+  --ap-accent-voice: #1f9d6b;
+  --ap-accent-rip: #d6453a;
+  --ap-accent-clip: #b9842b;
+  --ap-danger: #d6453a;
+  --ap-success: #1f9d6b;
+
+  /* Functional-role accents, deepened for contrast on the paper surface. */
+  --ap-role-voice: #d61e5f;
+  --ap-role-clip:  #d63f30;
+  --ap-role-audio: #3f4fd0;
+  --ap-role-video: #1594d1;
+  --ap-role-mesh:  #7fa815;
+  --ap-role-image: #c98a06;
+}

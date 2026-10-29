@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reference Model Refinement"
+  short_description: "Refine props and scenes from photos and video"
+  default_prompt: "Use $reference-model-refinement to improve this model from the supplied photos and video."

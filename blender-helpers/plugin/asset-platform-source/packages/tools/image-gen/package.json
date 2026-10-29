@@ -1,0 +1,9 @@
+{
+  "name": "@asset-tools/image-gen",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Image generation — Node API (the smarts) over the GPU host asset-platform-krea sidecar (WanGP / Krea 2). Every output lands in the library with a complete replayable recipe. Runtime deploy target: <runtime-root>/image-gen/.",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "express": "^4.18.2" }
+}

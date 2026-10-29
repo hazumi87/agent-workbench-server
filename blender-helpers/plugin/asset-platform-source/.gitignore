@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+playwright-report/
+test-results/
+.pnpm-store/
+# vestige SQLite copies — the live DB is <data-dir>/assets.db
+*.db
+# Python virtualenvs for the consolidated hybrid tools (regenerated from requirements.txt at runtime)
+venv/
+.venv/
+*-venv/
+__pycache__/

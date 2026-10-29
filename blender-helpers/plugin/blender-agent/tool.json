@@ -1,0 +1,109 @@
+{
+  "contract": "tool/draft-0",
+  "name": "Blender Studio",
+  "slug": "blender-agent",
+  "version": "0.2.0",
+  "description": "Model Studio's Blender backend: Library mesh -> texture from views / Rigify rig / shape keys / animation -> GLB (+meshopt) + FBX, published with lineage. Headless Blender, one step per process; CPU only.",
+  "authority": "own",
+  "operator": "resident",
+  "access": "exclusive",
+  "needs": {
+    "host": "win32",
+    "gpu": false,
+    "gpu_note": "steps are CPU; preview renders default to Cycles CPU. device GPU only when cleared in the room.",
+    "runtime": "node>=20; Blender 4.5.4 LTS portable in app/"
+  },
+  "lifecycle": {
+    "entry": null,
+    "pulse": "scripts/preflight.mjs",
+    "stop": null,
+    "note": "no persistent app: each step is one blender.exe process (run-step.mjs), killed by tree on timeout",
+    "status": "status/widget.json"
+  },
+  "verbs": [
+    {
+      "name": "manifest",
+      "class": "read",
+      "call": {
+        "http": "GET /manifest"
+      }
+    },
+    {
+      "name": "run",
+      "class": "mutate",
+      "call": {
+        "http": "POST /run"
+      },
+      "input": {
+        "id": "operation id (a recipe template)",
+        "inputs": {
+          "mesh": "Library asset id"
+        },
+        "params": "per the operation's schema",
+        "origin": "object?"
+      },
+      "output": {
+        "jobId": "string"
+      }
+    },
+    {
+      "name": "job_status",
+      "class": "read",
+      "call": {
+        "http": "GET /jobs/:id"
+      }
+    },
+    {
+      "name": "cancel",
+      "class": "mutate",
+      "call": {
+        "http": "POST /jobs/:id/cancel"
+      }
+    },
+    {
+      "name": "history",
+      "class": "read",
+      "call": {
+        "http": "GET /jobs"
+      }
+    },
+    {
+      "name": "run_recipe",
+      "class": "mutate",
+      "call": {
+        "script": "node scripts/run-recipe.mjs <job> <recipe.json>"
+      },
+      "note": "resident-only, local"
+    }
+  ],
+  "readiness": {
+    "command": "node scripts/preflight.mjs",
+    "steps": [
+      {
+        "name": "blender",
+        "check": "app/\u2026/blender.exe -b version probe, 60 s"
+      },
+      {
+        "name": "library",
+        "target": "asset-platform",
+        "config": "libraryUrl"
+      },
+      {
+        "name": "share",
+        "target": "agent-share",
+        "config": "shareUrl"
+      },
+      {
+        "name": "gpu",
+        "check": "nvidia-smi free VRAM (informational)"
+      }
+    ]
+  },
+  "endpoint": {
+    "server": "scripts/job-server.mjs",
+    "bind": "tailnet IP (config apiHost), never 0.0.0.0",
+    "port": "config apiPort (registry)",
+    "auth": "Bearer; sha256 in a per-host hash file (config tokenHashFile) (outside the repo), read per request, fail-closed (plaintext only on the server core)",
+    "contract": "(Model Studio backend contract, see the package docs)"
+  }
+}

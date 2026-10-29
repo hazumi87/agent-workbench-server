@@ -1,0 +1,14 @@
+{
+  "name": "model-studio",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Model Studio core — orchestrates pluggable 3D backends (Blender, image-to-mesh, decimators) that run as separate HTTP services listed in a human-edited config (the design notes). The Library full-page app and the briefing-table room tool both call it. Runtime deploy target: <runtime-root>/model-studio/.",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

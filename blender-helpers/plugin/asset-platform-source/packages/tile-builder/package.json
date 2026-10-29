@@ -1,0 +1,17 @@
+{
+  "name": "tile-builder",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tile builder \u2014 composes a seamless background tile from transparent PNG elements (position, scale, rotation, flip, z-order, tint, drop shadow, wrap-around) from a composition JSON.",
+  "bin": {
+    "tile-builder": "tile.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "1.60.0",
+    "sharp": "^0.35.4"
+  }
+}

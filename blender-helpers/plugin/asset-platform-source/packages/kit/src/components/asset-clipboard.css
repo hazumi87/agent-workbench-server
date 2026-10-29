@@ -1,0 +1,41 @@
+/* lineage: asset-platform/@asset/kit — created by domain-development (agent-user) — task */
+/*
+ * Clipboard styles — ported VERBATIM from asset-library/picker.css (the .ap-*
+ * namespace) so the React <asset-clipboard> is visually identical to the vanilla
+ * widget. Colors resolve from our injected design tokens (tokens.css aliases
+ * --accent/--surface/--border/--text/--text-muted/--bg-hover), with the same
+ * hardcoded fallbacks the vanilla kit used. Parity first (Step 1b); per-game
+ * theme overrides come later (Step A2).
+ */
+.ap-root { display: flex; flex-direction: column; gap: 8px; font-size: 13px; font-family: var(--ap-font-sans); }
+.ap-btn { background: var(--accent, #4caf88); color: #fff; border: none; border-radius: 5px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
+.ap-btn:hover { opacity: 0.9; }
+.ap-btn:disabled { cursor: not-allowed; }
+.ap-row { background: var(--surface, #161b22); border: 1px solid var(--border, #2e3350); border-radius: 6px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.ap-cb-row { cursor: default; }
+.ap-row-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.ap-row-label { font-size: 13px; color: var(--text, #e0e4f0); flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.ap-row-dur { font-size: 11px; color: var(--text-muted, #7a82a8); font-variant-numeric: tabular-nums; }
+.ap-cb-controls { display: flex; gap: 6px; justify-content: flex-end; }
+.ap-cb-save { background: var(--accent, #4caf88); }
+.ap-cb-saved { opacity: 0.4; }
+.ap-cb-trash { background: #b4453a; }
+.ap-cb-x { background: #6b7280; }
+.ap-cb-addbar { display: flex; }
+.ap-cb-add-btn { background: var(--accent, #4caf88); width: 100%; }
+.ap-empty { font-size: 12px; color: var(--text-muted, #7a82a8); padding: 8px; text-align: center; }
+.ap-error { font-size: 12px; color: #f87171; padding: 6px 8px; }
+.ap-menu { background: var(--surface, #161b22); border: 1px solid var(--border, #2e3350); border-radius: 6px; padding: 4px; display: flex; flex-direction: column; gap: 2px; z-index: 1000; box-shadow: 0 4px 16px rgba(0,0,0,0.4); min-width: 160px; }
+.ap-menu-item { background: none; border: none; color: var(--text, #e0e4f0); text-align: left; padding: 6px 10px; font-size: 12px; cursor: pointer; border-radius: 4px; white-space: nowrap; }
+.ap-menu-item:hover { background: var(--bg-hover, #1a1e25); }
+.ap-menu-item-disabled { opacity: 0.4; cursor: not-allowed; }
+.ap-mi-icon { display: inline-block; width: 18px; }
+.ap-mi-soon { font-size: 10px; color: var(--text-muted, #7a82a8); }
+.ap-recycle-panel { background: var(--surface, #161b22); border: 1px solid var(--border, #2e3350); border-radius: 6px; padding: 8px; margin-bottom: 4px; }
+.ap-recycle-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 600; color: var(--text, #e0e4f0); margin-bottom: 6px; }
+.ap-recycle-close { background: none; color: var(--text-muted, #7a82a8); padding: 2px 6px; }
+.ap-recycle-body { display: flex; flex-direction: column; gap: 4px; max-height: 240px; overflow-y: auto; }
+.ap-recycle-row { display: flex; align-items: center; gap: 8px; }
+.ap-recycle-revive { background: var(--accent, #4caf88); font-size: 11px; padding: 3px 8px; }
+.ap-recycle-delete { background: #b4453a; font-size: 11px; padding: 3px 8px; }
+.ap-cb audio { width: 100%; height: 32px; }

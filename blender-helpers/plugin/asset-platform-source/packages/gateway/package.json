@@ -1,0 +1,14 @@
+{
+  "name": "@asset-tools/gateway",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "server.js",
+  "description": "Asset Platform gateway — single Express server (PM2 :8260) that mounts every tool's register(app) and serves the Library SPA. Consolidated into the monorepo (Phase C0). Runtime deploy target: <runtime-root>/_gateway/ (Phase C).",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

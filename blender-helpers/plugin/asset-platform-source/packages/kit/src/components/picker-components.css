@@ -1,0 +1,51 @@
+/* lineage: asset-platform/@asset/kit — created by domain-development (agent-user) — task (Track A A3) */
+/* CSS for the ported picker components (url-history, exported-clips) + the panel
+   tab chrome — lifted from the vanilla picker.css so the kit WCs render at parity.
+   Token-driven via the --ap-* aliases (default + theme overrides apply). */
+
+/* ---- url-history grid ---- */
+.ap-hist-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; padding: 10px; }
+.ap-hist-card { border: 1px solid var(--border, #222731); border-radius: 8px; overflow: hidden; cursor: pointer; background: var(--surface, #161b22); transition: border-color .12s; }
+.ap-hist-card:hover { border-color: var(--accent, #4caf88); }
+.ap-hist-card.ap-hist-selected { border-color: var(--accent, #4caf88); }
+.ap-hist-thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: #000; }
+.ap-hist-label { font-size: 11px; padding: 5px 6px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text, #e8eaf0); line-height: 1.3; }
+/* ---- per-card actions (⋮) ---- */
+/* overflow must stay VISIBLE or the card clips its own actions menu; the rounded corners the
+   base rule's overflow:hidden was providing are re-applied to the thumb directly. */
+.ap-hist-card { position: relative; overflow: visible; min-width: 0; }
+.ap-hist-thumb { border-radius: 7px 7px 0 0; }
+.ap-hist-card.ap-hist-busy { opacity: .5; pointer-events: none; }
+/* the grid paints in DOM order, so the open card has to be lifted above later siblings */
+.ap-hist-card:has(.ap-hist-menu) { z-index: 30; }
+.ap-hist-menu-wrap { position: absolute; top: 4px; right: 4px; }
+/* Visible on hover/focus, and always once its menu is open — a control that only appears on
+   hover is unreachable by keyboard and invisible on touch, so focus-within carries it too. */
+.ap-hist-dots { opacity: 0; transition: opacity .12s; width: 22px; height: 22px; border-radius: 5px;
+  border: 1px solid var(--border, #222731); background: rgba(0,0,0,.72); color: var(--text, #e8eaf0);
+  font-size: 14px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+.ap-hist-card:hover .ap-hist-dots,
+.ap-hist-card:focus-within .ap-hist-dots,
+.ap-hist-dots[aria-expanded="true"] { opacity: 1; }
+.ap-hist-dots:hover:not(:disabled) { background: rgba(0,0,0,.9); border-color: var(--accent, #4caf88); }
+.ap-hist-dots:disabled { cursor: not-allowed; }
+.ap-hist-menu { position: absolute; top: 25px; right: 0; z-index: 30; width: max-content; max-width: 200px;
+  background: var(--surface, #161b22); border: 1px solid var(--border, #222731); border-radius: 7px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.55); overflow: hidden; }
+.ap-hist-menu-item { display: block; width: 100%; text-align: left; padding: 7px 11px; font-size: 11.5px;
+  white-space: nowrap; background: none; border: none; color: var(--text, #e8eaf0); cursor: pointer; }
+.ap-hist-menu-item:hover { background: rgba(255,255,255,.07); }
+.ap-hist-danger { color: #f28b82; }
+.ap-hist-error { grid-column: 1 / -1; font-size: 11px; color: #f28b82; padding: 2px 2px 0; }
+
+/* ---- exported-clips list ---- */
+.ap-clips-list { display: flex; flex-direction: column; gap: 6px; padding: 8px; }
+
+/* ---- panel chrome + tabs (for <asset-picker-panel>) ---- */
+.ap-panel-kit { display: flex; flex-direction: column; background: var(--surface, #161b22); border: 1px solid var(--border, #222731); border-radius: 8px; color: var(--text, #e8eaf0); font-family: var(--ap-font-sans); overflow: hidden; }
+.ap-panel-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--border, #222731); font-size: 13px; font-weight: 600; }
+.ap-panel-head .ap-refresh { margin-left: auto; background: none; border: none; color: var(--text-muted, #6b7280); cursor: pointer; font-size: 14px; }
+.ap-tabs { display: flex; gap: 4px; padding: 6px 8px 0; }
+.ap-tab { flex: 1; background: transparent; border: 1px solid var(--border, #222731); border-bottom: none; color: var(--text-muted, #6b7280); border-radius: 6px 6px 0 0; padding: 6px 0; cursor: pointer; font-size: 12px; font-weight: 600; }
+.ap-tab.ap-tab-active { color: var(--text, #e8eaf0); border-color: var(--accent, #4caf88); }
+.ap-view { flex: 1; min-height: 0; overflow-y: auto; }

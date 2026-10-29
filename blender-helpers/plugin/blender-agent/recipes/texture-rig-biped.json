@@ -1,0 +1,166 @@
+{
+  "id": "texture-rig-biped",
+  "title": "Texture from views + rig + idle (biped)",
+  "template": true,
+  "about": "As rig-biped, plus a colour texture projected from the mesh's four views (its meta.projection: Mesh Studio meshes) and baked to one UV set.",
+  "input": {
+    "kind": "mesh",
+    "formats": [
+      "glb"
+    ],
+    "requires": "meta.projection"
+  },
+  "gpu": false,
+  "host": "gpu-host",
+  "params": {
+    "target_tris": {
+      "type": "integer",
+      "minimum": 2000,
+      "maximum": 60000,
+      "default": 25000,
+      "title": "Triangle budget",
+      "bind": [
+        [
+          "decimate",
+          "target_tris"
+        ]
+      ]
+    },
+    "arm_down": {
+      "type": "number",
+      "minimum": 20,
+      "maximum": 85,
+      "default": 55,
+      "title": "Idle arm drop (deg)",
+      "bind": [
+        [
+          "anim_idle",
+          "arm_down"
+        ]
+      ]
+    },
+    "fingers": {
+      "type": "boolean",
+      "default": true,
+      "title": "Finger bones",
+      "bind": [
+        [
+          "rig_rigify",
+          "fingers"
+        ]
+      ]
+    },
+    "texture_res": {
+      "type": "integer",
+      "enum": [
+        1024,
+        2048,
+        4096
+      ],
+      "default": 2048,
+      "title": "Texture size",
+      "bind": [
+        [
+          "project_bake",
+          "res"
+        ]
+      ]
+    }
+  },
+  "steps": [
+    {
+      "step": "import_mesh",
+      "params": {
+        "src": "{input_path}"
+      }
+    },
+    {
+      "step": "cleanup",
+      "params": {
+        "merge_distance": 0.0001,
+        "min_part_ratio": 0.01
+      }
+    },
+    {
+      "step": "decimate",
+      "params": {
+        "target_tris": 25000
+      }
+    },
+    {
+      "step": "uv_unwrap",
+      "params": {
+        "mode": "smart",
+        "island_margin": 0.01
+      }
+    },
+    {
+      "step": "project_bake",
+      "params": {
+        "from_library": "{input}",
+        "res": 2048,
+        "name": "{name}"
+      }
+    },
+    {
+      "step": "rig_rigify",
+      "params": {
+        "fingers": true
+      }
+    },
+    {
+      "step": "skin",
+      "params": {}
+    },
+    {
+      "step": "anim_idle",
+      "params": {
+        "seconds": 4,
+        "fps": 30,
+        "arm_down": 55,
+        "elbow": 15
+      }
+    },
+    {
+      "step": "game_rig",
+      "params": {}
+    },
+    {
+      "step": "export",
+      "params": {
+        "name": "{name}",
+        "formats": [
+          "glb",
+          "fbx"
+        ]
+      }
+    },
+    {
+      "step": "validate",
+      "params": {
+        "max_bones": 128,
+        "max_tris": 60000,
+        "clips": [
+          "Idle"
+        ]
+      }
+    },
+    {
+      "step": "meshopt",
+      "params": {
+        "animations": [
+          "Idle"
+        ]
+      }
+    },
+    {
+      "step": "preview",
+      "params": {
+        "res": 512,
+        "samples": 16
+      }
+    }
+  ],
+  "op": "mesh-texture-project",
+  "est_seconds": 150
+}

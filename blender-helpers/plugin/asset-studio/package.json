@@ -1,0 +1,9 @@
+{
+  "name": "asset-studio",
+  "private": true,
+  "type": "module",
+  "description": "Room app: agent + user image generation over asset-platform image-gen. Version lives in tool.json.",
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
+}

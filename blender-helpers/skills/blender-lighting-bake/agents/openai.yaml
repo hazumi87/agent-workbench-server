@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blender Lighting and Bake"
+  short_description: "Prepare, validate and hand off dynamic lighting"
+  default_prompt: "Use $blender-lighting-bake to prepare and validate this controllable lighting asset through documented Blender verbs."

@@ -1,0 +1,516 @@
+{
+ "about": "Default fixed cameras for a 0.8 m T-pose character facing -Y (metres, Z up). `view`/`centre`/`size` give the orthographic shot used by kit2_view; `position`/`target`/`fov` (vertical degrees, camera 2.5 m from the target, square frame) give the same framing as a perspective camera for the live watch. below = camera below and in front, looking up at the waist. foot-*-side, foot-*-34 and elbow-* were added after the foot and elbow faults of the first character run lay outside every fixed view; the elbow cameras look at the rim of the cuff from in front and from inboard. feet-top and foot-*-side/-34 are placed from the character's own measurements by scripts/steps/kit2_cams.py at capture/render time; the numbers here are the fallback for a 0.8 m T-pose character. arm-left-end / arm-right-end are placed per character from the reference's measured arm (fingertip, wrist, elbow) by kit2_cams.py; the numbers here are the fallback for the 0.8 m character.",
+ "shots": [
+  {
+   "name": "front",
+   "view": "front",
+   "centre": [
+    0,
+    0,
+    0.41
+   ],
+   "size": 1.25,
+   "label": "Front",
+   "id": "front",
+   "target": [
+    0,
+    0,
+    0.41
+   ],
+   "position": [
+    0.0,
+    -2.5,
+    0.41
+   ],
+   "fov": 28.07
+  },
+  {
+   "name": "back",
+   "view": "back",
+   "centre": [
+    0,
+    0,
+    0.41
+   ],
+   "size": 1.25,
+   "label": "Back",
+   "id": "back",
+   "target": [
+    0,
+    0,
+    0.41
+   ],
+   "position": [
+    0.0,
+    2.5,
+    0.41
+   ],
+   "fov": 28.07
+  },
+  {
+   "name": "left",
+   "view": "left",
+   "centre": [
+    0,
+    0,
+    0.41
+   ],
+   "size": 1.25,
+   "label": "Left",
+   "id": "left",
+   "target": [
+    0,
+    0,
+    0.41
+   ],
+   "position": [
+    2.5,
+    0.0,
+    0.41
+   ],
+   "fov": 28.07
+  },
+  {
+   "name": "right",
+   "view": "right",
+   "centre": [
+    0,
+    0,
+    0.41
+   ],
+   "size": 1.25,
+   "label": "Right",
+   "id": "right",
+   "target": [
+    0,
+    0,
+    0.41
+   ],
+   "position": [
+    -2.5,
+    0.0,
+    0.41
+   ],
+   "fov": 28.07
+  },
+  {
+   "name": "top",
+   "view": "top",
+   "centre": [
+    0,
+    0,
+    0.41
+   ],
+   "size": 1.25,
+   "label": "Top",
+   "id": "top",
+   "target": [
+    0,
+    0,
+    0.41
+   ],
+   "position": [
+    0.0,
+    0.0,
+    2.91
+   ],
+   "fov": 28.07
+  },
+  {
+   "name": "chest",
+   "view": "front",
+   "centre": [
+    0,
+    0,
+    0.5
+   ],
+   "size": 0.45,
+   "label": "Chest",
+   "id": "chest",
+   "target": [
+    0,
+    0,
+    0.5
+   ],
+   "position": [
+    0.0,
+    -2.5,
+    0.5
+   ],
+   "fov": 10.29
+  },
+  {
+   "name": "waist",
+   "view": "front",
+   "centre": [
+    0,
+    0,
+    0.3
+   ],
+   "size": 0.4,
+   "label": "Waist",
+   "id": "waist",
+   "target": [
+    0,
+    0,
+    0.3
+   ],
+   "position": [
+    0.0,
+    -2.5,
+    0.3
+   ],
+   "fov": 9.15
+  },
+  {
+   "name": "waist-below",
+   "view": "below",
+   "centre": [
+    0,
+    0,
+    0.28
+   ],
+   "size": 0.45,
+   "label": "Waist from below",
+   "id": "waist-below",
+   "target": [
+    0,
+    0,
+    0.28
+   ],
+   "position": [
+    0.0,
+    -1.5,
+    -1.72
+   ],
+   "fov": 10.29
+  },
+  {
+   "name": "waist-side",
+   "view": "left",
+   "centre": [
+    0,
+    0,
+    0.3
+   ],
+   "size": 0.4,
+   "label": "Waist, side",
+   "id": "waist-side",
+   "target": [
+    0,
+    0,
+    0.3
+   ],
+   "position": [
+    2.5,
+    0.0,
+    0.3
+   ],
+   "fov": 9.15
+  },
+  {
+   "name": "wrist-left",
+   "view": "front",
+   "centre": [
+    0.33,
+    0,
+    0.56
+   ],
+   "size": 0.25,
+   "label": "Left wrist",
+   "id": "wrist-left",
+   "target": [
+    0.33,
+    0,
+    0.56
+   ],
+   "position": [
+    0.33,
+    -2.5,
+    0.56
+   ],
+   "fov": 5.72
+  },
+  {
+   "name": "wrist-right",
+   "view": "front",
+   "centre": [
+    -0.33,
+    0,
+    0.56
+   ],
+   "size": 0.25,
+   "label": "Right wrist",
+   "id": "wrist-right",
+   "target": [
+    -0.33,
+    0,
+    0.56
+   ],
+   "position": [
+    -0.33,
+    -2.5,
+    0.56
+   ],
+   "fov": 5.72
+  },
+  {
+   "name": "foot",
+   "view": "front",
+   "centre": [
+    0.095,
+    0,
+    0.05
+   ],
+   "size": 0.25,
+   "label": "Foot",
+   "id": "foot",
+   "target": [
+    0.095,
+    0,
+    0.05
+   ],
+   "position": [
+    0.095,
+    -2.5,
+    0.05
+   ],
+   "fov": 5.72
+  },
+  {
+   "name": "feet-top",
+   "view": [
+    0,
+    -0.6428,
+    0.766
+   ],
+   "centre": [
+    0,
+    0,
+    0.05
+   ],
+   "size": 0.78,
+   "label": "Both feet from front and above",
+   "id": "feet-top",
+   "target": [
+    0,
+    0,
+    0.05
+   ],
+   "position": [
+    0,
+    -0.82,
+    1.0272
+   ],
+   "fov": 34
+  },
+  {
+   "name": "foot-left-side",
+   "view": "left",
+   "centre": [
+    0.095,
+    0,
+    0.05
+   ],
+   "size": 0.3,
+   "label": "Left foot, from the side",
+   "id": "foot-left-side",
+   "target": [
+    0.095,
+    0,
+    0.05
+   ],
+   "position": [
+    2.595,
+    0.0,
+    0.05
+   ],
+   "fov": 6.87
+  },
+  {
+   "name": "foot-right-side",
+   "view": "right",
+   "centre": [
+    -0.095,
+    0,
+    0.05
+   ],
+   "size": 0.3,
+   "label": "Right foot, from the side",
+   "id": "foot-right-side",
+   "target": [
+    -0.095,
+    0,
+    0.05
+   ],
+   "position": [
+    -2.595,
+    0.0,
+    0.05
+   ],
+   "fov": 6.87
+  },
+  {
+   "name": "foot-left-34",
+   "view": [
+    0.7,
+    -0.7,
+    0.15
+   ],
+   "centre": [
+    0.095,
+    0,
+    0.05
+   ],
+   "size": 0.3,
+   "label": "Left foot, three-quarter",
+   "id": "foot-left-34",
+   "target": [
+    0.095,
+    0,
+    0.05
+   ],
+   "position": [
+    1.8428,
+    -1.7478,
+    0.4245
+   ],
+   "fov": 6.87
+  },
+  {
+   "name": "foot-right-34",
+   "view": [
+    -0.7,
+    -0.7,
+    0.15
+   ],
+   "centre": [
+    -0.095,
+    0,
+    0.05
+   ],
+   "size": 0.3,
+   "label": "Right foot, three-quarter",
+   "id": "foot-right-34",
+   "target": [
+    -0.095,
+    0,
+    0.05
+   ],
+   "position": [
+    -1.8428,
+    -1.7478,
+    0.4245
+   ],
+   "fov": 6.87
+  },
+  {
+   "name": "elbow-left",
+   "view": [
+    -0.4,
+    -0.9,
+    0.2
+   ],
+   "centre": [
+    0.3,
+    0.02,
+    0.56
+   ],
+   "size": 0.28,
+   "label": "Left elbow rim",
+   "id": "elbow-left",
+   "target": [
+    0.3,
+    0.02,
+    0.56
+   ],
+   "position": [
+    -0.695,
+    -2.2188,
+    1.0575
+   ],
+   "fov": 6.41
+  },
+  {
+   "name": "elbow-right",
+   "view": [
+    0.4,
+    -0.9,
+    0.2
+   ],
+   "centre": [
+    -0.3,
+    0.02,
+    0.56
+   ],
+   "size": 0.28,
+   "label": "Right elbow rim",
+   "id": "elbow-right",
+   "target": [
+    -0.3,
+    0.02,
+    0.56
+   ],
+   "position": [
+    0.695,
+    -2.2188,
+    1.0575
+   ],
+   "fov": 6.41
+  },
+  {
+   "name": "arm-left-end",
+   "view": [
+    0.9861,
+    -0.1174,
+    0.1174
+   ],
+   "centre": [
+    0.3,
+    -0.02,
+    0.545
+   ],
+   "size": 0.318,
+   "label": "Left arm, from the hand",
+   "id": "arm-left-end",
+   "target": [
+    0.3,
+    -0.02,
+    0.545
+   ],
+   "position": [
+    0.846,
+    -0.085,
+    0.61
+   ],
+   "fov": 32
+  },
+  {
+   "name": "arm-right-end",
+   "view": [
+    -0.9861,
+    -0.1174,
+    0.1174
+   ],
+   "centre": [
+    -0.3,
+    -0.02,
+    0.545
+   ],
+   "size": 0.318,
+   "label": "Right arm, from the hand",
+   "id": "arm-right-end",
+   "target": [
+    -0.3,
+    -0.02,
+    0.545
+   ],
+   "position": [
+    -0.846,
+    -0.085,
+    0.61
+   ],
+   "fov": 32
+  }
+ ]
+}
