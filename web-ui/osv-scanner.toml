@@ -6,18 +6,6 @@ id = "GHSA-333x-w4r6-6crp"
 ignoreUntil = 2027-01-27
 reason = "dev/build-tool dependency in a preserved source lockfile; not installed or shipped by the server; upgrade tracked"
 
-# undici (dev) 6.29.0 (CVSS 5.9); undici (dev) 7.30.0 (CVSS 5.9)
-[[IgnoredVulns]]
-id = "GHSA-4qv8-2p9j-2685"
-ignoreUntil = 2027-01-27
-reason = "dev/build-tool dependency in a preserved source lockfile; not installed or shipped by the server; upgrade tracked"
-
-# undici (dev) 7.30.0 (CVSS 5.9)
-[[IgnoredVulns]]
-id = "GHSA-f72v-6w45-q472"
-ignoreUntil = 2027-01-27
-reason = "dev/build-tool dependency in a preserved source lockfile; not installed or shipped by the server; upgrade tracked"
-
 # esbuild (dev) 0.28.0 (CVSS 2.5)
 [[IgnoredVulns]]
 id = "GHSA-g7r4-m6w7-qqqr"
@@ -45,11 +33,5 @@ reason = "dev/build-tool dependency in a preserved source lockfile; not installe
 # fast-uri (dev) 3.1.8 (CVSS 3.7)
 [[IgnoredVulns]]
 id = "GHSA-xhq7-xmqj-769h"
-ignoreUntil = 2027-01-27
-reason = "dev/build-tool dependency in a preserved source lockfile; not installed or shipped by the server; upgrade tracked"
-
-# undici (dev) 6.29.0 (CVSS 7.5); undici (dev) 7.30.0 (CVSS 7.5)
-[[IgnoredVulns]]
-id = "GHSA-xjj6-f33q-929c"
 ignoreUntil = 2027-01-27
 reason = "dev/build-tool dependency in a preserved source lockfile; not installed or shipped by the server; upgrade tracked"

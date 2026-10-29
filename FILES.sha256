@@ -1338,7 +1338,7 @@ a80da155fe04f7b4b5e09f612fe4f6e7d3a6e8e19e612fc3531072014cbfa09b  web-app/src/ve
 b81cd55177300649be8f95b3b747d721ce607e8ed2856e25bd0c630cfd631faf  web-app/src/vendor/m3/fonts/roboto-mono-latin-wght-normal.woff2
 c746135c7923bb6f8a6c110da09b251c5c4bf51fc6dbf8c61ddf8beb9f2fcc56  web-app/src/vendor/m3/mcu-0.4.0.js
 71a621bb7b126bdc4515604adaf6b07d9a4bfa934f2d81f4b57860e81ab6c142  web-app/wb-web.js
-7bf6e55f744b143753e92e86798dc1fd75405ae2f44076b511a15e5c155c09fd  web-ui/SOURCES.json
+fb3708637034b1874c1a07d45f10c720ddb1c25740a9da9742f9ddbb1097cf9c  web-ui/SOURCES.json
 8859ed7f70f5ac154d109fde832aa0da53b99b5461ab3e01586bc2cae2068745  web-ui/build-tools/osv-scanner.toml
 36800ef6d6d773bfb259e968d5d07f147b0b4a0ebbd129648fc44dc22e12503e  web-ui/build-tools/package-lock.json
 968e2b3f62457ded1fcb5d7fff98c2698825f4bd80e18b2fab4e4c1635e155a3  web-ui/build-tools/package.json
@@ -1373,8 +1373,8 @@ d342c26513a9d97b918b94b02b12621b5ea86f9a073d40fdb01434f06ea9a34e  web-ui/modules
 730035f46c9be1d6e8341ca3e7bc3af7b237deae49bd6e1428a88ea1f7c519dd  web-ui/modules/workrooms/module.json
 3f959e3aad760d7355599acbaca15e81121febb0b4f8e277856ba92451483da8  web-ui/modules/workrooms/settings.schema.json
 040974ab64aa9edb9ae1f83114587ad582ad4ed42823792c797afd53724bf707  web-ui/modules/workrooms/ui/index.html
-42dc50b22568947c2def45cb0c7777a0fb4e1da5e970363dacc9de3458ccc989  web-ui/osv-scanner.toml
-3bab94c06d317532f7de4366065d9d2ee38387188c6420dd22334d068da87ffa  web-ui/package-lock.json
+d2d193e902fbf1052a76abf2881982480d93c274c21a06343228219a6cd92631  web-ui/osv-scanner.toml
+8b5fede7de8549834e6c7d927b1ce9594ef0fe2b3c064137a92ac8338287ac7a  web-ui/package-lock.json
 4182670d34227bdcddf43fc863c6e2a62112c866c0cd170f7c5c28745202319e  web-ui/package.json
 cb63c3fbb36319892dc5fee9b455590743ee01fa58cb8621abfc9dd67160474f  web-ui/scripts/web/build-web.mjs
 123b8fcd1399988d790526f591a7a1989e529f5cf964d4a756fe4725364129d3  web-ui/src/module-cards.js
